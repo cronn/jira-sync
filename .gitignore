@@ -1,0 +1,46 @@
+# Backup files
+*~
+*.bak
+*.sav
+*.bck
+
+# Editor temp files
+.*.swp
+.swp
+
+# Gradle
+.gradle
+/caches
+/native
+gradle/wrapper/dists/
+
+# Build output directories
+/classes/
+/build/
+
+# Eclipse specific files/directories
+.classpath
+.project
+.settings
+.metadata
+bin
+.recommenders/
+
+# Profiler and heap dumps
+*.jps
+*.hprof
+
+# Miscellaneous
+nohup.out
+*.log
+
+# Jetbrains IDEA
+.idea
+*.iml
+*.ipr
+*.iws
+*.ids
+out/
+
+# personal (non-versioned) logback configuration file that can be defined with -Dlogback.configurationFile=/path/to/logback.user.groovy
+logback.user*.groovy
