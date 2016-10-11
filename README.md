@@ -95,5 +95,12 @@ de.cronn.jira.projects[0].versionMapping[11.0]=11
 de.cronn.jira.projects[0].versionMapping[12.0]=12
 ```
 
+### Running
+
+```
+./gradlew assemble
+build/libs/jira-sync.jar --spring.config.location=file:/path/to/config/
+```
+
 
 [jira-rest-api]: https://docs.atlassian.com/jira/REST/cloud/
