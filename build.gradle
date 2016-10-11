@@ -29,6 +29,10 @@ springBoot {
 	executable = true
 }
 
+bootRun {
+	systemProperties = System.properties
+}
+
 eclipse.classpath {
 	downloadSources = true
 }

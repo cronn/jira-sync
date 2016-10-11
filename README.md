@@ -97,13 +97,23 @@ de.cronn.jira.sync.projects[0].versionMapping[12.0]=12
 
 On Linux:
 
+#### Option 1
+
+```
+./gradlew bootRun -Dspring.config.location=file:/path/to/config/
+```
+
+#### Option 2
+
 ```
 ./gradlew assemble
 ```
 
+Execute the ['fat' JAR][spring-fat-jar]:
 ```
 build/libs/jira-sync-1.0.SNAPSHOT.jar --spring.config.location=file:/path/to/config/
 ```
 
 
 [jira-rest-api]: https://docs.atlassian.com/jira/REST/cloud/
+[spring-fat-jar]: http://docs.spring.io/spring-boot/docs/current/reference/html/executable-jar.html
