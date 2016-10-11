@@ -6,7 +6,7 @@
 
 - Java 8
 
-- [Access to Jira REST API][jira-rest-api]
+- Access to [Jira REST API][jira-rest-api]
 
 ### Building
 
