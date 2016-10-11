@@ -6,7 +6,7 @@
 
 - Java 8
 
-- Access to Jira REST API
+- [Access to Jira REST API][jira-rest-api]
 
 ### Building
 
@@ -22,3 +22,6 @@ On Windows:
 ```
 gradlew.bat build
 ```
+
+
+[jira-rest-api]: https://docs.atlassian.com/jira/REST/cloud/
