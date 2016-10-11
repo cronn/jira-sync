@@ -202,7 +202,6 @@ public class JiraSyncApplicationTests {
 
 		assertThat(jiraTarget.getAllIssues(), hasSize(1));
 		JiraIssue targetIssue = jiraTarget.getAllIssues().get(0);
-		assertThat(targetIssue.getFields().getDescription(), is(""));
 
 		// when
 		targetIssue.getFields().setStatus(TARGET_STATUS_CLOSED);
