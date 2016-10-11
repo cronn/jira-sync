@@ -75,8 +75,8 @@ de.cronn.jira.sync.resolutionMapping[Cannot\ Reproduce]=Cannot Reproduce
 de.cronn.jira.sync.projects[0].sourceProject=EXAMPLE
 de.cronn.jira.sync.projects[0].targetProject=EX
 de.cronn.jira.sync.projects[0].sourceFilterId=12345
-de.cronn.jira.sync.projects[0].remoteLinkIconInSource=https://jira.source/favicon.ico
-de.cronn.jira.sync.projects[0].remoteLinkIconInTarget=https://jira.target/favicon.ico
+de.cronn.jira.sync.projects[0].remoteLinkIconInSource=${de.cronn.jira.sync.source.url}/favicon.ico
+de.cronn.jira.sync.projects[0].remoteLinkIconInTarget=${de.cronn.jira.sync.target.url}/favicon.ico
 
 # Optional
 # de.cronn.jira.sync.projects[0].labelsToKeepInTarget=internal,readyToAssign

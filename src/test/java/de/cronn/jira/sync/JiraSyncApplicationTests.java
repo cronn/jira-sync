@@ -27,6 +27,7 @@ import de.cronn.jira.sync.domain.JiraIssueType;
 import de.cronn.jira.sync.domain.JiraPriority;
 import de.cronn.jira.sync.domain.JiraProject;
 import de.cronn.jira.sync.domain.JiraRemoteLink;
+import de.cronn.jira.sync.domain.JiraRemoteLinkObject;
 import de.cronn.jira.sync.dummy.JiraDummyService;
 
 @RunWith(SpringRunner.class)
@@ -135,8 +136,13 @@ public class JiraSyncApplicationTests {
 		assertThat(remoteLinksInTarget, hasSize(1));
 		assertThat(remoteLinksInSource, hasSize(1));
 
-		assertThat(remoteLinksInTarget.get(0).getObject().getUrl(), is(new URL("https://jira-source/browse/PROJECT_ONE-1")));
-		assertThat(remoteLinksInSource.get(0).getObject().getUrl(), is(new URL("https://jira-target/browse/PRJ_ONE-1")));
+		JiraRemoteLinkObject firstRemoteLinkInSource = remoteLinksInSource.get(0).getObject();
+		assertThat(firstRemoteLinkInSource.getUrl(), is(new URL("https://jira-target/browse/PRJ_ONE-1")));
+		assertThat(firstRemoteLinkInSource.getIcon().getUrl16x16(), is(new URL("https://jira-source/favicon.ico")));
+
+		JiraRemoteLinkObject firstRemoteLinkInTarget = remoteLinksInTarget.get(0).getObject();
+		assertThat(firstRemoteLinkInTarget.getUrl(), is(new URL("https://jira-source/browse/PROJECT_ONE-1")));
+		assertThat(firstRemoteLinkInTarget.getIcon().getUrl16x16(), is(new URL("https://jira-target/favicon.ico")));
 	}
 
 	@Test
