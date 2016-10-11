@@ -16,6 +16,7 @@ import org.springframework.util.CollectionUtils;
 import de.cronn.jira.sync.JiraSyncException;
 import de.cronn.jira.sync.config.JiraProjectSync;
 import de.cronn.jira.sync.config.StatusTransitionConfig;
+import de.cronn.jira.sync.domain.JiraField;
 import de.cronn.jira.sync.domain.JiraIdResource;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueFields;
@@ -24,6 +25,7 @@ import de.cronn.jira.sync.domain.JiraIssueUpdate;
 import de.cronn.jira.sync.domain.JiraPriority;
 import de.cronn.jira.sync.domain.JiraResolution;
 import de.cronn.jira.sync.domain.JiraTransition;
+import de.cronn.jira.sync.domain.JiraUser;
 import de.cronn.jira.sync.domain.JiraVersion;
 import de.cronn.jira.sync.mapping.DefaultVersionMapper;
 import de.cronn.jira.sync.mapping.DescriptionMapper;
@@ -66,8 +68,8 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		processDescription(sourceIssue, targetIssue, targetIssueUpdate);
 		processLabels(sourceIssue, targetIssue, targetIssueUpdate, projectSync);
 		processPriority(jiraTarget, sourceIssue, targetIssue, targetIssueUpdate);
-		processVersions(jiraTarget, sourceIssue, targetIssue, targetIssueUpdate, projectSync, JiraIssueFields::getVersions, "versions");
-		processVersions(jiraTarget, sourceIssue, targetIssue, targetIssueUpdate, projectSync, JiraIssueFields::getFixVersions, "fixVersions");
+		processVersions(jiraTarget, sourceIssue, targetIssue, targetIssueUpdate, projectSync, JiraIssueFields::getVersions, JiraField.VERSIONS);
+		processVersions(jiraTarget, sourceIssue, targetIssue, targetIssueUpdate, projectSync, JiraIssueFields::getFixVersions, JiraField.FIX_VERSIONS);
 
 		addBacklinkIfMissing(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
 
@@ -114,6 +116,16 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 
 		StatusTransitionConfig transition = findTransition(sourceIssue, targetIssue, statusTransitions);
 		if (transition != null) {
+
+			if (transition.isAssignedToMyselfInSource()) {
+				JiraUser myself = jiraSource.getMyself();
+				if (!isEqual(sourceIssue, myself)) {
+					JiraIssueUpdate jiraIssueUpdate = new JiraIssueUpdate();
+					jiraIssueUpdate.putFieldUpdate(JiraField.ASSIGNEE, myself);
+					jiraSource.updateIssue(sourceIssue, jiraIssueUpdate);
+				}
+			}
+
 			JiraTransition jiraTransition = getJiraTransition(jiraSource, sourceIssue, transition);
 			sourceIssueUpdate.setTransition(jiraTransition);
 
@@ -123,6 +135,14 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		}
 	}
 
+	private boolean isEqual(JiraIssue issue, JiraUser jiraUser) {
+		JiraUser assignee = issue.getFields().getAssignee();
+		if (assignee == null) {
+			return false;
+		}
+		return Objects.equals(jiraUser.getKey(), assignee.getKey());
+	}
+
 	private StatusTransitionConfig findTransition(JiraIssue sourceIssue, JiraIssue targetIssue, List<StatusTransitionConfig> statusTransitions) {
 		String sourceIssueStatus = getStatusName(sourceIssue);
 		String targetIssueStatus = getStatusName(targetIssue);
@@ -130,6 +150,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		List<StatusTransitionConfig> transitionConfigs = statusTransitions.stream()
 			.filter(statusTransitionConfig -> statusTransitionConfig.getSourceStatusIn().contains(sourceIssueStatus))
 			.filter(statusTransitionConfig -> statusTransitionConfig.getTargetStatusIn().contains(targetIssueStatus))
+			.filter(statusTransitionConfig -> filterOnlyIfAssignedInTarget(statusTransitionConfig, targetIssue))
 			.collect(Collectors.toList());
 
 		if (transitionConfigs.isEmpty()) {
@@ -141,6 +162,14 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 			return transitionConfig;
 		} else {
 			throw new JiraSyncException("Illegal number of matching status transitions: " + transitionConfigs);
+		}
+	}
+
+	private boolean filterOnlyIfAssignedInTarget(StatusTransitionConfig statusTransitionConfig, JiraIssue targetIssue) {
+		if (statusTransitionConfig.isOnlyIfAssignedInTarget()) {
+			return targetIssue.getFields().getAssignee() != null;
+		} else {
+			return true;
 		}
 	}
 
@@ -172,7 +201,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		String existingDescription = descriptionMapper.getDescription(targetIssue);
 		String newDescription = descriptionMapper.mapTargetDescription(sourceIssue, targetIssue);
 		if (!Objects.equals(existingDescription, newDescription)) {
-			issueUpdate.putFieldUpdate("description", newDescription);
+			issueUpdate.putFieldUpdate(JiraField.DESCRIPTION, newDescription);
 		}
 	}
 
@@ -190,7 +219,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		}
 
 		if (!Objects.equals(newValue, targetValue)) {
-			issueUpdate.putFieldUpdate("labels", newValue);
+			issueUpdate.putFieldUpdate(JiraField.LABELS, newValue);
 		}
 	}
 
@@ -199,7 +228,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		Assert.notNull(sourcePriority, "Priority of " + sourceIssue + " must not be null");
 		JiraPriority targetPriority = targetIssue.getFields().getPriority();
 		if (!isIdEqual(sourcePriority, targetPriority)) {
-			issueUpdate.putFieldUpdate("priority", sourcePriority);
+			issueUpdate.putFieldUpdate(JiraField.PRIORITY, sourcePriority);
 		}
 	}
 
@@ -207,7 +236,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		JiraResolution mappedTargetResolution = resolutionMapper.mapResolution(jiraSource, targetIssue);
 		JiraResolution sourceResolution = sourceIssue.getFields().getResolution();
 		if (!isIdEqual(mappedTargetResolution, sourceResolution)) {
-			issueUpdate.putFieldUpdate("resolution", mappedTargetResolution);
+			issueUpdate.putFieldUpdate(JiraField.RESOLUTION, mappedTargetResolution);
 		}
 	}
 
@@ -223,7 +252,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		}
 	}
 
-	private void processVersions(JiraService jiraTarget, JiraIssue sourceIssue, JiraIssue targetIssue, JiraIssueUpdate issueUpdate, JiraProjectSync projectSync, Function<JiraIssueFields, Set<JiraVersion>> versionGetter, String versionsField) {
+	private void processVersions(JiraService jiraTarget, JiraIssue sourceIssue, JiraIssue targetIssue, JiraIssueUpdate issueUpdate, JiraProjectSync projectSync, Function<JiraIssueFields, Set<JiraVersion>> versionGetter, JiraField versionsField) {
 		Set<JiraVersion> sourceVersions = versionGetter.apply(sourceIssue.getFields());
 		Set<JiraVersion> targetVersions = versionGetter.apply(targetIssue.getFields());
 

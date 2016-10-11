@@ -3,10 +3,10 @@ package de.cronn.jira.sync.service;
 import java.io.IOException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.PreDestroy;
 import javax.net.ssl.HostnameVerifier;
@@ -34,6 +34,7 @@ import org.springframework.web.client.RestTemplate;
 import de.cronn.jira.sync.JiraSyncException;
 import de.cronn.jira.sync.config.BasicAuthentication;
 import de.cronn.jira.sync.config.JiraConnectionProperties;
+import de.cronn.jira.sync.domain.JiraField;
 import de.cronn.jira.sync.domain.JiraFilterResult;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueUpdate;
@@ -52,6 +53,7 @@ import de.cronn.jira.sync.domain.JiraSearchResult;
 import de.cronn.jira.sync.domain.JiraServerInfo;
 import de.cronn.jira.sync.domain.JiraTransition;
 import de.cronn.jira.sync.domain.JiraTransitions;
+import de.cronn.jira.sync.domain.JiraUser;
 import de.cronn.jira.sync.domain.JiraVersion;
 import de.cronn.jira.sync.domain.JiraVersionsList;
 import de.cronn.proxy.ssh.SshProxy;
@@ -61,18 +63,6 @@ import de.cronn.proxy.ssh.SshProxy;
 public class JiraServiceRestClient implements JiraService {
 
 	private static final Logger log = LoggerFactory.getLogger(JiraServiceRestClient.class);
-
-	private static final List<String> ISSUE_FIELDS_TO_FETCH = Arrays.asList(
-		"summary",
-		"status",
-		"issuetype",
-		"description",
-		"priority",
-		"resolution",
-		"labels",
-		"versions",
-		"fixVersions"
-	);
 
 	private final RestTemplateBuilder restTemplateBuilder;
 
@@ -159,6 +149,13 @@ public class JiraServiceRestClient implements JiraService {
 	}
 
 	@Override
+	@Cacheable(value = "myself", key = "#root.target.url")
+	public JiraUser getMyself() {
+		log.debug("[{}], fetching myself", getUrl());
+		return getForObject("/rest/api/2/myself", JiraUser.class);
+	}
+
+	@Override
 	public JiraIssue getIssueByKey(String key) {
 		Assert.notNull(key, "key must not be null");
 		return getForObject("/rest/api/2/issue/{key}", JiraIssue.class, key);
@@ -199,7 +196,7 @@ public class JiraServiceRestClient implements JiraService {
 		log.debug("fetching filter {}", filterId);
 		JiraFilterResult filter = getForObject("/rest/api/2/filter/{id}", JiraFilterResult.class, filterId);
 		log.debug("fetching issues by JQL '{}'", filter.getJql());
-		String fieldsToFetch = ISSUE_FIELDS_TO_FETCH.stream().collect(Collectors.joining(","));
+		String fieldsToFetch = Stream.of(JiraField.values()).map(JiraField::getName).collect(Collectors.joining(","));
 		JiraSearchResult searchResult = getForObject("/rest/api/2/search?jql={jql}&maxResults=100&fields=" + fieldsToFetch, JiraSearchResult.class, filter.getJql());
 		log.info("got {} issues", searchResult.getTotal());
 		if (searchResult.getTotal() > searchResult.getMaxResults()) {

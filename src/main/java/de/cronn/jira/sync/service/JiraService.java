@@ -12,6 +12,7 @@ import de.cronn.jira.sync.domain.JiraRemoteLink;
 import de.cronn.jira.sync.domain.JiraResolution;
 import de.cronn.jira.sync.domain.JiraServerInfo;
 import de.cronn.jira.sync.domain.JiraTransition;
+import de.cronn.jira.sync.domain.JiraUser;
 import de.cronn.jira.sync.domain.JiraVersion;
 
 public interface JiraService extends AutoCloseable {
@@ -26,6 +27,8 @@ public interface JiraService extends AutoCloseable {
 	void close();
 
 	JiraServerInfo getServerInfo();
+
+	JiraUser getMyself();
 
 	JiraIssue getIssueByKey(String key);
 

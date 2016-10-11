@@ -42,10 +42,10 @@ public class JiraIssueUpdate {
 		return CollectionUtils.isEmpty(fields) && transition == null;
 	}
 
-	public void putFieldUpdate(String field, Object newValue) {
+	public void putFieldUpdate(JiraField field, Object newValue) {
 		if (fields == null) {
 			fields = new LinkedHashMap<>();
 		}
-		fields.put(field, newValue);
+		fields.put(field.getName(), newValue);
 	}
 }

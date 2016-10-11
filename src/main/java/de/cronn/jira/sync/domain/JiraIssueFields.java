@@ -18,6 +18,7 @@ public class JiraIssueFields {
 	private JiraIssueStatus status;
 	private Set<JiraVersion> versions;
 	private Set<JiraVersion> fixVersions;
+	private JiraUser assignee;
 
 	public JiraIssueFields() {
 	}
@@ -104,5 +105,13 @@ public class JiraIssueFields {
 
 	public Set<JiraVersion> getFixVersions() {
 		return fixVersions;
+	}
+
+	public JiraUser getAssignee() {
+		return assignee;
+	}
+
+	public void setAssignee(JiraUser assignee) {
+		this.assignee = assignee;
 	}
 }

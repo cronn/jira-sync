@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
 import de.cronn.jira.sync.config.JiraConnectionProperties;
+import de.cronn.jira.sync.domain.JiraField;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueStatus;
 import de.cronn.jira.sync.domain.JiraIssueUpdate;
@@ -27,6 +28,7 @@ import de.cronn.jira.sync.domain.JiraRemoteLinks;
 import de.cronn.jira.sync.domain.JiraResolution;
 import de.cronn.jira.sync.domain.JiraServerInfo;
 import de.cronn.jira.sync.domain.JiraTransition;
+import de.cronn.jira.sync.domain.JiraUser;
 import de.cronn.jira.sync.domain.JiraVersion;
 import de.cronn.jira.sync.service.JiraService;
 
@@ -90,6 +92,11 @@ public class JiraDummyService implements JiraService {
 		Assert.notNull(credentials, "Expected login not configured for " + url);
 		Assert.state(Objects.equals(connectionProperties.getUsername(), credentials.getUsername()));
 		Assert.state(Objects.equals(connectionProperties.getPassword(), credentials.getPassword()));
+	}
+
+	@Override
+	public JiraUser getMyself() {
+		return new JiraUser("me", "myself");
 	}
 
 	@Override
@@ -217,17 +224,23 @@ public class JiraDummyService implements JiraService {
 			return;
 		}
 		for (Map.Entry<String, Object> entry : fields.entrySet()) {
-			Object value = entry.getValue();
-			switch (entry.getKey()) {
-				case "description":
-					issueInSystem.getFields().setDescription((String) value);
-					break;
-				case "resolution":
-					issueInSystem.getFields().setResolution((JiraResolution) value);
-					break;
-				default:
-					throw new IllegalArgumentException("unsupported field update: " + entry.getKey());
-			}
+			updateField(issueInSystem, entry.getKey(), entry.getValue());
+		}
+	}
+
+	private void updateField(JiraIssue issueInSystem, String key, Object value) {
+		switch (JiraField.forName(key)) {
+			case DESCRIPTION:
+				issueInSystem.getFields().setDescription((String) value);
+				break;
+			case RESOLUTION:
+				issueInSystem.getFields().setResolution((JiraResolution) value);
+				break;
+			case ASSIGNEE:
+				issueInSystem.getFields().setAssignee((JiraUser) value);
+				break;
+			default:
+				throw new IllegalArgumentException("unsupported field update: " + key);
 		}
 	}
 
@@ -238,6 +251,7 @@ public class JiraDummyService implements JiraService {
 
 		JiraIssueStatus targetStatus = jiraIssueUpdate.getTransition().getTo();
 		Assert.notNull(targetStatus);
+		log.debug("Updating status of {} to {}", issue, targetStatus);
 		issueInSystem.getFields().setStatus(targetStatus);
 
 		updateFields(jiraIssueUpdate, issueInSystem);
