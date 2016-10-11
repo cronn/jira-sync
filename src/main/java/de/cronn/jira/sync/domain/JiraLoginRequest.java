@@ -1,5 +1,8 @@
 package de.cronn.jira.sync.domain;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+
 public class JiraLoginRequest {
 
 	private final String username;
@@ -18,4 +21,11 @@ public class JiraLoginRequest {
 		return password;
 	}
 
+	@Override
+	public String toString() {
+		return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
+			.append("username", username)
+			.append("password", password)
+			.toString();
+	}
 }
