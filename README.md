@@ -28,7 +28,7 @@ gradlew.bat build
 
 `config/application.properties`
 
-```
+```properties
 de.cronn.jira.source.url=https://jira.source/
 de.cronn.jira.target.url=https://jira.target/
 
