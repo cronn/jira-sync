@@ -78,14 +78,14 @@ public class DefaultIssueTypeMapper implements IssueTypeMapper {
 	}
 
 	private static JiraIssueType getFallbackIssueType(JiraProjectSync projectSync, JiraProject targetProject) {
-		String targetIssueFallbackType = projectSync.getTargetIssueFallbackType();
-		if (targetIssueFallbackType == null) {
-			throw new JiraSyncException("TargetIssueFallbackType must be configured");
+		String targetIssueTypeFallback = projectSync.getTargetIssueTypeFallback();
+		if (targetIssueTypeFallback == null) {
+			throw new JiraSyncException("targetIssueTypeFallback must be configured");
 		}
 
-		JiraIssueType issueType = getIssueTypeByName(targetIssueFallbackType, targetProject);
+		JiraIssueType issueType = getIssueTypeByName(targetIssueTypeFallback, targetProject);
 		if (issueType == null) {
-			throw new JiraSyncException("TargetIssueFallbackType " + targetIssueFallbackType + " not found");
+			throw new JiraSyncException("targetIssueTypeFallback " + targetIssueTypeFallback + " not found");
 		}
 
 		return issueType;

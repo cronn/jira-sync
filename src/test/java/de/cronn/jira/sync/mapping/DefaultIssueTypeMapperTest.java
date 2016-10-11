@@ -50,7 +50,7 @@ public class DefaultIssueTypeMapperTest {
 		issueTypeMapping.put(SOURCE_ISSUE_TYPE_IMPROVEMENT.getName(), TARGET_ISSUE_TYPE_NEW_FEATURE.getName());
 		syncConfig.setIssueTypeMapping(issueTypeMapping);
 
-		projectSync.setTargetIssueFallbackType(TARGET_ISSUE_TYPE_TASK.getName());
+		projectSync.setTargetIssueTypeFallback(TARGET_ISSUE_TYPE_TASK.getName());
 
 		issueTypeMapper = new DefaultIssueTypeMapper();
 	}
@@ -71,12 +71,12 @@ public class DefaultIssueTypeMapperTest {
 
 	@Test
 	public void testMap_NoConfiguration_NoFallbackIssueTypeConfigured() throws Exception {
-		projectSync.setTargetIssueFallbackType(null);
+		projectSync.setTargetIssueTypeFallback(null);
 		try {
 			issueTypeMapper.mapIssueType(sourceIssue, syncConfig, projectSync, targetProject);
 			fail("JiraSyncException expected");
 		} catch (JiraSyncException e) {
-			assertThat(e.getMessage(), is("TargetIssueFallbackType must be configured"));
+			assertThat(e.getMessage(), is("targetIssueTypeFallback must be configured"));
 		}
 	}
 
@@ -93,13 +93,13 @@ public class DefaultIssueTypeMapperTest {
 
 	@Test
 	public void testMap_NoConfiguration_UnknownFallbackIssueType() throws Exception {
-		projectSync.setTargetIssueFallbackType("Unknown");
+		projectSync.setTargetIssueTypeFallback("Unknown");
 
 		try {
 			issueTypeMapper.mapIssueType(sourceIssue, syncConfig, projectSync, targetProject);
 			fail("JiraSyncException expected");
 		} catch (JiraSyncException e) {
-			assertThat(e.getMessage(), is("TargetIssueFallbackType Unknown not found"));
+			assertThat(e.getMessage(), is("targetIssueTypeFallback Unknown not found"));
 		}
 	}
 

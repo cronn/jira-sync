@@ -50,8 +50,11 @@ public class JiraSyncApplicationTests {
 	private static final JiraIssueStatus TARGET_STATUS_CLOSED = new JiraIssueStatus("102", "Closed");
 
 	private static final JiraIssueType SOURCE_TYPE_BUG = new JiraIssueType("1", "Bug");
+	private static final JiraIssueType SOURCE_TYPE_UNKNOWN = new JiraIssueType("2", "Unknown");
+
 	private static final JiraIssueType TARGET_TYPE_BUG = new JiraIssueType("100", "Bug");
 	private static final JiraIssueType TARGET_TYPE_IMPROVEMENT = new JiraIssueType("101", "Improvement");
+	private static final JiraIssueType TARGET_TYPE_TASK = new JiraIssueType("102", "Task");
 
 	private static final JiraPriority SOURCE_PRIORITY_HIGH = new JiraPriority("1", "High");
 	private static final JiraPriority TARGET_PRIORITY_CRITICAL = new JiraPriority("100", "Critical");
@@ -109,7 +112,7 @@ public class JiraSyncApplicationTests {
 
 		jiraTarget.setDefaultStatus(TARGET_STATUS_OPEN);
 
-		TARGET_PROJECT.setIssueTypes(Arrays.asList(TARGET_TYPE_BUG, TARGET_TYPE_IMPROVEMENT));
+		TARGET_PROJECT.setIssueTypes(Arrays.asList(TARGET_TYPE_BUG, TARGET_TYPE_IMPROVEMENT, TARGET_TYPE_TASK));
 
 		jiraSource.expectLoginRequest("jira-sync", "secret in source");
 		jiraTarget.expectLoginRequest("jira-sync", "secret in target");
@@ -166,6 +169,24 @@ public class JiraSyncApplicationTests {
 		JiraRemoteLinkObject firstRemoteLinkInTarget = remoteLinksInTarget.get(0).getObject();
 		assertThat(firstRemoteLinkInTarget.getUrl(), is(new URL("https://jira-source/browse/PROJECT_ONE-1")));
 		assertThat(firstRemoteLinkInTarget.getIcon().getUrl16x16(), is(new URL("https://jira-target/favicon.ico")));
+	}
+
+	@Test
+	public void testCreateTicketInTarget_WithFallbackType() throws Exception {
+		// given
+		JiraIssue sourceIssue = new JiraIssue(null, null, "some issue", SOURCE_STATUS_OPEN);
+		sourceIssue.getFields().setProject(SOURCE_PROJECT);
+		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_UNKNOWN);
+		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
+		jiraSource.createIssue(sourceIssue);
+
+		// when
+		syncTask.sync();
+
+		// then
+		assertThat(jiraTarget.getAllIssues(), hasSize(1));
+		JiraIssue targetIssue = jiraTarget.getAllIssues().get(0);
+		assertThat(targetIssue.getFields().getIssuetype(), is(TARGET_TYPE_TASK));
 	}
 
 	@Test

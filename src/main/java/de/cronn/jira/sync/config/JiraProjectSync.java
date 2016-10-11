@@ -15,7 +15,7 @@ public class JiraProjectSync {
 	private String sourceFilterId;
 	private URL remoteLinkIconInSource;
 	private URL remoteLinkIconInTarget;
-	private String targetIssueFallbackType;
+	private String targetIssueTypeFallback;
 	private Set<String> labelsToKeepInTarget;
 	private List<StatusTransitionConfig> statusTransitions;
 	private Map<String, String> versionMapping;
@@ -44,12 +44,12 @@ public class JiraProjectSync {
 		return sourceFilterId;
 	}
 
-	public String getTargetIssueFallbackType() {
-		return targetIssueFallbackType;
+	public String getTargetIssueTypeFallback() {
+		return targetIssueTypeFallback;
 	}
 
-	public void setTargetIssueFallbackType(String targetIssueFallbackType) {
-		this.targetIssueFallbackType = targetIssueFallbackType;
+	public void setTargetIssueTypeFallback(String targetIssueTypeFallback) {
+		this.targetIssueTypeFallback = targetIssueTypeFallback;
 	}
 
 	public URL getRemoteLinkIconInTarget() {

@@ -98,7 +98,7 @@ public abstract class AbstractIssueSyncStrategyTest {
 		projectSync.setTargetProject(TARGET_PROJECT_KEY);
 		projectSync.setRemoteLinkIconInSource(new URL("https://remote-link-icon-in-source"));
 		projectSync.setRemoteLinkIconInTarget(new URL("https://remote-link-icon-in-target"));
-		projectSync.setTargetIssueFallbackType(TARGET_ISSUE_TYPE_DEFAULT);
+		projectSync.setTargetIssueTypeFallback(TARGET_ISSUE_TYPE_DEFAULT);
 
 		Map<String, String> versionMapping = new LinkedHashMap<>();
 		versionMapping.put(SOURCE_VERSION_1.getName(), TARGET_VERSION_1.getName());
