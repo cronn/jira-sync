@@ -6,6 +6,7 @@ import static org.junit.Assert.*;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import de.cronn.jira.sync.config.JiraSyncConfig;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueStatus;
 import de.cronn.jira.sync.domain.JiraIssueType;
@@ -47,6 +49,9 @@ public class JiraSyncApplicationTests {
 	@Autowired
 	private JiraSyncTask syncTask;
 
+	@Autowired
+	private JiraSyncConfig syncConfig;
+
 	@Before
 	public void setUp() throws Exception {
 		JiraDummyService.reset();
@@ -66,6 +71,12 @@ public class JiraSyncApplicationTests {
 
 		jiraSource.expectLoginRequest("jira-sync", "secret in source");
 		jiraTarget.expectLoginRequest("jira-sync", "secret in target");
+	}
+
+	@Test
+	public void testConfiguration() throws Exception {
+		Map<String, String> resolutionMapping = syncConfig.getResolutionMapping();
+		assertThat(resolutionMapping.keySet(), containsInAnyOrder("Fixed", "Duplicate", "Incomplete", "Won't Fix", "Won't Do", "Cannot Reproduce", "Done"));
 	}
 
 	@Test
