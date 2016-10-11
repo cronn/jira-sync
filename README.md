@@ -95,6 +95,8 @@ de.cronn.jira.sync.projects[0].versionMapping[12.0]=12
 
 ### Running
 
+On Linux:
+
 ```
 ./gradlew assemble
 ```
