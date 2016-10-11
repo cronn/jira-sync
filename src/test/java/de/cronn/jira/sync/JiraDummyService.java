@@ -174,7 +174,8 @@ public class JiraDummyService implements JiraService {
 	@Override
 	public void addRemoteLink(JiraIssue fromIssue, JiraIssue toIssue, JiraService toJiraService, URL remoteLinkIcon) {
 		JiraRemoteLinks remoteLinks = getDummyData().getRemoteLinks().computeIfAbsent(fromIssue.getKey(), k -> new JiraRemoteLinks());
-		remoteLinks.add(new JiraRemoteLink(toJiraService.getUrl() + "/browse/" + toIssue.getKey()));
+		String url = toJiraService.getUrl().toString();
+		remoteLinks.add(new JiraRemoteLink(url + (url.endsWith("/") ? "" : "/") + "browse/" + toIssue.getKey()));
 	}
 
 	@Override

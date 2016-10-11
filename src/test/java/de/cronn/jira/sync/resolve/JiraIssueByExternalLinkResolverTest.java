@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.Before;
@@ -82,6 +83,24 @@ public class JiraIssueByExternalLinkResolverTest {
 		List<JiraRemoteLink> remoteLinks = new ArrayList<>();
 		remoteLinks.add(new JiraRemoteLink("http://some.thing"));
 		remoteLinks.add(new JiraRemoteLink(JIRA_TARGET_URL + "/browse/" + targetIssue.getKey()));
+		when(jiraSource.getRemoteLinks(sourceIssue)).thenReturn(remoteLinks);
+
+		JiraIssue resolvedIssue = resolver.resolve(sourceIssue, jiraSource, jiraTarget);
+		assertThat(resolvedIssue, sameInstance(targetIssue));
+
+		verify(jiraTarget).getIssueByKey(targetIssue.getKey());
+	}
+
+	@Test
+	public void testResolve_ExtraSlash() throws Exception {
+		JiraIssueResolver resolver = new JiraIssueByExternalLinkResolver();
+
+		JiraIssue sourceIssue = new JiraIssue("1", "SOURCE-12");
+		JiraIssue targetIssue = new JiraIssue("1", "TARGET-123");
+
+		when(jiraTarget.getIssueByKey(targetIssue.getKey())).thenReturn(targetIssue);
+
+		List<JiraRemoteLink> remoteLinks = Collections.singletonList(new JiraRemoteLink("https://jira.target//browse/" + targetIssue.getKey()));
 		when(jiraSource.getRemoteLinks(sourceIssue)).thenReturn(remoteLinks);
 
 		JiraIssue resolvedIssue = resolver.resolve(sourceIssue, jiraSource, jiraTarget);

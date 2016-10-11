@@ -36,7 +36,7 @@ public class JiraIssueByExternalLinkResolver implements JiraIssueResolver {
 	private List<JiraIssue> resolveIssues(JiraIssue fromIssue, JiraService fromJiraService, JiraService toJiraService) {
 		List<JiraRemoteLink> remoteLinks = fromJiraService.getRemoteLinks(fromIssue);
 		String toBaseUrl = toJiraService.getServerInfo().getBaseUrl();
-		Pattern pattern = Pattern.compile("^" + Pattern.quote(toBaseUrl) + "/browse/([A-Z_]+-\\d+)$");
+		Pattern pattern = Pattern.compile("^" + Pattern.quote(toBaseUrl) + "/+browse/([A-Z_]+-\\d+)$");
 		List<JiraIssue> resolvedIssues = new ArrayList<>();
 		for (JiraRemoteLink remoteLink : remoteLinks) {
 			URL remoteLinkUrl = remoteLink.getObject().getUrl();
