@@ -2,6 +2,12 @@
 
 ## Jira-to-Jira Synchronisation
 
+### Prerequisites
+
+- Java 8
+
+- Access to Jira REST API
+
 ### Building
 
 On Unix:
