@@ -26,7 +26,7 @@ import de.cronn.jira.sync.domain.JiraRemoteLink;
 import de.cronn.jira.sync.domain.JiraRemoteLinks;
 import de.cronn.jira.sync.domain.JiraResolution;
 import de.cronn.jira.sync.domain.JiraServerInfo;
-import de.cronn.jira.sync.domain.JiraTransitions;
+import de.cronn.jira.sync.domain.JiraTransition;
 import de.cronn.jira.sync.domain.JiraVersion;
 import de.cronn.jira.sync.service.JiraService;
 
@@ -55,14 +55,23 @@ public class JiraDummyService implements JiraService {
 		getDummyData().setDefaultStatus(status);
 	}
 
-	public void addProject(JiraProject jiraProject) {
-		Assert.notNull(jiraProject.getKey());
-		Object old = getProjects().put(jiraProject.getKey(), jiraProject);
+	public void addProject(JiraProject project) {
+		Assert.notNull(project.getKey());
+		Object old = getProjects().put(project.getKey(), project);
 		Assert.isNull(old);
 	}
 
-	public void addPriority(JiraPriority jiraPriority) {
-		getDummyData().getPriorities().add(jiraPriority);
+	public void addTransition(JiraTransition transition) {
+		List<JiraTransition> transitions = getDummyData().getTransitions();
+		transitions.add(transition);
+	}
+
+	public void addPriority(JiraPriority priority) {
+		getDummyData().getPriorities().add(priority);
+	}
+
+	public void addResolution(JiraResolution resolution) {
+		getDummyData().getResolutions().add(resolution);
 	}
 
 	private Map<String, JiraProject> getProjects() {
@@ -122,7 +131,7 @@ public class JiraDummyService implements JiraService {
 
 	@Override
 	public List<JiraResolution> getResolutions() {
-		throw new UnsupportedOperationException("not yet implemented");
+		return getDummyData().getResolutions();
 	}
 
 	@Override
@@ -161,8 +170,8 @@ public class JiraDummyService implements JiraService {
 	}
 
 	@Override
-	public JiraTransitions getTransitions(JiraIssue issue) {
-		throw new UnsupportedOperationException("not yet implemented");
+	public List<JiraTransition> getTransitions(JiraIssue issue) {
+		return getDummyData().getTransitions();
 	}
 
 	@Override
@@ -199,10 +208,22 @@ public class JiraDummyService implements JiraService {
 	public void updateIssue(JiraIssue issue, JiraIssueUpdate jiraIssueUpdate) {
 		JiraIssue issueInSystem = getIssueByKey(issue.getKey());
 		Assert.isNull(jiraIssueUpdate.getTransition());
-		for (Map.Entry<String, Object> entry : jiraIssueUpdate.getFields().entrySet()) {
+		updateFields(jiraIssueUpdate, issueInSystem);
+	}
+
+	private void updateFields(JiraIssueUpdate jiraIssueUpdate, JiraIssue issueInSystem) {
+		Map<String, Object> fields = jiraIssueUpdate.getFields();
+		if (fields == null) {
+			return;
+		}
+		for (Map.Entry<String, Object> entry : fields.entrySet()) {
+			Object value = entry.getValue();
 			switch (entry.getKey()) {
 				case "description":
-					issueInSystem.getFields().setDescription((String) entry.getValue());
+					issueInSystem.getFields().setDescription((String) value);
+					break;
+				case "resolution":
+					issueInSystem.getFields().setResolution((JiraResolution) value);
 					break;
 				default:
 					throw new IllegalArgumentException("unsupported field update: " + entry.getKey());
@@ -212,7 +233,14 @@ public class JiraDummyService implements JiraService {
 
 	@Override
 	public void transitionIssue(JiraIssue issue, JiraIssueUpdate jiraIssueUpdate) {
-		throw new UnsupportedOperationException("not yet implemented");
+		JiraIssue issueInSystem = getIssueByKey(issue.getKey());
+		Assert.notNull(jiraIssueUpdate.getTransition());
+
+		JiraIssueStatus targetStatus = jiraIssueUpdate.getTransition().getTo();
+		Assert.notNull(targetStatus);
+		issueInSystem.getFields().setStatus(targetStatus);
+
+		updateFields(jiraIssueUpdate, issueInSystem);
 	}
 
 	@Override

@@ -50,6 +50,7 @@ import de.cronn.jira.sync.domain.JiraResolution;
 import de.cronn.jira.sync.domain.JiraResolutionList;
 import de.cronn.jira.sync.domain.JiraSearchResult;
 import de.cronn.jira.sync.domain.JiraServerInfo;
+import de.cronn.jira.sync.domain.JiraTransition;
 import de.cronn.jira.sync.domain.JiraTransitions;
 import de.cronn.jira.sync.domain.JiraVersion;
 import de.cronn.jira.sync.domain.JiraVersionsList;
@@ -218,9 +219,10 @@ public class JiraServiceRestClient implements JiraService {
 	}
 
 	@Override
-	public JiraTransitions getTransitions(JiraIssue issue) {
+	public List<JiraTransition> getTransitions(JiraIssue issue) {
 		Assert.hasText(issue.getKey());
-		return getForObject("/rest/api/2/issue/{issueId}/transitions", JiraTransitions.class, issue.getKey());
+		JiraTransitions transitions = getForObject("/rest/api/2/issue/{issueId}/transitions", JiraTransitions.class, issue.getKey());
+		return transitions.getTransitions();
 	}
 
 	@Override

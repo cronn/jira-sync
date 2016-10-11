@@ -25,7 +25,6 @@ import de.cronn.jira.sync.domain.JiraIssueUpdate;
 import de.cronn.jira.sync.domain.JiraPriority;
 import de.cronn.jira.sync.domain.JiraResolution;
 import de.cronn.jira.sync.domain.JiraTransition;
-import de.cronn.jira.sync.domain.JiraTransitions;
 import de.cronn.jira.sync.domain.JiraVersion;
 import de.cronn.jira.sync.mapping.DefaultVersionMapper;
 import de.cronn.jira.sync.mapping.DescriptionMapper;
@@ -122,8 +121,8 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 	}
 
 	private JiraTransition getJiraTransition(JiraService jiraTarget, JiraIssue targetIssue, String statusToTransitionTo) {
-		JiraTransitions allTransitions = jiraTarget.getTransitions(targetIssue);
-		List<JiraTransition> filteredTransitions = allTransitions.getTransitions().stream()
+		List<JiraTransition> allTransitions = jiraTarget.getTransitions(targetIssue);
+		List<JiraTransition> filteredTransitions = allTransitions.stream()
 			.filter(jiraTransition -> jiraTransition.getTo().getName().equals(statusToTransitionTo))
 			.collect(Collectors.toList());
 

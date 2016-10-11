@@ -30,6 +30,8 @@ import de.cronn.jira.sync.domain.JiraPriority;
 import de.cronn.jira.sync.domain.JiraProject;
 import de.cronn.jira.sync.domain.JiraRemoteLink;
 import de.cronn.jira.sync.domain.JiraRemoteLinkObject;
+import de.cronn.jira.sync.domain.JiraResolution;
+import de.cronn.jira.sync.domain.JiraTransition;
 import de.cronn.jira.sync.dummy.JiraDummyService;
 
 @RunWith(SpringRunner.class)
@@ -41,7 +43,9 @@ public class JiraSyncApplicationTests {
 	private static final JiraProject TARGET_PROJECT = new JiraProject("100", "PRJ_ONE");
 
 	private static final JiraIssueStatus SOURCE_STATUS_OPEN = new JiraIssueStatus("1", "Open");
+	private static final JiraIssueStatus SOURCE_STATUS_RESOLVED = new JiraIssueStatus("2", "Resolved");
 	private static final JiraIssueStatus TARGET_STATUS_OPEN = new JiraIssueStatus("100", "Open");
+	private static final JiraIssueStatus TARGET_STATUS_CLOSED = new JiraIssueStatus("101", "Closed");
 
 	private static final JiraIssueType SOURCE_TYPE_BUG = new JiraIssueType("1", "Bug");
 	private static final JiraIssueType TARGET_TYPE_BUG = new JiraIssueType("100", "Bug");
@@ -49,6 +53,9 @@ public class JiraSyncApplicationTests {
 
 	private static final JiraPriority SOURCE_PRIORITY_HIGH = new JiraPriority("1", "High");
 	private static final JiraPriority TARGET_PRIORITY_CRITICAL = new JiraPriority("100", "Critical");
+
+	private static final JiraResolution SOURCE_RESOLUTION_FIXED = new JiraResolution("1", "Fixed");
+	private static final JiraResolution TARGET_RESOLUTION_DONE = new JiraResolution("100", "Done");
 
 	@TestConfiguration
 	static class Config {
@@ -92,6 +99,10 @@ public class JiraSyncApplicationTests {
 
 		jiraSource.addPriority(SOURCE_PRIORITY_HIGH);
 		jiraTarget.addPriority(TARGET_PRIORITY_CRITICAL);
+
+		jiraSource.addResolution(SOURCE_RESOLUTION_FIXED);
+
+		jiraSource.addTransition(new JiraTransition("1", "Set resolved", SOURCE_STATUS_RESOLVED));
 
 		jiraTarget.setDefaultStatus(TARGET_STATUS_OPEN);
 
@@ -176,6 +187,32 @@ public class JiraSyncApplicationTests {
 
 		// then
 		assertThat(targetIssue.getFields().getDescription(), is("{panel:title=Original description|titleBGColor=#DDD|bgColor=#EEE}\nchanged description\n{panel}"));
+	}
+
+	@Test
+	public void testSetTicketToResolvedInSourceWhenTargetTicketIsClosed() throws Exception {
+		// given
+		JiraIssue sourceIssue = new JiraIssue(null, null, "My first bug", SOURCE_STATUS_OPEN);
+		sourceIssue.getFields().setProject(SOURCE_PROJECT);
+		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_BUG);
+		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
+		jiraSource.createIssue(sourceIssue);
+
+		syncTask.sync();
+
+		assertThat(jiraTarget.getAllIssues(), hasSize(1));
+		JiraIssue targetIssue = jiraTarget.getAllIssues().get(0);
+		assertThat(targetIssue.getFields().getDescription(), is(""));
+
+		// when
+		targetIssue.getFields().setStatus(TARGET_STATUS_CLOSED);
+		targetIssue.getFields().setResolution(TARGET_RESOLUTION_DONE);
+
+		syncTask.sync();
+
+		// then
+		assertThat(sourceIssue.getFields().getStatus(), sameInstance(SOURCE_STATUS_RESOLVED));
+		assertThat(sourceIssue.getFields().getResolution(), sameInstance(SOURCE_RESOLUTION_FIXED));
 	}
 
 }

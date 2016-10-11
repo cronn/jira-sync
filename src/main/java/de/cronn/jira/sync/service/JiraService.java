@@ -11,7 +11,7 @@ import de.cronn.jira.sync.domain.JiraProject;
 import de.cronn.jira.sync.domain.JiraRemoteLink;
 import de.cronn.jira.sync.domain.JiraResolution;
 import de.cronn.jira.sync.domain.JiraServerInfo;
-import de.cronn.jira.sync.domain.JiraTransitions;
+import de.cronn.jira.sync.domain.JiraTransition;
 import de.cronn.jira.sync.domain.JiraVersion;
 
 public interface JiraService extends AutoCloseable {
@@ -41,7 +41,7 @@ public interface JiraService extends AutoCloseable {
 
 	List<JiraRemoteLink> getRemoteLinks(JiraIssue issue);
 
-	JiraTransitions getTransitions(JiraIssue issue);
+	List<JiraTransition> getTransitions(JiraIssue issue);
 
 	void addRemoteLink(JiraIssue fromIssue, JiraIssue toIssue, JiraService toJiraService, URL remoteLinkIcon);
 

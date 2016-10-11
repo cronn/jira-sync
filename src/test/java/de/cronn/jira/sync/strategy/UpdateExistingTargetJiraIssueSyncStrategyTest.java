@@ -18,7 +18,6 @@ import org.mockito.Spy;
 import de.cronn.jira.sync.JiraSyncException;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueUpdate;
-import de.cronn.jira.sync.domain.JiraTransitions;
 import de.cronn.jira.sync.mapping.DefaultDescriptionMapper;
 import de.cronn.jira.sync.mapping.DefaultIssueTypeMapper;
 import de.cronn.jira.sync.mapping.DefaultLabelMapper;
@@ -138,7 +137,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		sourceIssue.getFields().setDescription("some description");
 		targetIssue.getFields().setDescription(descriptionMapper.mapSourceDescription("some description"));
 
-		when(jiraSource.getTransitions(sourceIssue)).thenReturn(new JiraTransitions(Collections.singletonList(SOURCE_TRANSITION_RESOLVE)));
+		when(jiraSource.getTransitions(sourceIssue)).thenReturn(Collections.singletonList(SOURCE_TRANSITION_RESOLVE));
 
 		when(jiraIssueResolver.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
 
@@ -168,7 +167,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 
 		sourceIssue.getFields().setDescription("some description");
 
-		when(jiraSource.getTransitions(sourceIssue)).thenReturn(new JiraTransitions(Collections.singletonList(SOURCE_TRANSITION_RESOLVE)));
+		when(jiraSource.getTransitions(sourceIssue)).thenReturn(Collections.singletonList(SOURCE_TRANSITION_RESOLVE));
 
 		when(jiraIssueResolver.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
 
