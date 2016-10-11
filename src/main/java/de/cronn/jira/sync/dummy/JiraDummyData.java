@@ -1,11 +1,11 @@
-package de.cronn.jira.sync;
-
-import static org.junit.Assert.*;
+package de.cronn.jira.sync.dummy;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.util.Assert;
 
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueStatus;
@@ -28,7 +28,7 @@ public class JiraDummyData {
 	}
 
 	public void setCredentials(JiraLoginRequest credentials) {
-		assertNull(this.credentials);
+		Assert.isNull(this.credentials);
 		this.credentials = credentials;
 	}
 

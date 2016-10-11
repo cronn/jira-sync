@@ -12,7 +12,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Scope;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import de.cronn.jira.sync.config.JiraSyncConfig;
@@ -22,6 +27,7 @@ import de.cronn.jira.sync.domain.JiraIssueType;
 import de.cronn.jira.sync.domain.JiraPriority;
 import de.cronn.jira.sync.domain.JiraProject;
 import de.cronn.jira.sync.domain.JiraRemoteLink;
+import de.cronn.jira.sync.dummy.JiraDummyService;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -39,6 +45,18 @@ public class JiraSyncApplicationTests {
 
 	private static final JiraPriority SOURCE_PRIORITY_HIGH = new JiraPriority("1", "High");
 	private static final JiraPriority TARGET_PRIORITY_CRITICAL = new JiraPriority("100", "Critical");
+
+	@TestConfiguration
+	static class Config {
+
+		@Bean
+		@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+		@Primary
+		JiraDummyService jiraDummyService() {
+			return new JiraDummyService();
+		}
+
+	}
 
 	@Autowired
 	private JiraDummyService jiraSource;
