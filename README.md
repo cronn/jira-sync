@@ -97,6 +97,9 @@ de.cronn.jira.sync.projects[0].versionMapping[12.0]=12
 
 ```
 ./gradlew assemble
+```
+
+```
 build/libs/jira-sync.jar --spring.config.location=file:/path/to/config/
 ```
 
