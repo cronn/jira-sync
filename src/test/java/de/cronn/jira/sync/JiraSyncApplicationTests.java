@@ -43,9 +43,9 @@ public class JiraSyncApplicationTests {
 	private static final JiraProject TARGET_PROJECT = new JiraProject("100", "PRJ_ONE");
 
 	private static final JiraIssueStatus SOURCE_STATUS_OPEN = new JiraIssueStatus("1", "Open");
-	private static final JiraIssueStatus SOURCE_STATUS_RESOLVED = new JiraIssueStatus("2", "Resolved");
+	private static final JiraIssueStatus SOURCE_STATUS_RESOLVED = new JiraIssueStatus("3", "Resolved");
 	private static final JiraIssueStatus TARGET_STATUS_OPEN = new JiraIssueStatus("100", "Open");
-	private static final JiraIssueStatus TARGET_STATUS_CLOSED = new JiraIssueStatus("101", "Closed");
+	private static final JiraIssueStatus TARGET_STATUS_CLOSED = new JiraIssueStatus("102", "Closed");
 
 	private static final JiraIssueType SOURCE_TYPE_BUG = new JiraIssueType("1", "Bug");
 	private static final JiraIssueType TARGET_TYPE_BUG = new JiraIssueType("100", "Bug");

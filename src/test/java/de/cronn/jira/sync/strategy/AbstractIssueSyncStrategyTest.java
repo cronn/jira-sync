@@ -4,6 +4,7 @@ import static org.mockito.Mockito.*;
 
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -15,7 +16,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import de.cronn.jira.sync.config.JiraProjectSync;
 import de.cronn.jira.sync.config.JiraSyncConfig;
-import de.cronn.jira.sync.config.SourceTargetStatus;
+import de.cronn.jira.sync.config.StatusTransitionConfig;
 import de.cronn.jira.sync.domain.JiraIssueStatus;
 import de.cronn.jira.sync.domain.JiraIssueType;
 import de.cronn.jira.sync.domain.JiraPriority;
@@ -114,9 +115,13 @@ public abstract class AbstractIssueSyncStrategyTest {
 		issueTypeMapping.put(SOURCE_ISSUE_TYPE_NEW_FEATURE, TARGET_ISSUE_TYPE_IMPROVEMENT);
 		jiraSyncConfig.setIssueTypeMapping(issueTypeMapping);
 
-		Map<SourceTargetStatus, String> statusTransitions = new LinkedHashMap<>();
-		statusTransitions.put(new SourceTargetStatus(SOURCE_STATUS_OPEN.getName(), TARGET_STATUS_CLOSED.getName()), SOURCE_STATUS_RESOLVED.getName());
-		projectSync.setStatusTransitions(statusTransitions);
+		projectSync.setStatusTransitions(Collections.singletonList(
+			new StatusTransitionConfig(
+				Collections.singletonList(SOURCE_STATUS_OPEN.getName()),
+				Collections.singletonList(TARGET_STATUS_CLOSED.getName()),
+				SOURCE_STATUS_RESOLVED.getName()
+			)
+		));
 
 		return projectSync;
 	}

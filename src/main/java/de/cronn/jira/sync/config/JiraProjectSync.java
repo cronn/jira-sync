@@ -1,6 +1,7 @@
 package de.cronn.jira.sync.config;
 
 import java.net.URL;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -16,7 +17,7 @@ public class JiraProjectSync {
 	private URL remoteLinkIconInTarget;
 	private String targetIssueFallbackType;
 	private Set<String> labelsToKeepInTarget;
-	private Map<SourceTargetStatus, String> statusTransitions;
+	private List<StatusTransitionConfig> statusTransitions;
 	private Map<String, String> versionMapping;
 
 	public String getSourceProject() {
@@ -75,11 +76,11 @@ public class JiraProjectSync {
 		return labelsToKeepInTarget;
 	}
 
-	public void setStatusTransitions(Map<SourceTargetStatus, String> statusTransitions) {
+	public void setStatusTransitions(List<StatusTransitionConfig> statusTransitions) {
 		this.statusTransitions = statusTransitions;
 	}
 
-	public Map<SourceTargetStatus, String> getStatusTransitions() {
+	public List<StatusTransitionConfig> getStatusTransitions() {
 		return statusTransitions;
 	}
 

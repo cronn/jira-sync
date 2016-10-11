@@ -81,9 +81,10 @@ de.cronn.jira.sync.projects[0].remoteLinkIconInTarget=${de.cronn.jira.sync.targe
 # Optional
 # de.cronn.jira.sync.projects[0].labelsToKeepInTarget=internal,readyToAssign
 
-de.cronn.jira.sync.projects[0].statusTransitions[Open,Closed]=Resolved
-de.cronn.jira.sync.projects[0].statusTransitions[Reopened,Closed]=Resolved
-de.cronn.jira.sync.projects[0].statusTransitions[In\ Progress,Closed]=Resolved
+de.cronn.jira.sync.projects[0].statusTransitions[0].sourceStatusIn=Open,Reopened,In Progress
+de.cronn.jira.sync.projects[0].statusTransitions[0].targetStatusIn=Closed
+de.cronn.jira.sync.projects[0].statusTransitions[0].sourceStatusToSet=Resolved
+de.cronn.jira.sync.projects[0].statusTransitions[0].copyResolution=true
 
 de.cronn.jira.sync.projects[0].targetIssueTypeFallback=Task
 
