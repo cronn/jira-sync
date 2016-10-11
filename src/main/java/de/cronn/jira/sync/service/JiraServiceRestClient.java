@@ -151,7 +151,7 @@ public class JiraServiceRestClient implements JiraService {
 	}
 
 	@Override
-	@Cacheable(value = "versions", key = "#root.target.url")
+	@Cacheable(value = "serverInfos", key = "#root.target.url")
 	public JiraServerInfo getServerInfo() {
 		log.debug("[{}], fetching server info", getUrl());
 		return getForObject("/rest/api/2/serverInfo", JiraServerInfo.class);
