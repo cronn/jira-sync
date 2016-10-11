@@ -11,7 +11,7 @@ public class StatusTransitionConfig {
 	private String sourceStatusToSet;
 	private boolean copyResolutionToSource = false;
 	private boolean onlyIfAssignedInTarget = false;
-	private boolean assignedToMyselfInSource = false;
+	private boolean assignToMyselfInSource = false;
 
 	public StatusTransitionConfig() {
 	}
@@ -58,12 +58,12 @@ public class StatusTransitionConfig {
 		return onlyIfAssignedInTarget;
 	}
 
-	public void setAssignedToMyselfInSource(boolean assignedToMyselfInSource) {
-		this.assignedToMyselfInSource = assignedToMyselfInSource;
+	public void setAssignToMyselfInSource(boolean assignToMyselfInSource) {
+		this.assignToMyselfInSource = assignToMyselfInSource;
 	}
 
-	public boolean isAssignedToMyselfInSource() {
-		return assignedToMyselfInSource;
+	public boolean isAssignToMyselfInSource() {
+		return assignToMyselfInSource;
 	}
 
 	public Set<String> getTargetStatusIn() {

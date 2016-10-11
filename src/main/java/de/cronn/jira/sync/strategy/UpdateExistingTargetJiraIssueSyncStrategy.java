@@ -117,7 +117,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		StatusTransitionConfig transition = findTransition(sourceIssue, targetIssue, statusTransitions);
 		if (transition != null) {
 
-			if (transition.isAssignedToMyselfInSource()) {
+			if (transition.isAssignToMyselfInSource()) {
 				JiraUser myself = jiraSource.getMyself();
 				if (!isEqual(sourceIssue, myself)) {
 					JiraIssueUpdate jiraIssueUpdate = new JiraIssueUpdate();
