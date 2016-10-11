@@ -102,7 +102,7 @@ On Linux:
 ```
 
 ```
-build/libs/jira-sync.jar --spring.config.location=file:/path/to/config/
+build/libs/jira-sync-1.0.SNAPSHOT.jar --spring.config.location=file:/path/to/config/
 ```
 
 

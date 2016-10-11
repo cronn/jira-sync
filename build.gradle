@@ -16,9 +16,8 @@ apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply plugin: 'spring-boot'
 
-ext {
-	version = '1.0.' + (System.env.BUILD_NUMBER ?: 'SNAPSHOT')
-}
+group = 'de.cronn'
+version = '1.0.' + (System.env.BUILD_NUMBER ?: 'SNAPSHOT')
 
 jacoco {
 	toolVersion = "0.7.7.201606060606"
