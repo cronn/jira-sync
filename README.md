@@ -65,7 +65,7 @@ de.cronn.jira.sync.issueTypeMapping[New\ Feature]=New Feature
 
 # cf. https://jira-source/rest/api/2/resolution and https://jira-target/rest/api/2/resolution
 de.cronn.jira.sync.resolutionMapping[Fixed]=Fixed
-de.cronn.jira.sync.resolutionMapping[Won\'t\ Fix]=Won't Fix
+de.cronn.jira.sync.resolutionMapping[Won\'t\ Fix]=Won\'t Fix
 de.cronn.jira.sync.resolutionMapping[Duplicate]=Duplicate
 de.cronn.jira.sync.resolutionMapping[Incomplete]=Incomplete
 de.cronn.jira.sync.resolutionMapping[Cannot\ Reproduce]=Cannot Reproduce

@@ -77,6 +77,11 @@ public class JiraSyncApplicationTests {
 	public void testConfiguration() throws Exception {
 		Map<String, String> resolutionMapping = syncConfig.getResolutionMapping();
 		assertThat(resolutionMapping.keySet(), containsInAnyOrder("Fixed", "Duplicate", "Incomplete", "Won't Fix", "Won't Do", "Cannot Reproduce", "Done"));
+
+		assertThat(resolutionMapping.get("Fixed"), is("Fixed"));
+		assertThat(resolutionMapping.get("Done"), is("Fixed"));
+		assertThat(resolutionMapping.get("Cannot Reproduce"), is("Cannot Reproduce"));
+		assertThat(resolutionMapping.get("Won't Fix"), is("Won't Fix"));
 	}
 
 	@Test
