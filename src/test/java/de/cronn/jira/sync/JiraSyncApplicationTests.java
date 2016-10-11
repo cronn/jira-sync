@@ -12,6 +12,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -61,6 +62,12 @@ public class JiraSyncApplicationTests {
 
 	}
 
+	@Value("${de.cronn.jira.sync.source.url}")
+	private URL sourceUrl;
+
+	@Value("${de.cronn.jira.sync.target.url}")
+	private URL targetUrl;
+
 	@Autowired
 	private JiraDummyService jiraSource;
 
@@ -77,8 +84,8 @@ public class JiraSyncApplicationTests {
 	public void setUp() throws Exception {
 		JiraDummyService.reset();
 
-		jiraSource.setUrl(new URL("https://jira-source"));
-		jiraTarget.setUrl(new URL("https://jira-target"));
+		jiraSource.setUrl(sourceUrl);
+		jiraTarget.setUrl(targetUrl);
 
 		jiraSource.addProject(SOURCE_PROJECT);
 		jiraTarget.addProject(TARGET_PROJECT);
