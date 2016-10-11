@@ -42,7 +42,7 @@ public class JiraDummyService implements JiraService {
 
 	private URL url;
 
-	private static final Map<URL, JiraDummyData> DUMMY_DATA = new LinkedHashMap<>();
+	private static final Map<String, JiraDummyData> DUMMY_DATA = new LinkedHashMap<>();
 
 	static void reset() {
 		DUMMY_DATA.clear();
@@ -152,7 +152,7 @@ public class JiraDummyService implements JiraService {
 
 	private JiraDummyData getDummyData() {
 		assertNotNull(url);
-		return DUMMY_DATA.computeIfAbsent(url, k -> new JiraDummyData());
+		return DUMMY_DATA.computeIfAbsent(url.toString(), k -> new JiraDummyData());
 	}
 
 	@Override
