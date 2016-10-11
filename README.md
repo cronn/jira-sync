@@ -69,8 +69,6 @@ de.cronn.jira.sync.resolutionMapping[Won\'t\ Fix]=Won\'t Fix
 de.cronn.jira.sync.resolutionMapping[Duplicate]=Duplicate
 de.cronn.jira.sync.resolutionMapping[Incomplete]=Incomplete
 de.cronn.jira.sync.resolutionMapping[Cannot\ Reproduce]=Cannot Reproduce
-de.cronn.jira.sync.resolutionMapping[Done]=Fixed
-de.cronn.jira.sync.resolutionMapping[Won\'t\ Do]=Rejected
 
 ### Project Configuration ###
 
