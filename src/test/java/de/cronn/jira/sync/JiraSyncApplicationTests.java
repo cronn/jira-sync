@@ -18,6 +18,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Scope;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import de.cronn.jira.sync.config.JiraSyncConfig;
@@ -32,6 +33,7 @@ import de.cronn.jira.sync.dummy.JiraDummyService;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
+@TestPropertySource("/test.properties")
 public class JiraSyncApplicationTests {
 
 	private static final JiraProject SOURCE_PROJECT = new JiraProject("1", "PROJECT_ONE");
