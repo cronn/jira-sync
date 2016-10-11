@@ -22,7 +22,7 @@ import de.cronn.jira.sync.domain.JiraVersion;
 import de.cronn.jira.sync.service.JiraService;
 
 @RunWith(MockitoJUnitRunner.class)
-public class VersionMapperTest {
+public class DefaultVersionMapperTest {
 
 	private static final JiraVersion SOURCE_VERSION_1 = new JiraVersion("10", "1.0");
 	private static final JiraVersion SOURCE_VERSION_2 = new JiraVersion("20", "2.0");
@@ -55,10 +55,10 @@ public class VersionMapperTest {
 	public void testMapVersion_Empty() throws Exception {
 		JiraProjectSync projectConfig = new JiraProjectSync();
 
-		Set<JiraVersion> versions = VersionMapper.mapVersions(jiraTarget, null, projectConfig);
+		Set<JiraVersion> versions = DefaultVersionMapper.mapVersions(jiraTarget, null, projectConfig);
 		assertThat(versions, empty());
 
-		versions = VersionMapper.mapVersions(jiraTarget, Collections.emptySet(), projectConfig);
+		versions = DefaultVersionMapper.mapVersions(jiraTarget, Collections.emptySet(), projectConfig);
 		assertThat(versions, empty());
 
 		verifyNoMoreInteractions(jiraTarget);
@@ -70,7 +70,7 @@ public class VersionMapperTest {
 		List<JiraVersion> versions = Collections.singletonList(SOURCE_VERSION_2);
 
 		// when
-		Set<JiraVersion> targetVersions = VersionMapper.mapVersions(jiraTarget, versions, projectConfig);
+		Set<JiraVersion> targetVersions = DefaultVersionMapper.mapVersions(jiraTarget, versions, projectConfig);
 
 		// then
 		assertThat(targetVersions, contains(TARGET_VERSION_2));
@@ -85,7 +85,7 @@ public class VersionMapperTest {
 		List<JiraVersion> versions = Arrays.asList(SOURCE_VERSION_2, SOURCE_VERSION_1);
 
 		// when
-		Set<JiraVersion> targetVersions = VersionMapper.mapVersions(jiraTarget, versions, projectConfig);
+		Set<JiraVersion> targetVersions = DefaultVersionMapper.mapVersions(jiraTarget, versions, projectConfig);
 
 		// then
 		assertThat(targetVersions, contains(TARGET_VERSION_2, TARGET_VERSION_1));

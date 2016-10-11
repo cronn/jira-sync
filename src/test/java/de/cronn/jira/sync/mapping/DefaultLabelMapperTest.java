@@ -7,12 +7,20 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueFields;
 
-public class LabelMapperTest {
+public class DefaultLabelMapperTest {
+
+	private LabelMapper labelMapper;
+
+	@Before
+	public void setUp() {
+		labelMapper = new DefaultLabelMapper();
+	}
 
 	@Test
 	public void testMapLabels_HappyPath() throws Exception {
@@ -22,7 +30,7 @@ public class LabelMapperTest {
 		jiraIssue.getFields().setLabels(new LinkedHashSet<>(Arrays.asList("label1", "label2", "label3")));
 
 		// when
-		Set<String> labels = LabelMapper.mapLabels(jiraIssue);
+		Set<String> labels = labelMapper.mapLabels(jiraIssue);
 
 		// then
 		assertNotSame(jiraIssue.getFields().getLabels(), labels);
@@ -36,7 +44,7 @@ public class LabelMapperTest {
 		jiraIssue.setFields(new JiraIssueFields());
 
 		// when
-		Set<String> labels = LabelMapper.mapLabels(jiraIssue);
+		Set<String> labels = labelMapper.mapLabels(jiraIssue);
 
 		// then
 		assertThat(labels, empty());

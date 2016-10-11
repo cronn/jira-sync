@@ -16,7 +16,6 @@ import org.springframework.util.CollectionUtils;
 
 import de.cronn.jira.sync.JiraSyncException;
 import de.cronn.jira.sync.config.JiraProjectSync;
-import de.cronn.jira.sync.config.JiraSyncConfig;
 import de.cronn.jira.sync.config.SourceTargetStatus;
 import de.cronn.jira.sync.domain.JiraIdResource;
 import de.cronn.jira.sync.domain.JiraIssue;
@@ -28,11 +27,11 @@ import de.cronn.jira.sync.domain.JiraResolution;
 import de.cronn.jira.sync.domain.JiraTransition;
 import de.cronn.jira.sync.domain.JiraTransitions;
 import de.cronn.jira.sync.domain.JiraVersion;
+import de.cronn.jira.sync.mapping.DefaultVersionMapper;
 import de.cronn.jira.sync.mapping.DescriptionMapper;
 import de.cronn.jira.sync.mapping.LabelMapper;
 import de.cronn.jira.sync.mapping.PriorityMapper;
 import de.cronn.jira.sync.mapping.ResolutionMapper;
-import de.cronn.jira.sync.mapping.VersionMapper;
 import de.cronn.jira.sync.resolve.JiraIssueResolver;
 import de.cronn.jira.sync.service.JiraService;
 
@@ -42,11 +41,17 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 	private static final Logger log = LoggerFactory.getLogger(UpdateExistingTargetJiraIssueSyncStrategy.class);
 
 	private final JiraIssueResolver jiraIssueResolver;
-	private final JiraSyncConfig jiraSyncConfig;
+	private final DescriptionMapper descriptionMapper;
+	private final LabelMapper labelMapper;
+	private final PriorityMapper priorityMapper;
+	private final ResolutionMapper resolutionMapper;
 
-	public UpdateExistingTargetJiraIssueSyncStrategy(JiraIssueResolver jiraIssueResolver, JiraSyncConfig jiraSyncConfig) {
+	public UpdateExistingTargetJiraIssueSyncStrategy(JiraIssueResolver jiraIssueResolver, DescriptionMapper descriptionMapper, LabelMapper labelMapper, PriorityMapper priorityMapper, ResolutionMapper resolutionMapper) {
 		this.jiraIssueResolver = jiraIssueResolver;
-		this.jiraSyncConfig = jiraSyncConfig;
+		this.descriptionMapper = descriptionMapper;
+		this.labelMapper = labelMapper;
+		this.priorityMapper = priorityMapper;
+		this.resolutionMapper = resolutionMapper;
 	}
 
 	@Override
@@ -140,16 +145,16 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 	}
 
 	private void processDescription(JiraIssue sourceIssue, JiraIssue targetIssue, JiraIssueUpdate issueUpdate) {
-		String existingDescription = DescriptionMapper.getDescription(targetIssue);
-		String newDescription = DescriptionMapper.mapTargetDescription(sourceIssue, targetIssue);
+		String existingDescription = descriptionMapper.getDescription(targetIssue);
+		String newDescription = descriptionMapper.mapTargetDescription(sourceIssue, targetIssue);
 		if (!Objects.equals(existingDescription, newDescription)) {
 			issueUpdate.putFieldUpdate("description", newDescription);
 		}
 	}
 
 	private void processLabels(JiraIssue sourceIssue, JiraIssue targetIssue, JiraIssueUpdate issueUpdate, JiraProjectSync projectSync) {
-		Set<String> sourceValue = LabelMapper.mapLabels(sourceIssue);
-		Set<String> targetValue = LabelMapper.mapLabels(targetIssue);
+		Set<String> sourceValue = labelMapper.mapLabels(sourceIssue);
+		Set<String> targetValue = labelMapper.mapLabels(targetIssue);
 
 		Set<String> newValue = new LinkedHashSet<>(sourceValue);
 		if (projectSync.getLabelsToKeepInTarget() != null) {
@@ -166,7 +171,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 	}
 
 	private void processPriority(JiraService jiraTarget, JiraIssue sourceIssue, JiraIssue targetIssue, JiraIssueUpdate issueUpdate) {
-		JiraPriority sourcePriority = PriorityMapper.mapPriority(jiraTarget, sourceIssue, jiraSyncConfig);
+		JiraPriority sourcePriority = priorityMapper.mapPriority(jiraTarget, sourceIssue);
 		Assert.notNull(sourcePriority, "Priority of " + sourceIssue + " must not be null");
 		JiraPriority targetPriority = targetIssue.getFields().getPriority();
 		if (!isIdEqual(sourcePriority, targetPriority)) {
@@ -175,7 +180,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 	}
 
 	private void processResolution(JiraService jiraTarget, JiraIssue sourceIssue, JiraIssue targetIssue, JiraIssueUpdate issueUpdate) {
-		JiraResolution mappedTargetResolution = ResolutionMapper.mapResolution(jiraTarget, targetIssue, jiraSyncConfig);
+		JiraResolution mappedTargetResolution = resolutionMapper.mapResolution(jiraTarget, targetIssue);
 		JiraResolution sourceResolution = sourceIssue.getFields().getResolution();
 		if (!isIdEqual(mappedTargetResolution, sourceResolution)) {
 			issueUpdate.putFieldUpdate("resolution", mappedTargetResolution);
@@ -202,7 +207,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 			return;
 		}
 
-		Set<JiraVersion> mappedSourceVersions = VersionMapper.mapVersions(jiraTarget, sourceVersions, projectSync);
+		Set<JiraVersion> mappedSourceVersions = DefaultVersionMapper.mapVersions(jiraTarget, sourceVersions, projectSync);
 
 		if (!Objects.equals(targetVersions, mappedSourceVersions)) {
 			issueUpdate.putFieldUpdate(versionsField, mappedSourceVersions);

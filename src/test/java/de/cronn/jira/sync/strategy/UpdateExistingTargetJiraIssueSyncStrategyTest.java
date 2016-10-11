@@ -13,12 +13,21 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 
 import de.cronn.jira.sync.JiraSyncException;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueUpdate;
 import de.cronn.jira.sync.domain.JiraTransitions;
-import de.cronn.jira.sync.mapping.DescriptionMapper;
+import de.cronn.jira.sync.mapping.DefaultDescriptionMapper;
+import de.cronn.jira.sync.mapping.DefaultIssueTypeMapper;
+import de.cronn.jira.sync.mapping.DefaultLabelMapper;
+import de.cronn.jira.sync.mapping.DefaultPriorityMapper;
+import de.cronn.jira.sync.mapping.DefaultResolutionMapper;
+import de.cronn.jira.sync.mapping.IssueTypeMapper;
+import de.cronn.jira.sync.mapping.LabelMapper;
+import de.cronn.jira.sync.mapping.PriorityMapper;
+import de.cronn.jira.sync.mapping.ResolutionMapper;
 import de.cronn.jira.sync.resolve.JiraIssueResolver;
 
 public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssueSyncStrategyTest {
@@ -28,6 +37,26 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 
 	@InjectMocks
 	private UpdateExistingTargetJiraIssueSyncStrategy strategy;
+
+	@InjectMocks
+	@Spy
+	private DefaultDescriptionMapper descriptionMapper = new DefaultDescriptionMapper();
+
+	@InjectMocks
+	@Spy
+	private IssueTypeMapper issueTypeMapper = new DefaultIssueTypeMapper();
+
+	@InjectMocks
+	@Spy
+	private LabelMapper labelMapper = new DefaultLabelMapper();
+
+	@InjectMocks
+	@Spy
+	private PriorityMapper priorityMapper = new DefaultPriorityMapper();
+
+	@InjectMocks
+	@Spy
+	private ResolutionMapper resolutionMapper = new DefaultResolutionMapper();
 
 	@Test
 	public void testSync_NoChanges() throws Exception {
@@ -42,7 +71,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		targetIssue.getFields().setVersions(Collections.singleton(TARGET_VERSION_1));
 
 		sourceIssue.getFields().setDescription("some description");
-		targetIssue.getFields().setDescription(DescriptionMapper.mapSourceDescription("some description"));
+		targetIssue.getFields().setDescription(descriptionMapper.mapSourceDescription("some description"));
 
 		when(jiraIssueResolver.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
 
@@ -107,7 +136,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		targetIssue.getFields().setPriority(TARGET_PRIORITY_MAJOR);
 
 		sourceIssue.getFields().setDescription("some description");
-		targetIssue.getFields().setDescription(DescriptionMapper.mapSourceDescription("some description"));
+		targetIssue.getFields().setDescription(descriptionMapper.mapSourceDescription("some description"));
 
 		when(jiraSource.getTransitions(sourceIssue)).thenReturn(new JiraTransitions(Collections.singletonList(SOURCE_TRANSITION_RESOLVE)));
 
@@ -156,7 +185,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		JiraIssueUpdate targetIssueUpdate = expectUpdateInTarget(targetIssue);
 
 		assertThat(targetIssueUpdate.getFields().keySet(), containsInAnyOrder("description"));
-		assertThat(targetIssueUpdate.getFields().values(), containsInAnyOrder(DescriptionMapper.mapTargetDescription("some description", null)));
+		assertThat(targetIssueUpdate.getFields().values(), containsInAnyOrder(descriptionMapper.mapTargetDescription("some description", null)));
 
 		assertNull(targetIssueUpdate.getTransition());
 
@@ -187,7 +216,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 
 		JiraIssueUpdate update = expectUpdateInTarget(targetIssue);
 		assertThat(update.getFields().keySet(), containsInAnyOrder("description"));
-		assertThat(update.getFields().values(), containsInAnyOrder(DescriptionMapper.mapTargetDescription("updated description", "some description")));
+		assertThat(update.getFields().values(), containsInAnyOrder(descriptionMapper.mapTargetDescription("updated description", "some description")));
 
 		verify(jiraTarget).getPriorities();
 		verifyNoMoreInteractions(jiraSource, jiraTarget);

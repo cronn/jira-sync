@@ -11,12 +11,12 @@ import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueType;
 import de.cronn.jira.sync.domain.JiraPriority;
 import de.cronn.jira.sync.domain.JiraProject;
+import de.cronn.jira.sync.mapping.DefaultSummaryMapper;
+import de.cronn.jira.sync.mapping.DefaultVersionMapper;
 import de.cronn.jira.sync.mapping.DescriptionMapper;
 import de.cronn.jira.sync.mapping.IssueTypeMapper;
 import de.cronn.jira.sync.mapping.LabelMapper;
 import de.cronn.jira.sync.mapping.PriorityMapper;
-import de.cronn.jira.sync.mapping.SummaryMapper;
-import de.cronn.jira.sync.mapping.VersionMapper;
 import de.cronn.jira.sync.service.JiraService;
 
 @Component
@@ -25,9 +25,17 @@ public class CreateMissingTargetJiraIssueSyncStrategy implements MissingTargetJi
 	private static final Logger log = LoggerFactory.getLogger(CreateMissingTargetJiraIssueSyncStrategy.class);
 
 	private final JiraSyncConfig jiraSyncConfig;
+	private final DescriptionMapper descriptionMapper;
+	private final IssueTypeMapper issueTypeMapper;
+	private final LabelMapper labelMapper;
+	private final PriorityMapper priorityMapper;
 
-	public CreateMissingTargetJiraIssueSyncStrategy(JiraSyncConfig jiraSyncConfig) {
+	public CreateMissingTargetJiraIssueSyncStrategy(JiraSyncConfig jiraSyncConfig, DescriptionMapper descriptionMapper, IssueTypeMapper issueTypeMapper, LabelMapper labelMapper, PriorityMapper priorityMapper) {
 		this.jiraSyncConfig = jiraSyncConfig;
+		this.descriptionMapper = descriptionMapper;
+		this.issueTypeMapper = issueTypeMapper;
+		this.labelMapper = labelMapper;
+		this.priorityMapper = priorityMapper;
 	}
 
 	@Override
@@ -53,33 +61,33 @@ public class CreateMissingTargetJiraIssueSyncStrategy implements MissingTargetJi
 	}
 
 	private void copyIssueType(JiraIssue sourceIssue, JiraProjectSync projectSync, JiraProject targetProject, JiraIssue issueToCreate) {
-		JiraIssueType targetIssueType = IssueTypeMapper.mapIssueType(sourceIssue, jiraSyncConfig, projectSync, targetProject);
+		JiraIssueType targetIssueType = issueTypeMapper.mapIssueType(sourceIssue, jiraSyncConfig, projectSync, targetProject);
 		issueToCreate.getFields().setIssuetype(targetIssueType);
 	}
 
 	private void copyPriority(JiraService jiraTarget, JiraIssue sourceIssue, JiraIssue issueToCreate) {
-		JiraPriority targetPriority = PriorityMapper.mapPriority(jiraTarget, sourceIssue, jiraSyncConfig);
+		JiraPriority targetPriority = priorityMapper.mapPriority(jiraTarget, sourceIssue);
 		issueToCreate.getFields().setPriority(targetPriority);
 	}
 
 	private void copyLabels(JiraIssue sourceIssue, JiraIssue issueToCreate) {
-		issueToCreate.getFields().setLabels(LabelMapper.mapLabels(sourceIssue));
+		issueToCreate.getFields().setLabels(labelMapper.mapLabels(sourceIssue));
 	}
 
 	private void copyVersions(JiraIssue sourceIssue, JiraIssue issueToCreate, JiraService jiraTarget, JiraProjectSync projectSync) {
-		issueToCreate.getFields().setVersions(VersionMapper.mapVersions(jiraTarget, sourceIssue.getFields().getVersions(), projectSync));
+		issueToCreate.getFields().setVersions(DefaultVersionMapper.mapVersions(jiraTarget, sourceIssue.getFields().getVersions(), projectSync));
 	}
 
 	private void copyFixVersions(JiraIssue sourceIssue, JiraIssue issueToCreate, JiraService jiraTarget, JiraProjectSync projectSync) {
-		issueToCreate.getFields().setFixVersions(VersionMapper.mapVersions(jiraTarget, sourceIssue.getFields().getFixVersions(), projectSync));
+		issueToCreate.getFields().setFixVersions(DefaultVersionMapper.mapVersions(jiraTarget, sourceIssue.getFields().getFixVersions(), projectSync));
 	}
 
 	private void copySummary(JiraIssue sourceIssue, JiraIssue issueToCreate) {
-		issueToCreate.getFields().setSummary(SummaryMapper.mapSummary(sourceIssue));
+		issueToCreate.getFields().setSummary(DefaultSummaryMapper.mapSummary(sourceIssue));
 	}
 
 	private void copyDescription(JiraIssue sourceIssue, JiraIssue issueToCreate) {
-		issueToCreate.getFields().setDescription(DescriptionMapper.mapSourceDescription(sourceIssue));
+		issueToCreate.getFields().setDescription(descriptionMapper.mapSourceDescription(sourceIssue));
 	}
 
 }

@@ -4,9 +4,9 @@ import org.springframework.util.Assert;
 
 import de.cronn.jira.sync.domain.JiraIssue;
 
-public final class SummaryMapper {
+public final class DefaultSummaryMapper {
 
-	private SummaryMapper() {
+	private DefaultSummaryMapper() {
 	}
 
 	public static String mapSummary(JiraIssue sourceIssue) {

@@ -17,7 +17,7 @@ import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueType;
 import de.cronn.jira.sync.domain.JiraProject;
 
-public class IssueTypeMapperTest {
+public class DefaultIssueTypeMapperTest {
 
 	private static final JiraIssueType SOURCE_ISSUE_TYPE_IMPROVEMENT = new JiraIssueType("100", "Improvement");
 
@@ -29,6 +29,8 @@ public class IssueTypeMapperTest {
 	private JiraSyncConfig syncConfig;
 	private JiraProjectSync projectSync;
 	private JiraProject targetProject;
+
+	private DefaultIssueTypeMapper issueTypeMapper;
 
 	@Before
 	public void setUp() {
@@ -49,6 +51,8 @@ public class IssueTypeMapperTest {
 		syncConfig.setIssueTypeMapping(issueTypeMapping);
 
 		projectSync.setTargetIssueFallbackType(TARGET_ISSUE_TYPE_TASK.getName());
+
+		issueTypeMapper = new DefaultIssueTypeMapper();
 	}
 
 	@Test
@@ -58,7 +62,7 @@ public class IssueTypeMapperTest {
 		sourceIssue.getFields().setIssuetype(SOURCE_ISSUE_TYPE_IMPROVEMENT);
 
 		// when
-		JiraIssueType mappedIssueType = IssueTypeMapper.mapIssueType(sourceIssue, syncConfig, projectSync, targetProject);
+		JiraIssueType mappedIssueType = issueTypeMapper.mapIssueType(sourceIssue, syncConfig, projectSync, targetProject);
 
 		// then
 		assertThat(mappedIssueType, sameInstance(TARGET_ISSUE_TYPE_NEW_FEATURE));
@@ -69,7 +73,7 @@ public class IssueTypeMapperTest {
 	public void testMap_NoConfiguration_NoFallbackIssueTypeConfigured() throws Exception {
 		projectSync.setTargetIssueFallbackType(null);
 		try {
-			IssueTypeMapper.mapIssueType(sourceIssue, syncConfig, projectSync, targetProject);
+			issueTypeMapper.mapIssueType(sourceIssue, syncConfig, projectSync, targetProject);
 			fail("JiraSyncException expected");
 		} catch (JiraSyncException e) {
 			assertThat(e.getMessage(), is("TargetIssueFallbackType must be configured"));
@@ -81,7 +85,7 @@ public class IssueTypeMapperTest {
 		// given
 
 		// when
-		JiraIssueType issueType = IssueTypeMapper.mapIssueType(sourceIssue, syncConfig, projectSync, targetProject);
+		JiraIssueType issueType = issueTypeMapper.mapIssueType(sourceIssue, syncConfig, projectSync, targetProject);
 
 		// then
 		assertThat(issueType, sameInstance(TARGET_ISSUE_TYPE_TASK));
@@ -92,7 +96,7 @@ public class IssueTypeMapperTest {
 		projectSync.setTargetIssueFallbackType("Unknown");
 
 		try {
-			IssueTypeMapper.mapIssueType(sourceIssue, syncConfig, projectSync, targetProject);
+			issueTypeMapper.mapIssueType(sourceIssue, syncConfig, projectSync, targetProject);
 			fail("JiraSyncException expected");
 		} catch (JiraSyncException e) {
 			assertThat(e.getMessage(), is("TargetIssueFallbackType Unknown not found"));

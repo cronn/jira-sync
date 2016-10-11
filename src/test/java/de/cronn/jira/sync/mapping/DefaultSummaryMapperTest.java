@@ -8,7 +8,7 @@ import org.junit.Test;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueStatus;
 
-public class SummaryMapperTest {
+public class DefaultSummaryMapperTest {
 
 	private static final JiraIssueStatus OPEN = new JiraIssueStatus("1", "Open");
 
@@ -18,7 +18,7 @@ public class SummaryMapperTest {
 		JiraIssue issue = new JiraIssue("0", "TEST-123", "Some Summary", OPEN);
 
 		// when
-		String summary = SummaryMapper.mapSummary(issue);
+		String summary = DefaultSummaryMapper.mapSummary(issue);
 
 		// then
 		assertThat(summary, is("TEST-123: Some Summary"));
@@ -30,7 +30,7 @@ public class SummaryMapperTest {
 		JiraIssue issue = new JiraIssue("0", "TEST-123", "", OPEN);
 
 		// when
-		String summary = SummaryMapper.mapSummary(issue);
+		String summary = DefaultSummaryMapper.mapSummary(issue);
 
 		// then
 		assertThat(summary, is("TEST-123: "));
@@ -41,7 +41,7 @@ public class SummaryMapperTest {
 		JiraIssue issue = new JiraIssue("0", null, "Some Summary", OPEN);
 
 		try {
-			SummaryMapper.mapSummary(issue);
+			DefaultSummaryMapper.mapSummary(issue);
 			fail("IllegalArgumentException expected");
 		} catch (IllegalArgumentException e) {
 			assertThat(e.getMessage(), is("key must not be null"));
@@ -53,7 +53,7 @@ public class SummaryMapperTest {
 		JiraIssue issue = new JiraIssue("0", "TEST-123", null, OPEN);
 
 		try {
-			SummaryMapper.mapSummary(issue);
+			DefaultSummaryMapper.mapSummary(issue);
 			fail("IllegalArgumentException expected");
 		} catch (IllegalArgumentException e) {
 			assertThat(e.getMessage(), is("summary must not be null"));

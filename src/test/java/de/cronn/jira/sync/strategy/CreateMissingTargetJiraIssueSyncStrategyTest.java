@@ -14,16 +14,39 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
+import org.mockito.Spy;
 
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueType;
 import de.cronn.jira.sync.domain.JiraPriority;
-import de.cronn.jira.sync.mapping.DescriptionMapper;
+import de.cronn.jira.sync.mapping.DefaultDescriptionMapper;
+import de.cronn.jira.sync.mapping.DefaultIssueTypeMapper;
+import de.cronn.jira.sync.mapping.DefaultLabelMapper;
+import de.cronn.jira.sync.mapping.DefaultPriorityMapper;
+import de.cronn.jira.sync.mapping.IssueTypeMapper;
+import de.cronn.jira.sync.mapping.LabelMapper;
+import de.cronn.jira.sync.mapping.PriorityMapper;
 
 public class CreateMissingTargetJiraIssueSyncStrategyTest extends AbstractIssueSyncStrategyTest {
 
 	@InjectMocks
 	private CreateMissingTargetJiraIssueSyncStrategy strategy;
+
+	@InjectMocks
+	@Spy
+	private DefaultDescriptionMapper descriptionMapper = new DefaultDescriptionMapper();
+
+	@InjectMocks
+	@Spy
+	private IssueTypeMapper issueTypeMapper = new DefaultIssueTypeMapper();
+
+	@InjectMocks
+	@Spy
+	private LabelMapper labelMapper = new DefaultLabelMapper();
+
+	@InjectMocks
+	@Spy
+	private PriorityMapper priorityMapper = new DefaultPriorityMapper();
 
 	@Test
 	public void testCreateMissingTicket() throws Exception {
@@ -52,7 +75,7 @@ public class CreateMissingTargetJiraIssueSyncStrategyTest extends AbstractIssueS
 		assertThat(createdIssue.getFields().getIssuetype().getName(), is(TARGET_ISSUE_TYPE_IMPROVEMENT));
 		assertThat(createdIssue.getFields().getProject(), Matchers.is(targetProject));
 		assertThat(createdIssue.getFields().getSummary(), is("SOURCE-123: some summary"));
-		assertThat(createdIssue.getFields().getDescription(), is(DescriptionMapper.mapSourceDescription("the description")));
+		assertThat(createdIssue.getFields().getDescription(), is(descriptionMapper.mapSourceDescription("the description")));
 		assertThat(createdIssue.getFields().getLabels(), contains("label1", "label2"));
 		assertThat(createdIssue.getFields().getPriority().getName(), Matchers.is(TARGET_PRIORITY_MAJOR.getName()));
 		assertThat(createdIssue.getFields().getVersions(), contains(TARGET_VERSION_2));

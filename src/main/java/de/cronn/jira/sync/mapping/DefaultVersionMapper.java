@@ -17,11 +17,11 @@ import de.cronn.jira.sync.config.JiraProjectSync;
 import de.cronn.jira.sync.domain.JiraVersion;
 import de.cronn.jira.sync.service.JiraService;
 
-public final class VersionMapper {
+public final class DefaultVersionMapper {
 
-	private static final Logger log = LoggerFactory.getLogger(VersionMapper.class);
+	private static final Logger log = LoggerFactory.getLogger(DefaultVersionMapper.class);
 
-	private VersionMapper() {
+	private DefaultVersionMapper() {
 	}
 
 	public static Set<JiraVersion> mapVersions(JiraService jiraTarget, Collection<JiraVersion> sourceVersions, JiraProjectSync projectSync) {
