@@ -111,7 +111,7 @@ On Linux:
 
 Execute the ['fat' JAR][spring-fat-jar]:
 ```
-build/libs/jira-sync-1.0.SNAPSHOT.jar --spring.config.location=file:/path/to/config/
+build/libs/jira-sync-1.0.jar --spring.config.location=file:/path/to/config/
 ```
 
 
