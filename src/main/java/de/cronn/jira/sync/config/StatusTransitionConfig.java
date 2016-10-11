@@ -9,7 +9,7 @@ public class StatusTransitionConfig {
 	private Set<String> sourceStatusIn;
 	private Set<String> targetStatusIn;
 	private String sourceStatusToSet;
-	private boolean copyResolution = false;
+	private boolean copyResolutionToSource = false;
 	private boolean onlyIfAssignedInTarget = false;
 	private boolean assignedToMyselfInSource = false;
 
@@ -42,12 +42,12 @@ public class StatusTransitionConfig {
 		this.sourceStatusToSet = sourceStatusToSet;
 	}
 
-	public boolean isCopyResolution() {
-		return copyResolution;
+	public boolean isCopyResolutionToSource() {
+		return copyResolutionToSource;
 	}
 
-	public void setCopyResolution(boolean copyResolution) {
-		this.copyResolution = copyResolution;
+	public void setCopyResolutionToSource(boolean copyResolutionToSource) {
+		this.copyResolutionToSource = copyResolutionToSource;
 	}
 
 	public void setOnlyIfAssignedInTarget(boolean onlyIfAssignedInTarget) {

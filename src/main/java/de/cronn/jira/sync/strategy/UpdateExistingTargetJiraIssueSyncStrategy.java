@@ -129,7 +129,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 			JiraTransition jiraTransition = getJiraTransition(jiraSource, sourceIssue, transition);
 			sourceIssueUpdate.setTransition(jiraTransition);
 
-			if (transition.isCopyResolution()) {
+			if (transition.isCopyResolutionToSource()) {
 				processResolution(jiraSource, sourceIssue, targetIssue, sourceIssueUpdate);
 			}
 		}
