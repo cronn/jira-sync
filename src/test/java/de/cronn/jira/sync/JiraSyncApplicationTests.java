@@ -23,7 +23,6 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import de.cronn.jira.sync.config.JiraSyncConfig;
-import de.cronn.jira.sync.domain.JiraUser;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueStatus;
 import de.cronn.jira.sync.domain.JiraIssueType;
@@ -33,6 +32,7 @@ import de.cronn.jira.sync.domain.JiraRemoteLink;
 import de.cronn.jira.sync.domain.JiraRemoteLinkObject;
 import de.cronn.jira.sync.domain.JiraResolution;
 import de.cronn.jira.sync.domain.JiraTransition;
+import de.cronn.jira.sync.domain.JiraUser;
 import de.cronn.jira.sync.dummy.JiraDummyService;
 
 @RunWith(SpringRunner.class)
