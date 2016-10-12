@@ -75,6 +75,9 @@ public class JiraSyncTask implements CommandLineRunner {
 			for (JiraProjectSync projectSync : projects) {
 				syncProject(jiraSource, jiraTarget, projectSync);
 			}
+		} catch (Exception e) {
+			log.error("Synchronisation failed", e);
+			throw e;
 		} finally {
 			jiraSource.close();
 			jiraTarget.close();

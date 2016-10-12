@@ -5,11 +5,22 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 
 public class JiraLoginRequest {
 
-	private final String username;
-	private final String password;
+	private String username;
+	private String password;
+
+	public JiraLoginRequest() {
+	}
 
 	public JiraLoginRequest(String username, String password) {
 		this.username = username;
+		this.password = password;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
+	public void setPassword(String password) {
 		this.password = password;
 	}
 

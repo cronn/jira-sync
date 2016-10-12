@@ -1,5 +1,6 @@
 package de.cronn.jira.sync;
 
+import static de.cronn.jira.sync.dummy.JiraDummyService.Context.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
@@ -7,18 +8,15 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
-import org.springframework.context.annotation.Scope;
+import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -26,6 +24,7 @@ import de.cronn.jira.sync.config.JiraSyncConfig;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueStatus;
 import de.cronn.jira.sync.domain.JiraIssueType;
+import de.cronn.jira.sync.domain.JiraIssueUpdate;
 import de.cronn.jira.sync.domain.JiraPriority;
 import de.cronn.jira.sync.domain.JiraProject;
 import de.cronn.jira.sync.domain.JiraRemoteLink;
@@ -34,9 +33,10 @@ import de.cronn.jira.sync.domain.JiraResolution;
 import de.cronn.jira.sync.domain.JiraTransition;
 import de.cronn.jira.sync.domain.JiraUser;
 import de.cronn.jira.sync.dummy.JiraDummyService;
+import de.cronn.jira.sync.dummy.JiraDummyService.Context;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @TestPropertySource("/test.properties")
 public class JiraSyncApplicationTests {
 
@@ -62,29 +62,8 @@ public class JiraSyncApplicationTests {
 	private static final JiraResolution SOURCE_RESOLUTION_FIXED = new JiraResolution("1", "Fixed");
 	private static final JiraResolution TARGET_RESOLUTION_DONE = new JiraResolution("100", "Done");
 
-	@TestConfiguration
-	static class Config {
-
-		@Bean
-		@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-		@Primary
-		JiraDummyService jiraDummyService() {
-			return new JiraDummyService();
-		}
-
-	}
-
-	@Value("${de.cronn.jira.sync.source.url}")
-	private URL sourceUrl;
-
-	@Value("${de.cronn.jira.sync.target.url}")
-	private URL targetUrl;
-
 	@Autowired
-	private JiraDummyService jiraSource;
-
-	@Autowired
-	private JiraDummyService jiraTarget;
+	private JiraDummyService jiraDummyService;
 
 	@Autowired
 	private JiraSyncTask syncTask;
@@ -92,32 +71,47 @@ public class JiraSyncApplicationTests {
 	@Autowired
 	private JiraSyncConfig syncConfig;
 
+	@LocalServerPort
+	private int port;
+
+	private String sourceBaseUrl;
+
+	private String targetBaseUrl;
+
 	@Before
 	public void setUp() throws Exception {
-		JiraDummyService.reset();
 
-		assertNotSame(jiraSource, jiraTarget);
+		String commonBaseUrl = "http://localhost:" + port + "/";
+		sourceBaseUrl = commonBaseUrl + Context.SOURCE + "/";
+		targetBaseUrl = commonBaseUrl + Context.TARGET + "/";
 
-		jiraSource.setUrl(sourceUrl);
-		jiraTarget.setUrl(targetUrl);
+		syncConfig.getSource().setUrl(new URL(sourceBaseUrl));
+		syncConfig.getTarget().setUrl(new URL(targetBaseUrl));
 
-		jiraSource.addProject(SOURCE_PROJECT);
-		jiraTarget.addProject(TARGET_PROJECT);
+		jiraDummyService.reset();
 
-		jiraSource.addPriority(SOURCE_PRIORITY_HIGH);
-		jiraTarget.addPriority(TARGET_PRIORITY_CRITICAL);
+		jiraDummyService.setBaseUrl(SOURCE, sourceBaseUrl);
+		jiraDummyService.setBaseUrl(TARGET, targetBaseUrl);
 
-		jiraSource.addResolution(SOURCE_RESOLUTION_FIXED);
+		jiraDummyService.addProject(SOURCE, SOURCE_PROJECT);
+		jiraDummyService.addProject(TARGET, TARGET_PROJECT);
 
-		jiraSource.addTransition(new JiraTransition("1", "Set resolved", SOURCE_STATUS_RESOLVED));
-		jiraSource.addTransition(new JiraTransition("2", "Set in progress", SOURCE_STATUS_IN_PROGRESS));
+		jiraDummyService.addPriority(SOURCE, SOURCE_PRIORITY_HIGH);
+		jiraDummyService.addPriority(TARGET, TARGET_PRIORITY_CRITICAL);
 
-		jiraTarget.setDefaultStatus(TARGET_STATUS_OPEN);
+		jiraDummyService.addResolution(SOURCE, SOURCE_RESOLUTION_FIXED);
+
+		jiraDummyService.addTransition(SOURCE, new JiraTransition("1", "Set resolved", SOURCE_STATUS_RESOLVED));
+		jiraDummyService.addTransition(SOURCE, new JiraTransition("2", "Set in progress", SOURCE_STATUS_IN_PROGRESS));
+
+		jiraDummyService.addTransition(TARGET, new JiraTransition("100", "Close", TARGET_STATUS_CLOSED));
+
+		jiraDummyService.setDefaultStatus(TARGET, TARGET_STATUS_OPEN);
 
 		TARGET_PROJECT.setIssueTypes(Arrays.asList(TARGET_TYPE_BUG, TARGET_TYPE_IMPROVEMENT, TARGET_TYPE_TASK));
 
-		jiraSource.expectLoginRequest("jira-sync", "secret in source");
-		jiraTarget.expectLoginRequest("jira-sync", "secret in target");
+		jiraDummyService.expectLoginRequest(SOURCE, "jira-sync", "secret in source");
+		jiraDummyService.expectLoginRequest(TARGET, "jira-sync", "secret in target");
 	}
 
 	@Test
@@ -137,7 +131,7 @@ public class JiraSyncApplicationTests {
 		syncTask.sync();
 
 		// then
-		assertThat(jiraTarget.getAllIssues(), empty());
+		assertThat(jiraDummyService.getAllIssues(TARGET), empty());
 	}
 
 	@Test
@@ -147,29 +141,29 @@ public class JiraSyncApplicationTests {
 		sourceIssue.getFields().setProject(SOURCE_PROJECT);
 		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_BUG);
 		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
-		jiraSource.createIssue(sourceIssue);
+		jiraDummyService.createIssue(SOURCE, sourceIssue);
 
 		// when
 		syncTask.sync();
 
 		// then
-		assertThat(jiraTarget.getAllIssues(), hasSize(1));
-		JiraIssue targetIssue = jiraTarget.getAllIssues().get(0);
+		assertThat(jiraDummyService.getAllIssues(TARGET), hasSize(1));
+		JiraIssue targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
 		assertThat(targetIssue.getFields().getSummary(), is("PROJECT_ONE-1: My first bug"));
-		assertThat(targetIssue.getFields().getIssuetype(), is(TARGET_TYPE_BUG));
-		assertThat(targetIssue.getFields().getPriority(), is(TARGET_PRIORITY_CRITICAL));
+		assertThat(targetIssue.getFields().getIssuetype().getName(), is(TARGET_TYPE_BUG.getName()));
+		assertThat(targetIssue.getFields().getPriority().getName(), is(TARGET_PRIORITY_CRITICAL.getName()));
 
-		List<JiraRemoteLink> remoteLinksInTarget = jiraTarget.getRemoteLinks(targetIssue);
-		List<JiraRemoteLink> remoteLinksInSource = jiraSource.getRemoteLinks(sourceIssue);
+		List<JiraRemoteLink> remoteLinksInTarget = jiraDummyService.getRemoteLinks(TARGET, targetIssue);
+		List<JiraRemoteLink> remoteLinksInSource = jiraDummyService.getRemoteLinks(SOURCE, sourceIssue);
 		assertThat(remoteLinksInTarget, hasSize(1));
 		assertThat(remoteLinksInSource, hasSize(1));
 
 		JiraRemoteLinkObject firstRemoteLinkInSource = remoteLinksInSource.get(0).getObject();
-		assertThat(firstRemoteLinkInSource.getUrl(), is(new URL("https://jira-target/browse/PRJ_ONE-1")));
+		assertThat(firstRemoteLinkInSource.getUrl(), is(new URL(targetBaseUrl + "/browse/PRJ_ONE-1")));
 		assertThat(firstRemoteLinkInSource.getIcon().getUrl16x16(), is(new URL("https://jira-source/favicon.ico")));
 
 		JiraRemoteLinkObject firstRemoteLinkInTarget = remoteLinksInTarget.get(0).getObject();
-		assertThat(firstRemoteLinkInTarget.getUrl(), is(new URL("https://jira-source/browse/PROJECT_ONE-1")));
+		assertThat(firstRemoteLinkInTarget.getUrl(), is(new URL(sourceBaseUrl + "/browse/PROJECT_ONE-1")));
 		assertThat(firstRemoteLinkInTarget.getIcon().getUrl16x16(), is(new URL("https://jira-target/favicon.ico")));
 	}
 
@@ -180,15 +174,15 @@ public class JiraSyncApplicationTests {
 		sourceIssue.getFields().setProject(SOURCE_PROJECT);
 		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_UNKNOWN);
 		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
-		jiraSource.createIssue(sourceIssue);
+		jiraDummyService.createIssue(SOURCE, sourceIssue);
 
 		// when
 		syncTask.sync();
 
 		// then
-		assertThat(jiraTarget.getAllIssues(), hasSize(1));
-		JiraIssue targetIssue = jiraTarget.getAllIssues().get(0);
-		assertThat(targetIssue.getFields().getIssuetype(), is(TARGET_TYPE_TASK));
+		assertThat(jiraDummyService.getAllIssues(TARGET), hasSize(1));
+		JiraIssue targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
+		assertThat(targetIssue.getFields().getIssuetype().getName(), is(TARGET_TYPE_TASK.getName()));
 	}
 
 	@Test
@@ -198,16 +192,18 @@ public class JiraSyncApplicationTests {
 		sourceIssue.getFields().setProject(SOURCE_PROJECT);
 		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_BUG);
 		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
-		jiraSource.createIssue(sourceIssue);
+		JiraIssue createdSourceIssue = jiraDummyService.createIssue(SOURCE, sourceIssue);
 
 		syncTask.sync();
 
-		assertThat(jiraTarget.getAllIssues(), hasSize(1));
-		JiraIssue targetIssue = jiraTarget.getAllIssues().get(0);
+		assertThat(jiraDummyService.getAllIssues(TARGET), hasSize(1));
+		JiraIssue targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
 		assertThat(targetIssue.getFields().getDescription(), is(""));
 
 		// when
-		sourceIssue.getFields().setDescription("changed description");
+		JiraIssueUpdate update = new JiraIssueUpdate();
+		update.getOrCreateFields().setDescription("changed description");
+		jiraDummyService.updateIssue(SOURCE, createdSourceIssue.getKey(), update);
 
 		syncTask.sync();
 
@@ -222,22 +218,36 @@ public class JiraSyncApplicationTests {
 		sourceIssue.getFields().setProject(SOURCE_PROJECT);
 		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_BUG);
 		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
-		jiraSource.createIssue(sourceIssue);
+		JiraIssue createdSourceIssue = jiraDummyService.createIssue(SOURCE, sourceIssue);
 
 		syncTask.sync();
 
-		assertThat(jiraTarget.getAllIssues(), hasSize(1));
-		JiraIssue targetIssue = jiraTarget.getAllIssues().get(0);
+		assertThat(jiraDummyService.getAllIssues(TARGET), hasSize(1));
+		JiraIssue targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
 
 		// when
-		targetIssue.getFields().setStatus(TARGET_STATUS_CLOSED);
-		targetIssue.getFields().setResolution(TARGET_RESOLUTION_DONE);
+		JiraTransition transition = findTransition(TARGET, targetIssue.getKey(), TARGET_STATUS_CLOSED);
+
+		JiraIssueUpdate update = new JiraIssueUpdate();
+		update.setTransition(transition);
+		update.getOrCreateFields().setResolution(TARGET_RESOLUTION_DONE);
+		jiraDummyService.transitionIssue(TARGET, targetIssue.getKey(), update);
 
 		syncTask.sync();
 
 		// then
-		assertThat(sourceIssue.getFields().getStatus(), sameInstance(SOURCE_STATUS_RESOLVED));
-		assertThat(sourceIssue.getFields().getResolution(), sameInstance(SOURCE_RESOLUTION_FIXED));
+		JiraIssue updatedSourceIssue = jiraDummyService.getIssueByKey(SOURCE, createdSourceIssue.getKey());
+		assertThat(updatedSourceIssue.getFields().getStatus().getName(), is(SOURCE_STATUS_RESOLVED.getName()));
+		assertThat(updatedSourceIssue.getFields().getResolution().getName(), is(SOURCE_RESOLUTION_FIXED.getName()));
+	}
+
+	private JiraTransition findTransition(Context context, String issueKey, JiraIssueStatus statusToTransitionTo) {
+		List<JiraTransition> transitions = jiraDummyService.getTransitions(context, issueKey).getTransitions();
+		List<JiraTransition> filteredTransitions = transitions.stream()
+			.filter(transition -> transition.getTo().getName().equals(statusToTransitionTo.getName()))
+			.collect(Collectors.toList());
+ 		assertThat(filteredTransitions, hasSize(1));
+		return filteredTransitions.get(0);
 	}
 
 	@Test
@@ -247,26 +257,29 @@ public class JiraSyncApplicationTests {
 		sourceIssue.getFields().setProject(SOURCE_PROJECT);
 		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_BUG);
 		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
-		jiraSource.createIssue(sourceIssue);
+		JiraIssue createdSourceIssue = jiraDummyService.createIssue(SOURCE, sourceIssue);
 
 		syncTask.sync();
 		syncTask.sync();
 
-		assertThat(jiraSource.getAllIssues(), hasSize(1));
-		JiraIssue currentSourceIssue = jiraSource.getAllIssues().get(0);
+		assertThat(jiraDummyService.getAllIssues(TARGET), hasSize(1));
+		JiraIssue currentSourceIssue = jiraDummyService.getAllIssues(TARGET).get(0);
 
-		assertThat(currentSourceIssue.getFields().getStatus(), sameInstance(SOURCE_STATUS_OPEN));
+		assertThat(currentSourceIssue.getFields().getStatus().getName(), is(SOURCE_STATUS_OPEN.getName()));
 
 		// when
 
-		assertThat(jiraTarget.getAllIssues(), hasSize(1));
-		JiraIssue targetIssue = jiraTarget.getAllIssues().get(0);
+		assertThat(jiraDummyService.getAllIssues(TARGET), hasSize(1));
+		JiraIssue targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
 		targetIssue.getFields().setAssignee(new JiraUser("some", "body"));
 
 		syncTask.sync();
 
-		assertThat(currentSourceIssue.getFields().getStatus(), sameInstance(SOURCE_STATUS_IN_PROGRESS));
-		assertThat(currentSourceIssue.getFields().getAssignee().getKey(), is("myself"));
+		// then
+		JiraIssue updatedSourceIssue = jiraDummyService.getIssueByKey(SOURCE, createdSourceIssue.getKey());
+
+		assertThat(updatedSourceIssue.getFields().getStatus().getName(), is(SOURCE_STATUS_IN_PROGRESS.getName()));
+		assertThat(updatedSourceIssue.getFields().getAssignee().getKey(), is("myself"));
 	}
 
 }

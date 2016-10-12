@@ -1,266 +1,277 @@
 package de.cronn.jira.sync.dummy;
 
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 
-import de.cronn.jira.sync.config.JiraConnectionProperties;
-import de.cronn.jira.sync.domain.JiraField;
+import de.cronn.jira.sync.domain.JiraFieldsUpdate;
+import de.cronn.jira.sync.domain.JiraFilterResult;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueStatus;
 import de.cronn.jira.sync.domain.JiraIssueUpdate;
-import de.cronn.jira.sync.domain.JiraLinkIcon;
 import de.cronn.jira.sync.domain.JiraLoginRequest;
+import de.cronn.jira.sync.domain.JiraLoginResponse;
 import de.cronn.jira.sync.domain.JiraPriority;
 import de.cronn.jira.sync.domain.JiraProject;
 import de.cronn.jira.sync.domain.JiraRemoteLink;
 import de.cronn.jira.sync.domain.JiraRemoteLinks;
 import de.cronn.jira.sync.domain.JiraResolution;
+import de.cronn.jira.sync.domain.JiraSearchResult;
 import de.cronn.jira.sync.domain.JiraServerInfo;
+import de.cronn.jira.sync.domain.JiraSession;
 import de.cronn.jira.sync.domain.JiraTransition;
+import de.cronn.jira.sync.domain.JiraTransitions;
 import de.cronn.jira.sync.domain.JiraUser;
-import de.cronn.jira.sync.domain.JiraVersion;
-import de.cronn.jira.sync.service.JiraService;
 
-public class JiraDummyService implements JiraService {
+@RestController
+@RequestMapping("/{" + JiraDummyService.CONTEXT + "}/rest")
+public class JiraDummyService {
 
 	private static final Logger log = LoggerFactory.getLogger(JiraDummyService.class);
 
-	private URL url;
+	public static final String CONTEXT = "context";
 
-	private static final Map<String, JiraDummyData> DUMMY_DATA = new LinkedHashMap<>();
+	private final Map<Context, JiraDummyData> data = new EnumMap<>(Context.class);
 
-	public static void reset() {
-		DUMMY_DATA.clear();
+	public void reset() {
+		data.clear();
 	}
 
-	public void setUrl(URL url) {
-		Assert.notNull(url);
-		this.url = url;
+	public enum Context {
+		SOURCE, TARGET;
 	}
 
-	public void expectLoginRequest(String username, String password) throws Exception {
-		getDummyData().setCredentials(new JiraLoginRequest(username, password));
+	public void setBaseUrl(Context context, String baseUrl) {
+		getData(context).setBaseUrl(baseUrl);
 	}
 
-	public void setDefaultStatus(JiraIssueStatus status) {
-		getDummyData().setDefaultStatus(status);
+	public void expectLoginRequest(Context context, String username, String password) throws Exception {
+		getData(context).setCredentials(new JiraLoginRequest(username, password));
 	}
 
-	public void addProject(JiraProject project) {
+	public void setDefaultStatus(Context context, JiraIssueStatus status) {
+		getData(context).setDefaultStatus(status);
+	}
+
+	public void addProject(Context context, JiraProject project) {
 		Assert.notNull(project.getKey());
-		Object old = getProjects().put(project.getKey(), project);
+		Object old = getProjects(context).put(project.getKey(), project);
 		Assert.isNull(old);
 	}
 
-	public void addTransition(JiraTransition transition) {
-		List<JiraTransition> transitions = getDummyData().getTransitions();
+	public void addTransition(Context context, JiraTransition transition) {
+		List<JiraTransition> transitions = getData(context).getTransitions();
 		transitions.add(transition);
 	}
 
-	public void addPriority(JiraPriority priority) {
-		getDummyData().getPriorities().add(priority);
+	public void addPriority(Context context, JiraPriority priority) {
+		getData(context).getPriorities().add(priority);
 	}
 
-	public void addResolution(JiraResolution resolution) {
-		getDummyData().getResolutions().add(resolution);
+	public void addResolution(Context context, JiraResolution resolution) {
+		getData(context).getResolutions().add(resolution);
 	}
 
-	private Map<String, JiraProject> getProjects() {
-		return getDummyData().getProjects();
+	private Map<String, JiraProject> getProjects(Context context) {
+		return getData(context).getProjects();
 	}
 
-	@Override
-	public URL getUrl() {
-		return url;
-	}
-
-	@Override
-	public void login(JiraConnectionProperties connectionProperties) {
-		this.url = connectionProperties.getUrl();
-		JiraLoginRequest credentials = getDummyData().getCredentials();
-		Assert.notNull(credentials, "Expected login not configured for " + url);
-		Assert.state(Objects.equals(connectionProperties.getUsername(), credentials.getUsername()));
-		Assert.state(Objects.equals(connectionProperties.getPassword(), credentials.getPassword()));
-	}
-
-	@Override
-	public JiraUser getMyself() {
-		return new JiraUser("me", "myself");
-	}
-
-	@Override
-	public void logout() {
-		log.debug("[{}] logout", getUrl());
-		url = null;
-	}
-
-	@Override
-	public void close() {
-		log.debug("closing");
-	}
-
-	@Override
-	public JiraServerInfo getServerInfo() {
-		JiraServerInfo jiraServerInfo = new JiraServerInfo(url.toString());
-		jiraServerInfo.setServerTitle(url.getHost());
+	@RequestMapping(path = "/api/2/serverInfo", method = RequestMethod.GET)
+	public JiraServerInfo serverInfo(@PathVariable(CONTEXT) Context context) {
+		JiraServerInfo jiraServerInfo = new JiraServerInfo(getData(context).getBaseUrl());
+		jiraServerInfo.setServerTitle(context + " Jira");
 		return jiraServerInfo;
 	}
 
-	@Override
-	public JiraIssue getIssueByKey(String key) {
-		JiraIssue issue = getIssueMap().get(key);
+	@RequestMapping(path = "/api/2/filter/{filterId}", method = RequestMethod.GET)
+	public JiraFilterResult filter(@PathVariable(CONTEXT) Context context, @PathVariable("filterId") String filterId) {
+		JiraFilterResult result = new JiraFilterResult();
+		result.setJql("dummy");
+		return result;
+	}
+
+	@RequestMapping(path = "/api/2/search", method = RequestMethod.GET)
+	public JiraSearchResult search(@PathVariable(CONTEXT) Context context) {
+		JiraSearchResult result = new JiraSearchResult();
+		List<JiraIssue> allIssues = getAllIssues(context);
+		result.setIssues(allIssues);
+		result.setMaxResults(allIssues.size());
+		result.setTotal(allIssues.size());
+		return result;
+	}
+
+	@RequestMapping(path = "/auth/1/session", method = RequestMethod.POST)
+	public JiraLoginResponse login(@PathVariable(CONTEXT) Context context, @RequestBody JiraLoginRequest loginRequest) {
+		JiraLoginRequest credentials = getData(context).getCredentials();
+		if (!credentials.getUsername().equals(loginRequest.getUsername())) {
+			throw new IllegalArgumentException("Illegal username");
+		}
+		if (!credentials.getPassword().equals(loginRequest.getPassword())) {
+			throw new IllegalArgumentException("Illegal password");
+		}
+		JiraLoginResponse loginResponse = new JiraLoginResponse();
+		JiraSession session = new JiraSession();
+		session.setName("test-session-" + context);
+		session.setValue("test-session-" + context);
+		loginResponse.setSession(session);
+
+		log.debug("[{}] login", context);
+
+		return loginResponse;
+	}
+
+	@RequestMapping(path = "/auth/1/session", method = RequestMethod.DELETE)
+	public void login(@PathVariable(CONTEXT) Context context) {
+		log.debug("[{}] logout", context);
+	}
+
+	@RequestMapping(path = "/api/2/myself", method = RequestMethod.GET)
+	public JiraUser getMyself(@PathVariable(CONTEXT) Context context) {
+		return new JiraUser("me", "myself");
+	}
+
+	@RequestMapping(path = "/api/2/issue/{issueKey}", method = RequestMethod.GET)
+	public JiraIssue getIssueByKey(@PathVariable(CONTEXT) Context context, @PathVariable("issueKey") String key) {
+		JiraIssue issue = getIssueMap(context).get(key);
 		Assert.notNull(issue, "Issue " + key + " not found");
 		return issue;
 	}
 
-	@Override
-	public JiraProject getProjectByKey(String projectKey) {
-		JiraProject jiraProject = getProjects().get(projectKey);
+	@RequestMapping(path = "/api/2/project/{projectKey}", method = RequestMethod.GET)
+	public JiraProject getProjectByKey(@PathVariable(CONTEXT) Context context, @PathVariable("projectKey") String projectKey) {
+		JiraProject jiraProject = getProjects(context).get(projectKey);
 		Assert.notNull(jiraProject, "Project " + projectKey + " not found");
 		return jiraProject;
 	}
 
-	@Override
-	public List<JiraPriority> getPriorities() {
-		return getDummyData().getPriorities();
+	@RequestMapping(path = "/api/2/priority", method = RequestMethod.GET)
+	public List<JiraPriority> getPriorities(@PathVariable(CONTEXT) Context context) {
+		return getData(context).getPriorities();
 	}
 
-	@Override
-	public List<JiraResolution> getResolutions() {
-		return getDummyData().getResolutions();
+	@RequestMapping(path = "/api/2/resolution", method = RequestMethod.GET)
+	public List<JiraResolution> getResolutions(@PathVariable(CONTEXT) Context context) {
+		return getData(context).getResolutions();
 	}
 
-	@Override
-	public List<JiraVersion> getVersions(String projectKey) {
-		throw new UnsupportedOperationException("not yet implemented");
-	}
-
-	@Override
-	public List<JiraIssue> getIssuesByFilterId(String filterId) {
-		return getAllIssues();
-	}
-
-	public List<JiraIssue> getAllIssues() {
-		Map<String, JiraIssue> issuesPerKey = getIssueMap();
+	public List<JiraIssue> getAllIssues(Context context) {
+		Map<String, JiraIssue> issuesPerKey = getIssueMap(context);
 		return Collections.unmodifiableList(new ArrayList<>(issuesPerKey.values()));
 	}
 
-	private Map<String, JiraIssue> getIssueMap() {
-		return getDummyData().getIssues();
+	private Map<String, JiraIssue> getIssueMap(Context context) {
+		return getData(context).getIssues();
 	}
 
-	private JiraDummyData getDummyData() {
-		Assert.notNull(url);
-		return DUMMY_DATA.computeIfAbsent(url.toString(), k -> new JiraDummyData());
+	private JiraDummyData getData(Context context) {
+		Assert.notNull(context);
+		return data.computeIfAbsent(context, k -> new JiraDummyData());
 	}
 
-	@Override
-	public List<JiraRemoteLink> getRemoteLinks(JiraIssue issue) {
-		Assert.notNull(issue.getKey());
-		Map<String, JiraRemoteLinks> remoteLinksPerIssueKey = getDummyData().getRemoteLinks();
-		JiraRemoteLinks jiraRemoteLinks = remoteLinksPerIssueKey.get(issue.getKey());
+	@RequestMapping(path = "/api/2/issue/{issueId}/remotelink", method = RequestMethod.GET)
+	public List<JiraRemoteLink> remoteLinks(@PathVariable(CONTEXT) Context context, @PathVariable("issueId") String issueId) {
+		return getRemoteLinks(context, issueId);
+	}
+
+	public List<JiraRemoteLink> getRemoteLinks(Context context, JiraIssue issue) {
+		return getRemoteLinks(context, issue.getKey());
+	}
+
+	private List<JiraRemoteLink> getRemoteLinks(Context context, String key) {
+		Assert.notNull(key);
+		Map<String, JiraRemoteLinks> remoteLinksPerIssueKey = getData(context).getRemoteLinks();
+		JiraRemoteLinks jiraRemoteLinks = remoteLinksPerIssueKey.get(key);
 		if (jiraRemoteLinks == null) {
 			return Collections.emptyList();
 		}
 		return jiraRemoteLinks;
 	}
 
-	@Override
-	public List<JiraTransition> getTransitions(JiraIssue issue) {
-		return getDummyData().getTransitions();
+	@RequestMapping(path = "/api/2/issue/{issueKey}/transitions", method = RequestMethod.GET)
+	public JiraTransitions getTransitions(@PathVariable(CONTEXT) Context context, @PathVariable("issueKey") String issueKey) {
+		return new JiraTransitions(getData(context).getTransitions());
 	}
 
-	@Override
-	public void addRemoteLink(JiraIssue fromIssue, JiraIssue toIssue, JiraService toJiraService, URL remoteLinkIcon) {
-		JiraRemoteLinks remoteLinks = getDummyData().getRemoteLinks().computeIfAbsent(fromIssue.getKey(), k -> new JiraRemoteLinks());
-		String url = toJiraService.getUrl().toString();
-		JiraRemoteLink jiraRemoteLink = new JiraRemoteLink(url + (url.endsWith("/") ? "" : "/") + "browse/" + toIssue.getKey());
-		jiraRemoteLink.getObject().setIcon(new JiraLinkIcon(remoteLinkIcon));
-		remoteLinks.add(jiraRemoteLink);
+	@RequestMapping(path = "/api/2/issue/{issueKey}/remotelink", method = RequestMethod.POST)
+	public void addRemoteLink(@PathVariable(CONTEXT) Context context, @PathVariable("issueKey") String issueKey, @RequestBody JiraRemoteLink newRemoteLink) {
+		JiraRemoteLinks remoteLinks = getData(context).getRemoteLinks().computeIfAbsent(issueKey, k -> new JiraRemoteLinks());
+		remoteLinks.add(newRemoteLink);
 	}
 
-	@Override
-	public JiraIssue createIssue(JiraIssue issue) {
+	@RequestMapping(path = "/api/2/issue", method = RequestMethod.POST)
+	public JiraIssue createIssue(@PathVariable(CONTEXT) Context context, @RequestBody JiraIssue issue) {
 		JiraProject project = issue.getFields().getProject();
 		Assert.notNull(project);
 		if (issue.getKey() == null) {
-			long id = getIssueMap().size() + 1;
+			long id = getIssueMap(context).size() + 1;
 			String projectKey = project.getKey();
 			Assert.notNull(projectKey);
 			issue.setKey(projectKey + "-" + id);
 			issue.setId(String.valueOf(id));
 		}
 		if (issue.getFields().getStatus() == null) {
-			JiraIssueStatus defaultStatus = getDummyData().getDefaultStatus();
+			JiraIssueStatus defaultStatus = getData(context).getDefaultStatus();
 			Assert.notNull(defaultStatus, "defaultStatus must be set");
 			issue.getFields().setStatus(defaultStatus);
 		}
-		Object old = getIssueMap().put(issue.getKey(), issue);
+		Object old = getIssueMap(context).put(issue.getKey(), issue);
 		Assert.isNull(old);
 		return issue;
 	}
 
-	@Override
-	public void updateIssue(JiraIssue issue, JiraIssueUpdate jiraIssueUpdate) {
-		JiraIssue issueInSystem = getIssueByKey(issue.getKey());
+	@RequestMapping(path = "/api/2/issue/{issueKey}", method = RequestMethod.PUT)
+	public void updateIssue(@PathVariable(CONTEXT) Context context, @PathVariable("issueKey") String issueKey, @RequestBody JiraIssueUpdate jiraIssueUpdate) {
+		JiraIssue issueInSystem = getIssueByKey(context, issueKey);
 		Assert.isNull(jiraIssueUpdate.getTransition());
 		updateFields(jiraIssueUpdate, issueInSystem);
 	}
 
 	private void updateFields(JiraIssueUpdate jiraIssueUpdate, JiraIssue issueInSystem) {
-		Map<String, Object> fields = jiraIssueUpdate.getFields();
-		if (fields == null) {
+		JiraFieldsUpdate fieldToUpdate = jiraIssueUpdate.getFields();
+		if (fieldToUpdate == null) {
 			return;
 		}
-		for (Map.Entry<String, Object> entry : fields.entrySet()) {
-			updateField(issueInSystem, entry.getKey(), entry.getValue());
+
+		if (fieldToUpdate.getDescription() != null) {
+			issueInSystem.getFields().setDescription(fieldToUpdate.getDescription());
 		}
+
+		if (fieldToUpdate.getResolution() != null) {
+			issueInSystem.getFields().setResolution(fieldToUpdate.getResolution());
+		}
+
+		if (fieldToUpdate.getAssignee() != null) {
+			issueInSystem.getFields().setAssignee(fieldToUpdate.getAssignee());
+		}
+
+		Assert.isNull(fieldToUpdate.getLabels());
+		Assert.isNull(fieldToUpdate.getVersions());
+		Assert.isNull(fieldToUpdate.getFixVersions());
+		Assert.isNull(fieldToUpdate.getSummary());
+		Assert.isNull(fieldToUpdate.getPriority());
 	}
 
-	private void updateField(JiraIssue issueInSystem, String key, Object value) {
-		switch (JiraField.forName(key)) {
-			case DESCRIPTION:
-				issueInSystem.getFields().setDescription((String) value);
-				break;
-			case RESOLUTION:
-				issueInSystem.getFields().setResolution((JiraResolution) value);
-				break;
-			case ASSIGNEE:
-				issueInSystem.getFields().setAssignee((JiraUser) value);
-				break;
-			default:
-				throw new IllegalArgumentException("unsupported field update: " + key);
-		}
-	}
-
-	@Override
-	public void transitionIssue(JiraIssue issue, JiraIssueUpdate jiraIssueUpdate) {
-		JiraIssue issueInSystem = getIssueByKey(issue.getKey());
+	@RequestMapping(path = "/api/2/issue/{issueKey}/transitions", method = RequestMethod.POST)
+	public void transitionIssue(@PathVariable(CONTEXT) Context context, @PathVariable("issueKey") String issueKey, @RequestBody JiraIssueUpdate jiraIssueUpdate) {
+		JiraIssue issueInSystem = getIssueByKey(context, issueKey);
 		Assert.notNull(jiraIssueUpdate.getTransition());
 
 		JiraIssueStatus targetStatus = jiraIssueUpdate.getTransition().getTo();
 		Assert.notNull(targetStatus);
-		log.debug("Updating status of {} to {}", issue, targetStatus);
+		log.debug("Updating status of {} to {}", issueKey, targetStatus);
 		issueInSystem.getFields().setStatus(targetStatus);
 
 		updateFields(jiraIssueUpdate, issueInSystem);
-	}
-
-	@Override
-	public String toString() {
-		return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
-			.append("url", url)
-			.toString();
 	}
 }

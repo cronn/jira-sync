@@ -1,32 +1,27 @@
 package de.cronn.jira.sync.domain;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import org.springframework.util.CollectionUtils;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 @JsonInclude(Include.NON_NULL)
 public class JiraIssueUpdate {
 
-	private Map<String, Object> fields;
+	private JiraFieldsUpdate fields;
 
 	private JiraTransition transition;
 
 	public JiraIssueUpdate() {
 	}
 
-	public JiraIssueUpdate(Map<String, Object> fields) {
-		this.fields = new LinkedHashMap<>(fields);
+	public JiraIssueUpdate(JiraFieldsUpdate fields) {
+		this.fields = fields;
 	}
 
-	public Map<String, Object> getFields() {
+	public JiraFieldsUpdate getFields() {
 		return fields;
 	}
 
-	public void setFields(Map<String, Object> fields) {
+	public void setFields(JiraFieldsUpdate fields) {
 		this.fields = fields;
 	}
 
@@ -39,13 +34,14 @@ public class JiraIssueUpdate {
 	}
 
 	public boolean isEmpty() {
-		return CollectionUtils.isEmpty(fields) && transition == null;
+		return fields == null && transition == null;
 	}
 
-	public void putFieldUpdate(JiraField field, Object newValue) {
+	public JiraFieldsUpdate getOrCreateFields() {
+		JiraFieldsUpdate fields = getFields();
 		if (fields == null) {
-			fields = new LinkedHashMap<>();
+			setFields(new JiraFieldsUpdate());
 		}
-		fields.put(field.getName(), newValue);
+		return getFields();
 	}
 }

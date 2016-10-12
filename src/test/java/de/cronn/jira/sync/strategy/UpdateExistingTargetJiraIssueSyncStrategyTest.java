@@ -1,6 +1,5 @@
 package de.cronn.jira.sync.strategy;
 
-import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -183,8 +182,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 
 		JiraIssueUpdate targetIssueUpdate = expectUpdateInTarget(targetIssue);
 
-		assertThat(targetIssueUpdate.getFields().keySet(), containsInAnyOrder("description"));
-		assertThat(targetIssueUpdate.getFields().values(), containsInAnyOrder(descriptionMapper.mapTargetDescription("some description", null)));
+		assertThat(targetIssueUpdate.getFields().getDescription(), is(descriptionMapper.mapTargetDescription("some description", null)));
 
 		assertNull(targetIssueUpdate.getTransition());
 
@@ -214,8 +212,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		assertThat(result, is(SyncResult.CHANGED));
 
 		JiraIssueUpdate update = expectUpdateInTarget(targetIssue);
-		assertThat(update.getFields().keySet(), containsInAnyOrder("description"));
-		assertThat(update.getFields().values(), containsInAnyOrder(descriptionMapper.mapTargetDescription("updated description", "some description")));
+		assertThat(update.getFields().getDescription(), is(descriptionMapper.mapTargetDescription("updated description", "some description")));
 
 		verify(jiraTarget).getPriorities();
 		verifyNoMoreInteractions(jiraSource, jiraTarget);
@@ -263,8 +260,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		assertThat(result, is(SyncResult.CHANGED));
 
 		JiraIssueUpdate update = expectUpdateInTarget(targetIssue);
-		assertThat(update.getFields().keySet(), contains("versions"));
-		assertThat(update.getFields().values(), contains(Collections.singleton(TARGET_VERSION_1)));
+		assertThat(update.getFields().getVersions(), is(Collections.singleton(TARGET_VERSION_1)));
 
 		verify(jiraTarget).getPriorities();
 		verify(jiraTarget).getVersions(TARGET_PROJECT_KEY);
@@ -292,8 +288,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		assertThat(result, is(SyncResult.CHANGED));
 
 		JiraIssueUpdate update = expectUpdateInTarget(targetIssue);
-		assertThat(update.getFields().keySet(), contains("fixVersions"));
-		assertThat(update.getFields().values(), contains(new LinkedHashSet<>(Arrays.asList(TARGET_VERSION_1, TARGET_VERSION_2))));
+		assertThat(update.getFields().getFixVersions(), is(new LinkedHashSet<>(Arrays.asList(TARGET_VERSION_1, TARGET_VERSION_2))));
 
 		verify(jiraTarget).getPriorities();
 		verify(jiraTarget).getVersions(TARGET_PROJECT_KEY);
@@ -320,11 +315,8 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		assertThat(result, is(SyncResult.CHANGED));
 
 		JiraIssueUpdate update = expectUpdateInTarget(targetIssue);
-		assertThat(update.getFields().keySet(), contains("labels", "priority"));
-		assertThat(update.getFields().values(), contains(
-			Collections.singleton("some-label"),
-			TARGET_PRIORITY_MINOR
-		));
+		assertThat(update.getFields().getLabels(), is(Collections.singleton("some-label")));
+		assertThat(update.getFields().getPriority(), is(TARGET_PRIORITY_MINOR));
 
 		verify(jiraTarget).getPriorities();
 		verifyNoMoreInteractions(jiraSource, jiraTarget);
@@ -353,10 +345,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		assertThat(result, is(SyncResult.CHANGED));
 
 		JiraIssueUpdate update = expectUpdateInTarget(targetIssue);
-		assertThat(update.getFields().keySet(), contains("labels"));
-		assertThat(update.getFields().values(), contains(
-			new LinkedHashSet<>(Arrays.asList("internal-label", "some-label"))
-		));
+		assertThat(update.getFields().getLabels(), containsInAnyOrder("some-label", "internal-label"));
 
 		verify(jiraTarget).getPriorities();
 		verifyNoMoreInteractions(jiraSource, jiraTarget);

@@ -26,6 +26,7 @@ public class JiraDummyData {
 	private final List<JiraPriority> priorities = new ArrayList<>();
 	private final List<JiraResolution> resolutions = new ArrayList<>();
 	private final List<JiraTransition> transitions = new ArrayList<>();
+	private String baseUrl;
 
 	public JiraLoginRequest getCredentials() {
 		return credentials;
@@ -68,4 +69,11 @@ public class JiraDummyData {
 		return projects;
 	}
 
+	public void setBaseUrl(String baseUrl) {
+		this.baseUrl = baseUrl;
+	}
+
+	public String getBaseUrl() {
+		return baseUrl;
+	}
 }
