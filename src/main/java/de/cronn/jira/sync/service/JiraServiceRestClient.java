@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Scope;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
@@ -63,6 +64,13 @@ import de.cronn.proxy.ssh.SshProxy;
 public class JiraServiceRestClient implements JiraService {
 
 	private static final Logger log = LoggerFactory.getLogger(JiraServiceRestClient.class);
+
+	private static final String CACHE_NAME_PRIORITIES = "priorities";
+	private static final String CACHE_NAME_SERVER_INFO = "serverInfo";
+	private static final String CACHE_NAME_MYSELF = "myself";
+	private static final String CACHE_NAME_PROJECTS = "projects";
+	private static final String CACHE_NAME_VERSIONS = "versions";
+	private static final String CACHE_NAME_RESOLUTIONS = "resolutions";
 
 	private final RestTemplateBuilder restTemplateBuilder;
 
@@ -124,6 +132,14 @@ public class JiraServiceRestClient implements JiraService {
 	}
 
 	@Override
+	@CacheEvict(cacheNames = {
+		CACHE_NAME_PRIORITIES,
+		CACHE_NAME_SERVER_INFO,
+		CACHE_NAME_MYSELF,
+		CACHE_NAME_PROJECTS,
+		CACHE_NAME_VERSIONS,
+		CACHE_NAME_RESOLUTIONS
+	}, allEntries = true)
 	public void logout() {
 		restTemplate.delete(restUrl("/rest/auth/1/session"));
 		jiraConnectionProperties = null;
@@ -142,14 +158,14 @@ public class JiraServiceRestClient implements JiraService {
 	}
 
 	@Override
-	@Cacheable(value = "serverInfos", key = "#root.target.url")
+	@Cacheable(value = CACHE_NAME_SERVER_INFO, key = "#root.target.url")
 	public JiraServerInfo getServerInfo() {
 		log.debug("[{}], fetching server info", getUrl());
 		return getForObject("/rest/api/2/serverInfo", JiraServerInfo.class);
 	}
 
 	@Override
-	@Cacheable(value = "myself", key = "#root.target.url")
+	@Cacheable(value = CACHE_NAME_MYSELF, key = "#root.target.url")
 	public JiraUser getMyself() {
 		log.debug("[{}], fetching myself", getUrl());
 		return getForObject("/rest/api/2/myself", JiraUser.class);
@@ -162,7 +178,7 @@ public class JiraServiceRestClient implements JiraService {
 	}
 
 	@Override
-	@Cacheable(value = "projects", key = "{ #root.target.url, #projectKey }")
+	@Cacheable(value = CACHE_NAME_PROJECTS, key = "{ #root.target.url, #projectKey }")
 	public JiraProject getProjectByKey(String projectKey) {
 		Assert.notNull(projectKey, "projectKey must not be null");
 		log.debug("[{}], fetching project {}", getUrl(), projectKey);
@@ -170,7 +186,7 @@ public class JiraServiceRestClient implements JiraService {
 	}
 
 	@Override
-	@Cacheable(value = "versions", key = "{ #root.target.url, #projectKey }")
+	@Cacheable(value = CACHE_NAME_VERSIONS, key = "{ #root.target.url, #projectKey }")
 	public List<JiraVersion> getVersions(String projectKey) {
 		Assert.notNull(projectKey, "projectKey must not be null");
 		log.debug("[{}] fetching versions for project {}", getUrl(), projectKey);
@@ -178,14 +194,14 @@ public class JiraServiceRestClient implements JiraService {
 	}
 
 	@Override
-	@Cacheable(value = "priorities", key = "#root.target.url")
+	@Cacheable(value = CACHE_NAME_PRIORITIES, key = "#root.target.url")
 	public List<JiraPriority> getPriorities() {
 		log.debug("[{}] fetching priorities", getUrl());
 		return getForObject("/rest/api/2/priority", JiraPriorityList.class);
 	}
 
 	@Override
-	@Cacheable(value = "resolutions", key = "#root.target.url")
+	@Cacheable(value = CACHE_NAME_RESOLUTIONS, key = "#root.target.url")
 	public List<JiraResolution> getResolutions() {
 		log.debug("[{}] fetching resolutions", getUrl());
 		return getForObject("/rest/api/2/resolution", JiraResolutionList.class);

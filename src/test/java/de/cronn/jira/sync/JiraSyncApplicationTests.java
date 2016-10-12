@@ -138,6 +138,7 @@ public class JiraSyncApplicationTests {
 	@Test
 	public void testResolutionsAreCached() throws Exception {
 		assertNotSame(jiraSource, jiraTarget);
+
 		try {
 			jiraSource.login(jiraSyncConfig.getSource());
 			jiraTarget.login(jiraSyncConfig.getTarget());
@@ -151,11 +152,48 @@ public class JiraSyncApplicationTests {
 			assertSame(targetResolutions1, targetResolutions2);
 
 			assertNotSame(sourceResolutions1, targetResolutions1);
-
-
 		} finally {
 			jiraSource.logout();
 			jiraTarget.logout();
+		}
+	}
+
+	@Test
+	public void testResolutionsAndPrioritiesAreCached() throws Exception {
+		try {
+			jiraSource.login(jiraSyncConfig.getSource());
+
+			List<JiraResolution> sourceResolutions1 = jiraSource.getResolutions();
+			List<JiraPriority> sourcePriorities1 = jiraSource.getPriorities();
+			List<JiraResolution> sourceResolutions2 = jiraSource.getResolutions();
+			List<JiraPriority> sourcePriorities2 = jiraSource.getPriorities();
+			assertSame(sourceResolutions1, sourceResolutions2);
+			assertSame(sourcePriorities1, sourcePriorities2);
+			assertNotSame(sourcePriorities1, sourceResolutions1);
+		} finally {
+			jiraSource.logout();
+		}
+	}
+
+	@Test
+	public void testCacheGetsEvictedOnLogout() throws Exception {
+		try {
+			jiraSource.login(jiraSyncConfig.getSource());
+
+			List<JiraResolution> resolutions1 = jiraSource.getResolutions();
+			List<JiraResolution> resolutions2 = jiraSource.getResolutions();
+			assertSame(resolutions1, resolutions2);
+
+			jiraSource.logout();
+			jiraSource.login(jiraSyncConfig.getSource());
+
+			List<JiraResolution> resolutions3 = jiraSource.getResolutions();
+			List<JiraResolution> resolutions4 = jiraSource.getResolutions();
+			assertNotSame(resolutions1, resolutions3);
+			assertSame(resolutions3, resolutions4);
+
+		} finally {
+			jiraSource.logout();
 		}
 	}
 
