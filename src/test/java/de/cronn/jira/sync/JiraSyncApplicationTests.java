@@ -96,6 +96,8 @@ public class JiraSyncApplicationTests {
 	public void setUp() throws Exception {
 		JiraDummyService.reset();
 
+		assertNotSame(jiraSource, jiraTarget);
+
 		jiraSource.setUrl(sourceUrl);
 		jiraTarget.setUrl(targetUrl);
 
