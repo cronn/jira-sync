@@ -34,6 +34,7 @@ import de.cronn.jira.sync.domain.JiraTransition;
 import de.cronn.jira.sync.domain.JiraUser;
 import de.cronn.jira.sync.dummy.JiraDummyService;
 import de.cronn.jira.sync.dummy.JiraDummyService.Context;
+import de.cronn.jira.sync.service.JiraService;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -64,6 +65,15 @@ public class JiraSyncApplicationTests {
 
 	@Autowired
 	private JiraDummyService jiraDummyService;
+
+	@Autowired
+	private JiraService jiraSource;
+
+	@Autowired
+	private JiraService jiraTarget;
+
+	@Autowired
+	private JiraSyncConfig jiraSyncConfig;
 
 	@Autowired
 	private JiraSyncTask syncTask;
@@ -123,6 +133,30 @@ public class JiraSyncApplicationTests {
 		assertThat(resolutionMapping.get("Done"), is("Fixed"));
 		assertThat(resolutionMapping.get("Cannot Reproduce"), is("Cannot Reproduce"));
 		assertThat(resolutionMapping.get("Won't Fix"), is("Won't Fix"));
+	}
+
+	@Test
+	public void testResolutionsAreCached() throws Exception {
+		assertNotSame(jiraSource, jiraTarget);
+		try {
+			jiraSource.login(jiraSyncConfig.getSource());
+			jiraTarget.login(jiraSyncConfig.getTarget());
+
+			List<JiraResolution> sourceResolutions1 = jiraSource.getResolutions();
+			List<JiraResolution> sourceResolutions2 = jiraSource.getResolutions();
+			assertSame(sourceResolutions1, sourceResolutions2);
+
+			List<JiraResolution> targetResolutions1 = jiraTarget.getResolutions();
+			List<JiraResolution> targetResolutions2 = jiraTarget.getResolutions();
+			assertSame(targetResolutions1, targetResolutions2);
+
+			assertNotSame(sourceResolutions1, targetResolutions1);
+
+
+		} finally {
+			jiraSource.logout();
+			jiraTarget.logout();
+		}
 	}
 
 	@Test
