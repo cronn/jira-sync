@@ -23,14 +23,22 @@ import de.cronn.jira.sync.mapping.DefaultDescriptionMapper;
 import de.cronn.jira.sync.mapping.DefaultIssueTypeMapper;
 import de.cronn.jira.sync.mapping.DefaultLabelMapper;
 import de.cronn.jira.sync.mapping.DefaultPriorityMapper;
+import de.cronn.jira.sync.mapping.DefaultSummaryMapper;
+import de.cronn.jira.sync.mapping.DefaultVersionMapper;
 import de.cronn.jira.sync.mapping.IssueTypeMapper;
 import de.cronn.jira.sync.mapping.LabelMapper;
 import de.cronn.jira.sync.mapping.PriorityMapper;
+import de.cronn.jira.sync.mapping.SummaryMapper;
+import de.cronn.jira.sync.mapping.VersionMapper;
 
 public class CreateMissingTargetJiraIssueSyncStrategyTest extends AbstractIssueSyncStrategyTest {
 
 	@InjectMocks
 	private CreateMissingTargetJiraIssueSyncStrategy strategy;
+
+	@InjectMocks
+	@Spy
+	private SummaryMapper summaryMapper = new DefaultSummaryMapper();
 
 	@InjectMocks
 	@Spy
@@ -47,6 +55,10 @@ public class CreateMissingTargetJiraIssueSyncStrategyTest extends AbstractIssueS
 	@InjectMocks
 	@Spy
 	private PriorityMapper priorityMapper = new DefaultPriorityMapper();
+
+	@InjectMocks
+	@Spy
+	private VersionMapper versionMapper = new DefaultVersionMapper();
 
 	@Test
 	public void testCreateMissingTicket() throws Exception {

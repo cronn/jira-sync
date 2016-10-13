@@ -22,10 +22,12 @@ import de.cronn.jira.sync.mapping.DefaultIssueTypeMapper;
 import de.cronn.jira.sync.mapping.DefaultLabelMapper;
 import de.cronn.jira.sync.mapping.DefaultPriorityMapper;
 import de.cronn.jira.sync.mapping.DefaultResolutionMapper;
+import de.cronn.jira.sync.mapping.DefaultVersionMapper;
 import de.cronn.jira.sync.mapping.IssueTypeMapper;
 import de.cronn.jira.sync.mapping.LabelMapper;
 import de.cronn.jira.sync.mapping.PriorityMapper;
 import de.cronn.jira.sync.mapping.ResolutionMapper;
+import de.cronn.jira.sync.mapping.VersionMapper;
 import de.cronn.jira.sync.resolve.JiraIssueResolver;
 
 public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssueSyncStrategyTest {
@@ -55,6 +57,10 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 	@InjectMocks
 	@Spy
 	private ResolutionMapper resolutionMapper = new DefaultResolutionMapper();
+
+	@InjectMocks
+	@Spy
+	private VersionMapper versionMapper = new DefaultVersionMapper();
 
 	@Test
 	public void testSync_NoChanges() throws Exception {
@@ -187,6 +193,74 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		assertNull(targetIssueUpdate.getTransition());
 
 		verify(jiraTarget).getPriorities();
+		verify(jiraSource).getTransitions(sourceIssue);
+		verifyNoMoreInteractions(jiraSource, jiraTarget);
+	}
+
+	@Test
+	public void testSync_StatusTransitionAndFieldChange_DoNotCopyFixedVersions() throws Exception {
+		// given
+		JiraIssue sourceIssue = new JiraIssue("100", "SOURCE-123", "Some Summary", SOURCE_STATUS_OPEN);
+		JiraIssue targetIssue = new JiraIssue("400", "TARGET-123", "Some Summary", TARGET_STATUS_CLOSED);
+
+		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
+		targetIssue.getFields().setPriority(TARGET_PRIORITY_MAJOR);
+		targetIssue.getFields().setFixVersions(Collections.singleton(TARGET_VERSION_2));
+
+		when(jiraSource.getTransitions(sourceIssue)).thenReturn(Collections.singletonList(SOURCE_TRANSITION_RESOLVE));
+
+		when(jiraIssueResolver.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
+
+		// when
+		SyncResult result = strategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
+
+		// then
+		assertThat(result, is(SyncResult.CHANGED_TRANSITION));
+
+		JiraIssueUpdate sourceIssueUpdate = expectTransitionInSource(sourceIssue);
+		assertNull(sourceIssueUpdate.getFields());
+		assertThat(sourceIssueUpdate.getTransition(), is(SOURCE_TRANSITION_RESOLVE));
+
+		JiraIssueUpdate targetIssueUpdate = expectUpdateInTarget(targetIssue);
+
+		assertThat(targetIssueUpdate.getFields().getFixVersions(), empty());
+		assertNull(targetIssueUpdate.getTransition());
+
+		verify(jiraTarget).getPriorities();
+		verify(jiraSource).getTransitions(sourceIssue);
+		verifyNoMoreInteractions(jiraSource, jiraTarget);
+	}
+
+	@Test
+	public void testSync_StatusTransitionAndFieldChange_DoCopyFixedVersions() throws Exception {
+		// given
+		assertThat(projectSync.getTransitions(), hasSize(1));
+		projectSync.getTransitions().get(0).setCopyFixVersionsToSource(true);
+
+		JiraIssue sourceIssue = new JiraIssue("100", "SOURCE-123", "Some Summary", SOURCE_STATUS_OPEN);
+		JiraIssue targetIssue = new JiraIssue("400", "TARGET-123", "Some Summary", TARGET_STATUS_CLOSED);
+
+		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
+		targetIssue.getFields().setPriority(TARGET_PRIORITY_MAJOR);
+		targetIssue.getFields().setFixVersions(Collections.singleton(TARGET_VERSION_2));
+
+		when(jiraSource.getTransitions(sourceIssue)).thenReturn(Collections.singletonList(SOURCE_TRANSITION_RESOLVE));
+
+		when(jiraIssueResolver.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
+
+		// when
+		SyncResult result = strategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
+
+		// then
+		assertThat(result, is(SyncResult.CHANGED_TRANSITION));
+
+		JiraIssueUpdate sourceIssueUpdate = expectTransitionInSource(sourceIssue);
+		assertThat(sourceIssueUpdate.getFields().getFixVersions(), contains(SOURCE_VERSION_2));
+		assertThat(sourceIssueUpdate.getTransition(), is(SOURCE_TRANSITION_RESOLVE));
+
+		verify(jiraTarget).getPriorities();
+		verify(jiraSource).getVersions(SOURCE_PROJECT_KEY);
+		verify(jiraTarget).getVersions(TARGET_PROJECT_KEY);
 		verify(jiraSource).getTransitions(sourceIssue);
 		verifyNoMoreInteractions(jiraSource, jiraTarget);
 	}

@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
@@ -27,11 +28,11 @@ import de.cronn.jira.sync.domain.JiraResolution;
 import de.cronn.jira.sync.domain.JiraTransition;
 import de.cronn.jira.sync.domain.JiraUser;
 import de.cronn.jira.sync.domain.JiraVersion;
-import de.cronn.jira.sync.mapping.DefaultVersionMapper;
 import de.cronn.jira.sync.mapping.DescriptionMapper;
 import de.cronn.jira.sync.mapping.LabelMapper;
 import de.cronn.jira.sync.mapping.PriorityMapper;
 import de.cronn.jira.sync.mapping.ResolutionMapper;
+import de.cronn.jira.sync.mapping.VersionMapper;
 import de.cronn.jira.sync.resolve.JiraIssueResolver;
 import de.cronn.jira.sync.service.JiraService;
 
@@ -40,17 +41,41 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 
 	private static final Logger log = LoggerFactory.getLogger(UpdateExistingTargetJiraIssueSyncStrategy.class);
 
-	private final JiraIssueResolver jiraIssueResolver;
-	private final DescriptionMapper descriptionMapper;
-	private final LabelMapper labelMapper;
-	private final PriorityMapper priorityMapper;
-	private final ResolutionMapper resolutionMapper;
+	private JiraIssueResolver jiraIssueResolver;
 
-	public UpdateExistingTargetJiraIssueSyncStrategy(JiraIssueResolver jiraIssueResolver, DescriptionMapper descriptionMapper, LabelMapper labelMapper, PriorityMapper priorityMapper, ResolutionMapper resolutionMapper) {
+	private DescriptionMapper descriptionMapper;
+	private LabelMapper labelMapper;
+	private PriorityMapper priorityMapper;
+	private ResolutionMapper resolutionMapper;
+	private VersionMapper versionMapper;
+
+	@Autowired
+	public void setJiraIssueResolver(JiraIssueResolver jiraIssueResolver) {
 		this.jiraIssueResolver = jiraIssueResolver;
+	}
+
+	@Autowired
+	public void setDescriptionMapper(DescriptionMapper descriptionMapper) {
 		this.descriptionMapper = descriptionMapper;
+	}
+
+	@Autowired
+	public void setLabelMapper(LabelMapper labelMapper) {
 		this.labelMapper = labelMapper;
+	}
+
+	@Autowired
+	public void setPriorityMapper(PriorityMapper priorityMapper) {
 		this.priorityMapper = priorityMapper;
+	}
+
+	@Autowired
+	public void setVersionMapper(VersionMapper versionMapper) {
+		this.versionMapper = versionMapper;
+	}
+
+	@Autowired
+	public void setResolutionMapper(ResolutionMapper resolutionMapper) {
 		this.resolutionMapper = resolutionMapper;
 	}
 
@@ -64,12 +89,12 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		JiraIssueUpdate targetIssueUpdate = new JiraIssueUpdate();
 		JiraIssueUpdate sourceIssueUpdate = new JiraIssueUpdate();
 
-		processStatusTransition(jiraSource, sourceIssue, targetIssue, projectSync, sourceIssueUpdate);
+		processTransition(jiraSource, sourceIssue, targetIssue, projectSync, sourceIssueUpdate);
 		processDescription(sourceIssue, targetIssue, targetIssueUpdate);
 		processLabels(sourceIssue, targetIssue, targetIssueUpdate, projectSync);
 		processPriority(jiraTarget, sourceIssue, targetIssue, targetIssueUpdate);
-		processVersions(jiraTarget, sourceIssue, targetIssue, projectSync, JiraIssueFields::getVersions, versions -> targetIssueUpdate.getOrCreateFields().setVersions(versions));
-		processVersions(jiraTarget, sourceIssue, targetIssue, projectSync, JiraIssueFields::getFixVersions, versions -> targetIssueUpdate.getOrCreateFields().setFixVersions(versions));
+		processVersions(jiraTarget, sourceIssue, targetIssue, JiraIssueFields::getVersions, versions -> targetIssueUpdate.getOrCreateFields().setVersions(versions), projectSync);
+		processVersions(jiraTarget, sourceIssue, targetIssue, JiraIssueFields::getFixVersions, versions -> targetIssueUpdate.getOrCreateFields().setFixVersions(versions), projectSync);
 
 		addBacklinkIfMissing(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
 
@@ -107,7 +132,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		}
 	}
 
-	private void processStatusTransition(JiraService jiraSource, JiraIssue sourceIssue, JiraIssue targetIssue, JiraProjectSync projectSync, JiraIssueUpdate sourceIssueUpdate) {
+	private void processTransition(JiraService jiraSource, JiraIssue sourceIssue, JiraIssue targetIssue, JiraProjectSync projectSync, JiraIssueUpdate sourceIssueUpdate) {
 		List<TransitionConfig> transitions = projectSync.getTransitions();
 		if (transitions == null) {
 			log.trace("No transitions configured");
@@ -132,6 +157,25 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 			if (transition.isCopyResolutionToSource()) {
 				processResolution(jiraSource, sourceIssue, targetIssue, sourceIssueUpdate);
 			}
+
+			if (transition.isCopyFixVersionsToSource()) {
+				processVersions(jiraSource, sourceIssue, targetIssue, sourceIssueUpdate, projectSync);
+			}
+		}
+	}
+
+	private void processVersions(JiraService jiraSource, JiraIssue sourceIssue, JiraIssue targetIssue, JiraIssueUpdate sourceIssueUpdate, JiraProjectSync projectSync) {
+		Set<JiraVersion> targetFixVersions = targetIssue.getFields().getFixVersions();
+		Set<JiraVersion> sourceFixVersions = sourceIssue.getFields().getFixVersions();
+
+		if (CollectionUtils.isEmpty(sourceFixVersions) && CollectionUtils.isEmpty(targetFixVersions)) {
+			return;
+		}
+
+		Set<JiraVersion> mappedVersions = versionMapper.mapTargetToSource(jiraSource, targetFixVersions, projectSync);
+		if (!Objects.equals(mappedVersions, sourceFixVersions)) {
+			sourceIssueUpdate.getOrCreateFields().setFixVersions(mappedVersions);
+			sourceIssue.getFields().setFixVersions(mappedVersions);
 		}
 	}
 
@@ -148,9 +192,9 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		String targetIssueStatus = getStatusName(targetIssue);
 
 		List<TransitionConfig> transitionConfigs = statusTransitions.stream()
-			.filter(statusTransitionConfig -> statusTransitionConfig.getSourceStatusIn().contains(sourceIssueStatus))
-			.filter(statusTransitionConfig -> statusTransitionConfig.getTargetStatusIn().contains(targetIssueStatus))
-			.filter(statusTransitionConfig -> filterOnlyIfAssignedInTarget(statusTransitionConfig, targetIssue))
+			.filter(transitionConfig -> transitionConfig.getSourceStatusIn().contains(sourceIssueStatus))
+			.filter(transitionConfig -> transitionConfig.getTargetStatusIn().contains(targetIssueStatus))
+			.filter(transitionConfig -> filterOnlyIfAssignedInTarget(transitionConfig, targetIssue))
 			.collect(Collectors.toList());
 
 		if (transitionConfigs.isEmpty()) {
@@ -161,12 +205,12 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 			Assert.notNull(statusToTransitionTo);
 			return transitionConfig;
 		} else {
-			throw new JiraSyncException("Illegal number of matching status transitions: " + transitionConfigs);
+			throw new JiraSyncException("Illegal number of matching transitions: " + transitionConfigs);
 		}
 	}
 
-	private boolean filterOnlyIfAssignedInTarget(TransitionConfig statusTransitionConfig, JiraIssue targetIssue) {
-		if (statusTransitionConfig.isOnlyIfAssignedInTarget()) {
+	private boolean filterOnlyIfAssignedInTarget(TransitionConfig transitionConfig, JiraIssue targetIssue) {
+		if (transitionConfig.isOnlyIfAssignedInTarget()) {
 			return targetIssue.getFields().getAssignee() != null;
 		} else {
 			return true;
@@ -233,10 +277,11 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 	}
 
 	private void processResolution(JiraService jiraSource, JiraIssue sourceIssue, JiraIssue targetIssue, JiraIssueUpdate issueUpdate) {
-		JiraResolution mappedTargetResolution = resolutionMapper.mapResolution(jiraSource, targetIssue);
+		JiraResolution mappedResolution = resolutionMapper.mapResolution(jiraSource, targetIssue);
 		JiraResolution sourceResolution = sourceIssue.getFields().getResolution();
-		if (!isIdEqual(mappedTargetResolution, sourceResolution)) {
-			issueUpdate.getOrCreateFields().setResolution(mappedTargetResolution);
+		if (!isIdEqual(mappedResolution, sourceResolution)) {
+			issueUpdate.getOrCreateFields().setResolution(mappedResolution);
+			sourceIssue.getFields().setResolution(mappedResolution);
 		}
 	}
 
@@ -252,7 +297,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		}
 	}
 
-	private void processVersions(JiraService jiraTarget, JiraIssue sourceIssue, JiraIssue targetIssue, JiraProjectSync projectSync, Function<JiraIssueFields, Set<JiraVersion>> versionGetter, Consumer<Set<JiraVersion>> versionsSetter) {
+	private void processVersions(JiraService jiraTarget, JiraIssue sourceIssue, JiraIssue targetIssue, Function<JiraIssueFields, Set<JiraVersion>> versionGetter, Consumer<Set<JiraVersion>> versionsSetter, JiraProjectSync projectSync) {
 		Set<JiraVersion> sourceVersions = versionGetter.apply(sourceIssue.getFields());
 		Set<JiraVersion> targetVersions = versionGetter.apply(targetIssue.getFields());
 
@@ -260,7 +305,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 			return;
 		}
 
-		Set<JiraVersion> mappedSourceVersions = DefaultVersionMapper.mapVersions(jiraTarget, sourceVersions, projectSync);
+		Set<JiraVersion> mappedSourceVersions = versionMapper.mapSourceToTarget(jiraTarget, sourceVersions, projectSync);
 
 		if (!Objects.equals(targetVersions, mappedSourceVersions)) {
 			versionsSetter.accept(mappedSourceVersions);

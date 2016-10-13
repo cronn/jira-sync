@@ -50,11 +50,11 @@ public abstract class AbstractIssueSyncStrategyTest {
 	protected static final JiraPriority TARGET_PRIORITY_MAJOR = new JiraPriority("800", "Major");
 	protected static final JiraPriority TARGET_PRIORITY_MINOR =  new JiraPriority("700", "Minor");
 
-	protected static final JiraVersion SOURCE_VERSION_1 = new JiraVersion("1", "1.0");
-	protected static final JiraVersion SOURCE_VERSION_2 = new JiraVersion("2", "2.0");
+	protected static final JiraVersion SOURCE_VERSION_1 = new JiraVersion("1", "1.0-SOURCE");
+	protected static final JiraVersion SOURCE_VERSION_2 = new JiraVersion("2", "2.0-SOURCE");
 
-	protected static final JiraVersion TARGET_VERSION_1 = new JiraVersion("100", "Release 1");
-	protected static final JiraVersion TARGET_VERSION_2 = new JiraVersion("200", "Release 2");
+	protected static final JiraVersion TARGET_VERSION_1 = new JiraVersion("100", "TARGET 1");
+	protected static final JiraVersion TARGET_VERSION_2 = new JiraVersion("200", "TARGET 2");
 
 	@Mock
 	protected JiraService jiraSource;
@@ -67,7 +67,8 @@ public abstract class AbstractIssueSyncStrategyTest {
 
 	protected JiraProject targetProject;
 
-	protected JiraProjectSync projectSync;
+	@Spy
+	protected JiraProjectSync projectSync = new JiraProjectSync();
 
 	@Before
 	public void setUpTargetProject() throws Exception {
@@ -78,8 +79,6 @@ public abstract class AbstractIssueSyncStrategyTest {
 		));
 
 		when(jiraTarget.getProjectByKey(TARGET_PROJECT_KEY)).thenReturn(targetProject);
-
-		projectSync = createProjectSyncConfiguration();
 	}
 
 	@Before
@@ -90,10 +89,11 @@ public abstract class AbstractIssueSyncStrategyTest {
 	@Before
 	public void setUpGetVersions() {
 		when(jiraTarget.getVersions(TARGET_PROJECT_KEY)).thenReturn(Arrays.asList(TARGET_VERSION_1, TARGET_VERSION_2));
+		when(jiraSource.getVersions(SOURCE_PROJECT_KEY)).thenReturn(Arrays.asList(SOURCE_VERSION_1, SOURCE_VERSION_2));
 	}
 
-	private JiraProjectSync createProjectSyncConfiguration() throws Exception {
-		JiraProjectSync projectSync = new JiraProjectSync();
+	@Before
+	public void setUpProjectSyncConfiguration() throws Exception {
 		projectSync.setSourceProject(SOURCE_PROJECT_KEY);
 		projectSync.setTargetProject(TARGET_PROJECT_KEY);
 		projectSync.setRemoteLinkIconInSource(new URL("https://remote-link-icon-in-source"));
@@ -122,8 +122,6 @@ public abstract class AbstractIssueSyncStrategyTest {
 				SOURCE_STATUS_RESOLVED.getName()
 			)
 		));
-
-		return projectSync;
 	}
 
 }

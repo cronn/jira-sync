@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,6 +68,7 @@ public class JiraDummyService {
 
 	public void addProject(Context context, JiraProject project) {
 		Assert.notNull(project.getKey());
+		Assert.notNull(project.getId());
 		Object old = getProjects(context).put(project.getKey(), project);
 		Assert.isNull(old);
 	}
@@ -224,7 +226,8 @@ public class JiraDummyService {
 	@RequestMapping(path = "/api/2/issue", method = RequestMethod.POST)
 	public JiraIssue createIssue(@PathVariable(CONTEXT) Context context, @RequestBody JiraIssue issue) {
 		JiraProject project = issue.getFields().getProject();
-		Assert.notNull(project);
+		validateProject(context, project);
+
 		Assert.isNull(issue.getKey());
 		Assert.isNull(issue.getId());
 		if (issue.getKey() == null) {
@@ -239,6 +242,17 @@ public class JiraDummyService {
 			Assert.notNull(defaultStatus, "defaultStatus must be set");
 			issue.getFields().setStatus(defaultStatus);
 		}
+
+		if (issue.getFields().getResolution() != null) {
+			validateResolution(context, issue.getFields().getResolution());
+		}
+		validateVersions(context, issue.getFields().getVersions());
+		validateVersions(context, issue.getFields().getFixVersions());
+
+		if (issue.getFields().getPriority() != null) {
+			validatePriority(context, issue.getFields().getPriority());
+		}
+
 		Object old = getIssueMap(context).put(issue.getKey(), issue);
 		Assert.isNull(old);
 		return issue;
@@ -248,10 +262,54 @@ public class JiraDummyService {
 	public void updateIssue(@PathVariable(CONTEXT) Context context, @PathVariable("issueKey") String issueKey, @RequestBody JiraIssueUpdate jiraIssueUpdate) {
 		JiraIssue issueInSystem = getIssueByKey(context, issueKey);
 		Assert.isNull(jiraIssueUpdate.getTransition());
-		updateFields(jiraIssueUpdate, issueInSystem);
+		updateFields(context, jiraIssueUpdate, issueInSystem);
 	}
 
-	private void updateFields(JiraIssueUpdate jiraIssueUpdate, JiraIssue issueInSystem) {
+	private void validateValidVersion(Context context, JiraVersion version) {
+		for (JiraVersion jiraVersion : getVersions(context, null)) {
+			if (jiraVersion.getName().equals(version.getName()) && jiraVersion.getId().equals(version.getId())) {
+				return;
+			}
+		}
+		throw new IllegalArgumentException("Unknown version: " + version);
+	}
+
+	private void validatePriority(Context context, JiraPriority priority) {
+		for (JiraPriority jiraPriority : getPriorities(context)) {
+			if (jiraPriority.getName().equals(priority.getName()) && jiraPriority.getId().equals(priority.getId())) {
+				return;
+			}
+		}
+		throw new IllegalArgumentException("Unknown priority: " + priority);
+	}
+
+
+	private void validateProject(Context context, JiraProject project) {
+		Assert.notNull(project);
+		for (JiraProject jiraProject : getProjects(context).values()) {
+			if (jiraProject.getKey().equals(project.getKey()) && jiraProject.getId().equals(project.getId())) {
+				return;
+			}
+		}
+		throw new IllegalArgumentException("Unknown project: " + project);
+	}
+
+	private void validateVersions(Context context, Set<JiraVersion> versions) {
+		if (versions != null) {
+			versions.forEach(version -> validateValidVersion(context, version));
+		}
+	}
+
+	private void validateResolution(Context context, JiraResolution resolution) {
+		for (JiraResolution jiraResolution : getResolutions(context)) {
+			if (jiraResolution.getName().equals(resolution.getName()) && jiraResolution.getId().equals(resolution.getId())) {
+				return;
+			}
+		}
+		throw new IllegalArgumentException("Unknown resolution: " + resolution);
+	}
+
+	private void updateFields(Context context, JiraIssueUpdate jiraIssueUpdate, JiraIssue issueInSystem) {
 		JiraFieldsUpdate fieldToUpdate = jiraIssueUpdate.getFields();
 		if (fieldToUpdate == null) {
 			return;
@@ -262,6 +320,7 @@ public class JiraDummyService {
 		}
 
 		if (fieldToUpdate.getResolution() != null) {
+			validateResolution(context, fieldToUpdate.getResolution());
 			issueInSystem.getFields().setResolution(fieldToUpdate.getResolution());
 		}
 
@@ -269,9 +328,14 @@ public class JiraDummyService {
 			issueInSystem.getFields().setAssignee(fieldToUpdate.getAssignee());
 		}
 
+		validateVersions(context, fieldToUpdate.getFixVersions());
+
+		if (fieldToUpdate.getFixVersions() != null) {
+			issueInSystem.getFields().setFixVersions(fieldToUpdate.getFixVersions());
+		}
+
 		Assert.isNull(fieldToUpdate.getLabels());
 		Assert.isNull(fieldToUpdate.getVersions());
-		Assert.isNull(fieldToUpdate.getFixVersions());
 		Assert.isNull(fieldToUpdate.getPriority());
 	}
 
@@ -285,6 +349,6 @@ public class JiraDummyService {
 		log.debug("Updating status of {} to {}", issueKey, targetStatus);
 		issueInSystem.getFields().setStatus(targetStatus);
 
-		updateFields(jiraIssueUpdate, issueInSystem);
+		updateFields(context, jiraIssueUpdate, issueInSystem);
 	}
 }

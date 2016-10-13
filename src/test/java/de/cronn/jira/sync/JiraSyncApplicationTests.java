@@ -62,12 +62,19 @@ public class JiraSyncApplicationTests {
 	private static final JiraIssueType TARGET_TYPE_TASK = new JiraIssueType("102", "Task");
 
 	private static final JiraPriority SOURCE_PRIORITY_HIGH = new JiraPriority("1", "High");
+	private static final JiraPriority SOURCE_PRIORITY_UNMAPPED = new JiraPriority("99", "Unmapped priority");
+
 	private static final JiraPriority TARGET_PRIORITY_CRITICAL = new JiraPriority("100", "Critical");
 
 	private static final JiraResolution SOURCE_RESOLUTION_FIXED = new JiraResolution("1", "Fixed");
 	private static final JiraResolution TARGET_RESOLUTION_DONE = new JiraResolution("100", "Done");
+
 	private static final JiraVersion SOURCE_VERSION_10 = new JiraVersion("1", "10.0");
 	private static final JiraVersion SOURCE_VERSION_11 = new JiraVersion("2", "11.0");
+	private static final JiraVersion SOURCE_VERSION_UNMAPPED = new JiraVersion("99", "Unmapped version");
+
+	private static final JiraVersion TARGET_VERSION_10 = new JiraVersion("100", "10");
+	private static final JiraVersion TARGET_VERSION_11 = new JiraVersion("101", "11");
 
 	@Autowired
 	private JiraDummyService jiraDummyService;
@@ -113,17 +120,23 @@ public class JiraSyncApplicationTests {
 		jiraDummyService.addProject(TARGET, TARGET_PROJECT);
 
 		jiraDummyService.addPriority(SOURCE, SOURCE_PRIORITY_HIGH);
+		jiraDummyService.addPriority(SOURCE, SOURCE_PRIORITY_UNMAPPED);
 		jiraDummyService.addPriority(TARGET, TARGET_PRIORITY_CRITICAL);
 
 		jiraDummyService.addResolution(SOURCE, SOURCE_RESOLUTION_FIXED);
+		jiraDummyService.addResolution(TARGET, TARGET_RESOLUTION_DONE);
 
 		jiraDummyService.addTransition(SOURCE, new JiraTransition("1", "Set resolved", SOURCE_STATUS_RESOLVED));
 		jiraDummyService.addTransition(SOURCE, new JiraTransition("2", "Set in progress", SOURCE_STATUS_IN_PROGRESS));
 
 		jiraDummyService.addTransition(TARGET, new JiraTransition("100", "Close", TARGET_STATUS_CLOSED));
 
-		jiraDummyService.addVersion(TARGET, new JiraVersion("1", "10"));
-		jiraDummyService.addVersion(TARGET, new JiraVersion("2", "11"));
+		jiraDummyService.addVersion(SOURCE, SOURCE_VERSION_10);
+		jiraDummyService.addVersion(SOURCE, SOURCE_VERSION_11);
+		jiraDummyService.addVersion(SOURCE, SOURCE_VERSION_UNMAPPED);
+
+		jiraDummyService.addVersion(TARGET, TARGET_VERSION_10);
+		jiraDummyService.addVersion(TARGET, TARGET_VERSION_11);
 
 		jiraDummyService.setDefaultStatus(TARGET, TARGET_STATUS_OPEN);
 
@@ -255,13 +268,13 @@ public class JiraSyncApplicationTests {
 	}
 
 	@Test
-	public void testUnknownVersionAndUnknownPriority() throws Exception {
+	public void testUnmappedVersionAndUnmappedPriority() throws Exception {
 		// given
 		JiraIssue sourceIssue = new JiraIssue(null, null, "some bug", SOURCE_STATUS_OPEN);
 		sourceIssue.getFields().setProject(SOURCE_PROJECT);
 		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_BUG);
-		sourceIssue.getFields().setPriority(new JiraPriority("100", "Some unknown priority"));
-		sourceIssue.getFields().setVersions(Collections.singleton(new JiraVersion("100", "Unknown version")));
+		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_UNMAPPED);
+		sourceIssue.getFields().setVersions(Collections.singleton(SOURCE_VERSION_UNMAPPED));
 		jiraDummyService.createIssue(SOURCE, sourceIssue);
 
 		// when
@@ -276,17 +289,18 @@ public class JiraSyncApplicationTests {
 	}
 
 	private static List<String> getNames(Set<JiraVersion> versions) {
-		return versions.stream().map(JiraVersion::getName).collect(Collectors.toList());
+		if (versions == null) {
+			return null;
+		}
+		return versions.stream()
+			.map(JiraVersion::getName)
+			.collect(Collectors.toList());
 	}
 
 	@Test
 	public void testCreateTicketInTarget_WithFallbackType() throws Exception {
 		// given
-		JiraIssue sourceIssue = new JiraIssue(null, null, "some issue", SOURCE_STATUS_OPEN);
-		sourceIssue.getFields().setProject(SOURCE_PROJECT);
-		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_UNKNOWN);
-		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
-		jiraDummyService.createIssue(SOURCE, sourceIssue);
+		createIssueInSource("some issue", SOURCE_TYPE_UNKNOWN);
 
 		// when
 		syncTask.sync();
@@ -300,11 +314,7 @@ public class JiraSyncApplicationTests {
 	@Test
 	public void testUpdateTicketInTarget() throws Exception {
 		// given
-		JiraIssue sourceIssue = new JiraIssue(null, null, "My first bug", SOURCE_STATUS_OPEN);
-		sourceIssue.getFields().setProject(SOURCE_PROJECT);
-		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_BUG);
-		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
-		JiraIssue createdSourceIssue = jiraDummyService.createIssue(SOURCE, sourceIssue);
+		JiraIssue createdSourceIssue = createIssueInSource("My first bug");
 
 		syncTask.sync();
 
@@ -326,11 +336,7 @@ public class JiraSyncApplicationTests {
 	@Test
 	public void testSetTicketToResolvedInSourceWhenTargetTicketIsClosed() throws Exception {
 		// given
-		JiraIssue sourceIssue = new JiraIssue(null, null, "My first bug", SOURCE_STATUS_OPEN);
-		sourceIssue.getFields().setProject(SOURCE_PROJECT);
-		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_BUG);
-		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
-		JiraIssue createdSourceIssue = jiraDummyService.createIssue(SOURCE, sourceIssue);
+		JiraIssue createdSourceIssue = createIssueInSource("My first bug");
 
 		syncTask.sync();
 
@@ -343,6 +349,7 @@ public class JiraSyncApplicationTests {
 		JiraIssueUpdate update = new JiraIssueUpdate();
 		update.setTransition(transition);
 		update.getOrCreateFields().setResolution(TARGET_RESOLUTION_DONE);
+		update.getOrCreateFields().setFixVersions(Collections.singleton(TARGET_VERSION_10));
 		jiraDummyService.transitionIssue(TARGET, targetIssue.getKey(), update);
 
 		syncTask.sync();
@@ -351,6 +358,19 @@ public class JiraSyncApplicationTests {
 		JiraIssue updatedSourceIssue = jiraDummyService.getIssueByKey(SOURCE, createdSourceIssue.getKey());
 		assertThat(updatedSourceIssue.getFields().getStatus().getName(), is(SOURCE_STATUS_RESOLVED.getName()));
 		assertThat(updatedSourceIssue.getFields().getResolution().getName(), is(SOURCE_RESOLUTION_FIXED.getName()));
+		assertThat(getNames(updatedSourceIssue.getFields().getFixVersions()), contains(SOURCE_VERSION_10.getName()));
+	}
+
+	private JiraIssue createIssueInSource(String summary) {
+		return createIssueInSource(summary, SOURCE_TYPE_BUG);
+	}
+
+	private JiraIssue createIssueInSource(String summary, JiraIssueType issueType) {
+		JiraIssue sourceIssue = new JiraIssue(null, null, summary, SOURCE_STATUS_OPEN);
+		sourceIssue.getFields().setProject(SOURCE_PROJECT);
+		sourceIssue.getFields().setIssuetype(issueType);
+		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
+		return jiraDummyService.createIssue(SOURCE, sourceIssue);
 	}
 
 	private JiraTransition findTransition(Context context, String issueKey, JiraIssueStatus statusToTransitionTo) {
@@ -365,11 +385,7 @@ public class JiraSyncApplicationTests {
 	@Test
 	public void testSetTicketToInProgressInSourceWhenTargetGetsAssigned() throws Exception {
 		// given
-		JiraIssue sourceIssue = new JiraIssue(null, null, "My first bug", SOURCE_STATUS_OPEN);
-		sourceIssue.getFields().setProject(SOURCE_PROJECT);
-		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_BUG);
-		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
-		JiraIssue createdSourceIssue = jiraDummyService.createIssue(SOURCE, sourceIssue);
+		JiraIssue createdSourceIssue = createIssueInSource("My first bug");
 
 		syncTask.sync();
 		syncTask.sync();
