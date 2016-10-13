@@ -2,16 +2,12 @@ package de.cronn.jira.sync.domain;
 
 import java.util.Set;
 
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 @JsonInclude(Include.NON_NULL)
 public class JiraFieldsUpdate {
 
-	private String summary;
 	private String description;
 	private JiraPriority priority;
 	private JiraResolution resolution;
@@ -19,14 +15,6 @@ public class JiraFieldsUpdate {
 	private Set<JiraVersion> versions;
 	private Set<JiraVersion> fixVersions;
 	private JiraUser assignee;
-
-	public String getSummary() {
-		return summary;
-	}
-
-	public void setSummary(String summary) {
-		this.summary = summary;
-	}
 
 	public String getDescription() {
 		return description;
@@ -84,41 +72,4 @@ public class JiraFieldsUpdate {
 		this.assignee = assignee;
 	}
 
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) {
-			return true;
-		}
-
-		if (o == null || getClass() != o.getClass()) {
-			return false;
-		}
-
-		JiraFieldsUpdate that = (JiraFieldsUpdate) o;
-
-		return new EqualsBuilder()
-			.append(summary, that.summary)
-			.append(description, that.description)
-			.append(priority, that.priority)
-			.append(resolution, that.resolution)
-			.append(labels, that.labels)
-			.append(versions, that.versions)
-			.append(fixVersions, that.fixVersions)
-			.append(assignee, that.assignee)
-			.isEquals();
-	}
-
-	@Override
-	public int hashCode() {
-		return new HashCodeBuilder(17, 37)
-			.append(summary)
-			.append(description)
-			.append(priority)
-			.append(resolution)
-			.append(labels)
-			.append(versions)
-			.append(fixVersions)
-			.append(assignee)
-			.toHashCode();
-	}
 }

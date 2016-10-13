@@ -272,7 +272,6 @@ public class JiraDummyService {
 		Assert.isNull(fieldToUpdate.getLabels());
 		Assert.isNull(fieldToUpdate.getVersions());
 		Assert.isNull(fieldToUpdate.getFixVersions());
-		Assert.isNull(fieldToUpdate.getSummary());
 		Assert.isNull(fieldToUpdate.getPriority());
 	}
 
