@@ -16,7 +16,7 @@ import org.springframework.util.CollectionUtils;
 
 import de.cronn.jira.sync.JiraSyncException;
 import de.cronn.jira.sync.config.JiraProjectSync;
-import de.cronn.jira.sync.config.StatusTransitionConfig;
+import de.cronn.jira.sync.config.TransitionConfig;
 import de.cronn.jira.sync.domain.JiraIdResource;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueFields;
@@ -108,13 +108,13 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 	}
 
 	private void processStatusTransition(JiraService jiraSource, JiraIssue sourceIssue, JiraIssue targetIssue, JiraProjectSync projectSync, JiraIssueUpdate sourceIssueUpdate) {
-		List<StatusTransitionConfig> statusTransitions = projectSync.getStatusTransitions();
-		if (statusTransitions == null) {
-			log.trace("No status transitions configured");
+		List<TransitionConfig> transitions = projectSync.getTransitions();
+		if (transitions == null) {
+			log.trace("No transitions configured");
 			return;
 		}
 
-		StatusTransitionConfig transition = findTransition(sourceIssue, targetIssue, statusTransitions);
+		TransitionConfig transition = findTransition(sourceIssue, targetIssue, transitions);
 		if (transition != null) {
 
 			if (transition.isAssignToMyselfInSource()) {
@@ -143,11 +143,11 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		return Objects.equals(jiraUser.getKey(), assignee.getKey());
 	}
 
-	private StatusTransitionConfig findTransition(JiraIssue sourceIssue, JiraIssue targetIssue, List<StatusTransitionConfig> statusTransitions) {
+	private TransitionConfig findTransition(JiraIssue sourceIssue, JiraIssue targetIssue, List<TransitionConfig> statusTransitions) {
 		String sourceIssueStatus = getStatusName(sourceIssue);
 		String targetIssueStatus = getStatusName(targetIssue);
 
-		List<StatusTransitionConfig> transitionConfigs = statusTransitions.stream()
+		List<TransitionConfig> transitionConfigs = statusTransitions.stream()
 			.filter(statusTransitionConfig -> statusTransitionConfig.getSourceStatusIn().contains(sourceIssueStatus))
 			.filter(statusTransitionConfig -> statusTransitionConfig.getTargetStatusIn().contains(targetIssueStatus))
 			.filter(statusTransitionConfig -> filterOnlyIfAssignedInTarget(statusTransitionConfig, targetIssue))
@@ -156,7 +156,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		if (transitionConfigs.isEmpty()) {
 			return null;
 		} else if (transitionConfigs.size() == 1) {
-			StatusTransitionConfig transitionConfig = transitionConfigs.get(0);
+			TransitionConfig transitionConfig = transitionConfigs.get(0);
 			String statusToTransitionTo = transitionConfig.getSourceStatusToSet();
 			Assert.notNull(statusToTransitionTo);
 			return transitionConfig;
@@ -165,7 +165,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		}
 	}
 
-	private boolean filterOnlyIfAssignedInTarget(StatusTransitionConfig statusTransitionConfig, JiraIssue targetIssue) {
+	private boolean filterOnlyIfAssignedInTarget(TransitionConfig statusTransitionConfig, JiraIssue targetIssue) {
 		if (statusTransitionConfig.isOnlyIfAssignedInTarget()) {
 			return targetIssue.getFields().getAssignee() != null;
 		} else {
@@ -173,7 +173,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		}
 	}
 
-	private JiraTransition getJiraTransition(JiraService jiraTarget, JiraIssue targetIssue, StatusTransitionConfig transitionConfig) {
+	private JiraTransition getJiraTransition(JiraService jiraTarget, JiraIssue targetIssue, TransitionConfig transitionConfig) {
 		String sourceStatusToSet = transitionConfig.getSourceStatusToSet();
 		List<JiraTransition> allTransitions = jiraTarget.getTransitions(targetIssue);
 		List<JiraTransition> filteredTransitions = allTransitions.stream()

@@ -4,19 +4,20 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-public class StatusTransitionConfig {
+public class TransitionConfig {
 
 	private Set<String> sourceStatusIn;
 	private Set<String> targetStatusIn;
 	private String sourceStatusToSet;
 	private boolean copyResolutionToSource = false;
+	private boolean copyFixVersionsToSource = false;
 	private boolean onlyIfAssignedInTarget = false;
 	private boolean assignToMyselfInSource = false;
 
-	public StatusTransitionConfig() {
+	public TransitionConfig() {
 	}
 
-	public StatusTransitionConfig(Collection<String> sourceStatusIn, Collection<String> targetStatusIn, String sourceStatusToSet) {
+	public TransitionConfig(Collection<String> sourceStatusIn, Collection<String> targetStatusIn, String sourceStatusToSet) {
 		this.sourceStatusIn = new LinkedHashSet<>(sourceStatusIn);
 		this.targetStatusIn = new LinkedHashSet<>(targetStatusIn);
 		this.sourceStatusToSet = sourceStatusToSet;
@@ -48,6 +49,14 @@ public class StatusTransitionConfig {
 
 	public void setCopyResolutionToSource(boolean copyResolutionToSource) {
 		this.copyResolutionToSource = copyResolutionToSource;
+	}
+
+	public boolean isCopyFixVersionsToSource() {
+		return copyFixVersionsToSource;
+	}
+
+	public void setCopyFixVersionsToSource(boolean copyFixVersionsToSource) {
+		this.copyFixVersionsToSource = copyFixVersionsToSource;
 	}
 
 	public void setOnlyIfAssignedInTarget(boolean onlyIfAssignedInTarget) {

@@ -17,7 +17,7 @@ public class JiraProjectSync {
 	private URL remoteLinkIconInTarget;
 	private String targetIssueTypeFallback;
 	private Set<String> labelsToKeepInTarget;
-	private List<StatusTransitionConfig> statusTransitions;
+	private List<TransitionConfig> transitions;
 	private Map<String, String> versionMapping;
 
 	public String getSourceProject() {
@@ -76,12 +76,12 @@ public class JiraProjectSync {
 		return labelsToKeepInTarget;
 	}
 
-	public void setStatusTransitions(List<StatusTransitionConfig> statusTransitions) {
-		this.statusTransitions = statusTransitions;
+	public void setTransitions(List<TransitionConfig> transitions) {
+		this.transitions = transitions;
 	}
 
-	public List<StatusTransitionConfig> getStatusTransitions() {
-		return statusTransitions;
+	public List<TransitionConfig> getTransitions() {
+		return transitions;
 	}
 
 	public Map<String, String> getVersionMapping() {
