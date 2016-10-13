@@ -5,7 +5,7 @@ public enum JiraField {
 
 	SUMMARY("summary"),
 	STATUS("status"),
-	ISSUETYPE("issuetype"),
+	ISSUE_TYPE("issuetype"),
 	DESCRIPTION("description"),
 	PRIORITY("priority"),
 	PROJECT("project"),
