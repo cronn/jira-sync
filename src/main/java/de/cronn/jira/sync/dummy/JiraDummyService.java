@@ -329,13 +329,17 @@ public class JiraDummyService {
 		}
 
 		validateVersions(context, fieldToUpdate.getFixVersions());
+		validateVersions(context, fieldToUpdate.getVersions());
 
 		if (fieldToUpdate.getFixVersions() != null) {
 			issueInSystem.getFields().setFixVersions(fieldToUpdate.getFixVersions());
 		}
 
+		if (fieldToUpdate.getVersions() != null) {
+			issueInSystem.getFields().setVersions(fieldToUpdate.getVersions());
+		}
+
 		Assert.isNull(fieldToUpdate.getLabels());
-		Assert.isNull(fieldToUpdate.getVersions());
 		Assert.isNull(fieldToUpdate.getPriority());
 	}
 
