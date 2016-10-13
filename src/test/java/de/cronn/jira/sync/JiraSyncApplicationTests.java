@@ -254,6 +254,27 @@ public class JiraSyncApplicationTests {
 		assertThat(firstRemoteLinkInTarget.getIcon().getUrl16x16(), is(new URL("https://jira-target/favicon.ico")));
 	}
 
+	@Test
+	public void testUnknownVersionAndUnknownPriority() throws Exception {
+		// given
+		JiraIssue sourceIssue = new JiraIssue(null, null, "some bug", SOURCE_STATUS_OPEN);
+		sourceIssue.getFields().setProject(SOURCE_PROJECT);
+		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_BUG);
+		sourceIssue.getFields().setPriority(new JiraPriority("100", "Some unknown priority"));
+		sourceIssue.getFields().setVersions(Collections.singleton(new JiraVersion("100", "Unknown version")));
+		jiraDummyService.createIssue(SOURCE, sourceIssue);
+
+		// when
+		syncTask.sync();
+
+		// then
+		assertThat(jiraDummyService.getAllIssues(TARGET), hasSize(1));
+		JiraIssue targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
+		assertThat(targetIssue.getFields().getIssuetype().getName(), is(TARGET_TYPE_BUG.getName()));
+		assertNull(targetIssue.getFields().getPriority());
+		assertThat(targetIssue.getFields().getVersions(), empty());
+	}
+
 	private static List<String> getNames(Set<JiraVersion> versions) {
 		return versions.stream().map(JiraVersion::getName).collect(Collectors.toList());
 	}

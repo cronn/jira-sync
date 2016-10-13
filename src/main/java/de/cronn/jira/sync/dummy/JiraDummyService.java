@@ -97,6 +97,7 @@ public class JiraDummyService {
 	public JiraServerInfo serverInfo(@PathVariable(CONTEXT) Context context) {
 		JiraServerInfo jiraServerInfo = new JiraServerInfo(getData(context).getBaseUrl());
 		jiraServerInfo.setServerTitle(context + " Jira");
+		jiraServerInfo.setVersion("DummyService");
 		return jiraServerInfo;
 	}
 
@@ -224,6 +225,8 @@ public class JiraDummyService {
 	public JiraIssue createIssue(@PathVariable(CONTEXT) Context context, @RequestBody JiraIssue issue) {
 		JiraProject project = issue.getFields().getProject();
 		Assert.notNull(project);
+		Assert.isNull(issue.getKey());
+		Assert.isNull(issue.getId());
 		if (issue.getKey() == null) {
 			long id = getIssueMap(context).size() + 1;
 			String projectKey = project.getKey();
