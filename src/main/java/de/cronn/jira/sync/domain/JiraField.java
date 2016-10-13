@@ -8,6 +8,7 @@ public enum JiraField {
 	ISSUETYPE("issuetype"),
 	DESCRIPTION("description"),
 	PRIORITY("priority"),
+	PROJECT("project"),
 	RESOLUTION("resolution"),
 	LABELS("labels"),
 	VERSIONS("versions"),
