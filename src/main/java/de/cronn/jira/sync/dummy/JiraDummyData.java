@@ -21,6 +21,7 @@ public class JiraDummyData {
 
 	private JiraLoginRequest credentials;
 	private JiraIssueStatus defaultStatus;
+	private final Map<String, JiraProject> projectAssociatedToFilterId = new LinkedHashMap<>();
 	private final Map<String, JiraIssue> issues = new LinkedHashMap<>();
 	private final Map<String, JiraRemoteLinks> remoteLinks = new LinkedHashMap<>();
 	private final Map<String, JiraProject> projects = new LinkedHashMap<>();
@@ -81,5 +82,9 @@ public class JiraDummyData {
 
 	public String getBaseUrl() {
 		return baseUrl;
+	}
+
+	public Map<String, JiraProject> getProjectAssociatedToFilterId() {
+		return projectAssociatedToFilterId;
 	}
 }

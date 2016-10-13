@@ -119,6 +119,8 @@ public class JiraSyncApplicationTests {
 		jiraDummyService.addProject(SOURCE, SOURCE_PROJECT);
 		jiraDummyService.addProject(TARGET, TARGET_PROJECT);
 
+		jiraDummyService.associateFilterIdToProject(SOURCE, "12345", SOURCE_PROJECT);
+
 		jiraDummyService.addPriority(SOURCE, SOURCE_PRIORITY_HIGH);
 		jiraDummyService.addPriority(SOURCE, SOURCE_PRIORITY_UNMAPPED);
 		jiraDummyService.addPriority(TARGET, TARGET_PRIORITY_CRITICAL);

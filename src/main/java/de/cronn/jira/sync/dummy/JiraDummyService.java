@@ -6,6 +6,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import de.cronn.jira.sync.domain.JiraFieldsUpdate;
@@ -91,6 +93,13 @@ public class JiraDummyService {
 		getData(context).getResolutions().add(resolution);
 	}
 
+	public void associateFilterIdToProject(Context context, String filterId, JiraProject project) {
+		validateProject(context, project);
+		Map<String, JiraProject> projectAssociatedToFilterId = getData(context).getProjectAssociatedToFilterId();
+		Object old = projectAssociatedToFilterId.put(filterId, project);
+		Assert.isNull(old);
+	}
+
 	private Map<String, JiraProject> getProjects(Context context) {
 		return getData(context).getProjects();
 	}
@@ -106,14 +115,22 @@ public class JiraDummyService {
 	@RequestMapping(path = "/api/2/filter/{filterId}", method = RequestMethod.GET)
 	public JiraFilterResult filter(@PathVariable(CONTEXT) Context context, @PathVariable("filterId") String filterId) {
 		JiraFilterResult result = new JiraFilterResult();
-		result.setJql("dummy");
+		result.setJql(filterId);
 		return result;
 	}
 
 	@RequestMapping(path = "/api/2/search", method = RequestMethod.GET)
-	public JiraSearchResult search(@PathVariable(CONTEXT) Context context) {
+	public JiraSearchResult search(@PathVariable(CONTEXT) Context context, @RequestParam("jql") String jql) {
 		JiraSearchResult result = new JiraSearchResult();
-		List<JiraIssue> allIssues = getAllIssues(context);
+
+		Map<String, JiraProject> projectAssociatedToFilterId = getData(context).getProjectAssociatedToFilterId();
+		JiraProject project = projectAssociatedToFilterId.get(jql);
+		Assert.notNull(project, "No project associated to filter " + jql);
+
+		List<JiraIssue> allIssues = getAllIssues(context).stream()
+			.filter(issue -> issue.getFields().getProject().getKey().equals(project.getKey()))
+			.collect(Collectors.toList());
+
 		result.setIssues(allIssues);
 		result.setMaxResults(allIssues.size());
 		result.setTotal(allIssues.size());
