@@ -50,12 +50,12 @@ public final class DefaultVersionMapper {
 			}
 
 			JiraVersion targetVersion = projectVersions.stream()
-				.filter(priority -> Objects.equals(priority.getName(), targetVersionName))
+				.filter(version -> Objects.equals(version.getName(), targetVersionName))
 				.findFirst()
 				.orElse(null);
 
 			if (targetVersion == null) {
-				log.warn("target priority '{}' not found", targetVersionName);
+				log.warn("target version '{}' not found", targetVersionName);
 				continue;
 			}
 
