@@ -24,12 +24,4 @@ public enum JiraField {
 		return name;
 	}
 
-	public static JiraField forName(String name) {
-		for (JiraField field : values()) {
-			if (field.getName().equals(name)) {
-				return field;
-			}
-		}
-		throw new IllegalArgumentException("Field not found for name '" + name + "'");
-	}
 }

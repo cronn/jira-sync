@@ -14,10 +14,6 @@ public class JiraPriority extends JiraIdResource {
 	public JiraPriority() {
 	}
 
-	public JiraPriority(String id) {
-		super(id);
-	}
-
 	public JiraPriority(String id, String name) {
 		super(id);
 		this.name = name;

@@ -16,10 +16,6 @@ public class JiraVersion extends JiraIdResource {
 	public JiraVersion() {
 	}
 
-	public JiraVersion(String id) {
-		super(id);
-	}
-
 	public JiraVersion(String id, String name) {
 		super(id);
 		this.name = name;

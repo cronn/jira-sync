@@ -14,10 +14,6 @@ public class JiraResolution extends JiraIdResource {
 	public JiraResolution() {
 	}
 
-	public JiraResolution(String id) {
-		super(id);
-	}
-
 	public JiraResolution(String id, String name) {
 		super(id);
 		this.name = name;
