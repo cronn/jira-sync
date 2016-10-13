@@ -33,6 +33,7 @@ import de.cronn.jira.sync.domain.JiraSession;
 import de.cronn.jira.sync.domain.JiraTransition;
 import de.cronn.jira.sync.domain.JiraTransitions;
 import de.cronn.jira.sync.domain.JiraUser;
+import de.cronn.jira.sync.domain.JiraVersion;
 
 @RestController
 @RequestMapping("/{" + JiraDummyService.CONTEXT + "}/rest")
@@ -73,6 +74,11 @@ public class JiraDummyService {
 	public void addTransition(Context context, JiraTransition transition) {
 		List<JiraTransition> transitions = getData(context).getTransitions();
 		transitions.add(transition);
+	}
+
+	public void addVersion(Context context, JiraVersion version) {
+		List<JiraVersion> versions = getData(context).getVersions();
+		versions.add(version);
 	}
 
 	public void addPriority(Context context, JiraPriority priority) {
@@ -201,6 +207,11 @@ public class JiraDummyService {
 	@RequestMapping(path = "/api/2/issue/{issueKey}/transitions", method = RequestMethod.GET)
 	public JiraTransitions getTransitions(@PathVariable(CONTEXT) Context context, @PathVariable("issueKey") String issueKey) {
 		return new JiraTransitions(getData(context).getTransitions());
+	}
+
+	@RequestMapping(path = "/api/2/project/{projectKey}/versions", method = RequestMethod.GET)
+	public List<JiraVersion> getVersions(@PathVariable(CONTEXT) Context context, @PathVariable("projectKey") String projectKey) {
+		return getData(context).getVersions();
 	}
 
 	@RequestMapping(path = "/api/2/issue/{issueKey}/remotelink", method = RequestMethod.POST)

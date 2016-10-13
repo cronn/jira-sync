@@ -6,8 +6,11 @@ import static org.junit.Assert.*;
 
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.junit.Before;
@@ -32,6 +35,7 @@ import de.cronn.jira.sync.domain.JiraRemoteLinkObject;
 import de.cronn.jira.sync.domain.JiraResolution;
 import de.cronn.jira.sync.domain.JiraTransition;
 import de.cronn.jira.sync.domain.JiraUser;
+import de.cronn.jira.sync.domain.JiraVersion;
 import de.cronn.jira.sync.dummy.JiraDummyService;
 import de.cronn.jira.sync.dummy.JiraDummyService.Context;
 import de.cronn.jira.sync.service.JiraService;
@@ -62,6 +66,8 @@ public class JiraSyncApplicationTests {
 
 	private static final JiraResolution SOURCE_RESOLUTION_FIXED = new JiraResolution("1", "Fixed");
 	private static final JiraResolution TARGET_RESOLUTION_DONE = new JiraResolution("100", "Done");
+	private static final JiraVersion SOURCE_VERSION_10 = new JiraVersion("1", "10.0");
+	private static final JiraVersion SOURCE_VERSION_11 = new JiraVersion("2", "11.0");
 
 	@Autowired
 	private JiraDummyService jiraDummyService;
@@ -115,6 +121,9 @@ public class JiraSyncApplicationTests {
 		jiraDummyService.addTransition(SOURCE, new JiraTransition("2", "Set in progress", SOURCE_STATUS_IN_PROGRESS));
 
 		jiraDummyService.addTransition(TARGET, new JiraTransition("100", "Close", TARGET_STATUS_CLOSED));
+
+		jiraDummyService.addVersion(TARGET, new JiraVersion("1", "10"));
+		jiraDummyService.addVersion(TARGET, new JiraVersion("2", "11"));
 
 		jiraDummyService.setDefaultStatus(TARGET, TARGET_STATUS_OPEN);
 
@@ -213,6 +222,9 @@ public class JiraSyncApplicationTests {
 		sourceIssue.getFields().setProject(SOURCE_PROJECT);
 		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_BUG);
 		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
+		sourceIssue.getFields().setLabels(new LinkedHashSet<>(Arrays.asList("label1", "label2")));
+		sourceIssue.getFields().setVersions(new LinkedHashSet<>(Arrays.asList(SOURCE_VERSION_10, SOURCE_VERSION_11)));
+		sourceIssue.getFields().setFixVersions(Collections.singleton(SOURCE_VERSION_11));
 		jiraDummyService.createIssue(SOURCE, sourceIssue);
 
 		// when
@@ -224,6 +236,9 @@ public class JiraSyncApplicationTests {
 		assertThat(targetIssue.getFields().getSummary(), is("PROJECT_ONE-1: My first bug"));
 		assertThat(targetIssue.getFields().getIssuetype().getName(), is(TARGET_TYPE_BUG.getName()));
 		assertThat(targetIssue.getFields().getPriority().getName(), is(TARGET_PRIORITY_CRITICAL.getName()));
+		assertThat(targetIssue.getFields().getLabels(), contains("label1", "label2"));
+		assertThat(getNames(targetIssue.getFields().getVersions()), containsInAnyOrder("10", "11"));
+		assertThat(getNames(targetIssue.getFields().getFixVersions()), contains("11"));
 
 		List<JiraRemoteLink> remoteLinksInTarget = jiraDummyService.getRemoteLinks(TARGET, targetIssue);
 		List<JiraRemoteLink> remoteLinksInSource = jiraDummyService.getRemoteLinks(SOURCE, sourceIssue);
@@ -237,6 +252,10 @@ public class JiraSyncApplicationTests {
 		JiraRemoteLinkObject firstRemoteLinkInTarget = remoteLinksInTarget.get(0).getObject();
 		assertThat(firstRemoteLinkInTarget.getUrl(), is(new URL(sourceBaseUrl + "/browse/PROJECT_ONE-1")));
 		assertThat(firstRemoteLinkInTarget.getIcon().getUrl16x16(), is(new URL("https://jira-target/favicon.ico")));
+	}
+
+	private static List<String> getNames(Set<JiraVersion> versions) {
+		return versions.stream().map(JiraVersion::getName).collect(Collectors.toList());
 	}
 
 	@Test

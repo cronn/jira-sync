@@ -15,6 +15,7 @@ import de.cronn.jira.sync.domain.JiraProject;
 import de.cronn.jira.sync.domain.JiraRemoteLinks;
 import de.cronn.jira.sync.domain.JiraResolution;
 import de.cronn.jira.sync.domain.JiraTransition;
+import de.cronn.jira.sync.domain.JiraVersion;
 
 public class JiraDummyData {
 
@@ -26,6 +27,7 @@ public class JiraDummyData {
 	private final List<JiraPriority> priorities = new ArrayList<>();
 	private final List<JiraResolution> resolutions = new ArrayList<>();
 	private final List<JiraTransition> transitions = new ArrayList<>();
+	private final List<JiraVersion> versions = new ArrayList<>();
 	private String baseUrl;
 
 	public JiraLoginRequest getCredentials() {
@@ -39,6 +41,10 @@ public class JiraDummyData {
 
 	public List<JiraTransition> getTransitions() {
 		return transitions;
+	}
+
+	public List<JiraVersion> getVersions() {
+		return versions;
 	}
 
 	public List<JiraResolution> getResolutions() {
