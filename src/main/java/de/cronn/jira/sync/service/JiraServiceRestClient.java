@@ -126,6 +126,7 @@ public class JiraServiceRestClient implements JiraService {
 	public void login(JiraConnectionProperties jiraConnectionProperties) {
 		this.jiraConnectionProperties = jiraConnectionProperties;
 		this.url = jiraConnectionProperties.getUrl();
+		Assert.notNull(url, "url is missing");
 		this.restTemplate = createRestTemplate(jiraConnectionProperties);
 		JiraLoginRequest loginRequest = new JiraLoginRequest(jiraConnectionProperties.getUsername(), jiraConnectionProperties.getPassword());
 		restTemplate.postForObject(restUrl("/rest/auth/1/session"), loginRequest, JiraLoginResponse.class);
