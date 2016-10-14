@@ -141,7 +141,10 @@ public class JiraServiceRestClient implements JiraService {
 		CACHE_NAME_RESOLUTIONS
 	}, allEntries = true)
 	public void logout() {
-		restTemplate.delete(restUrl("/rest/auth/1/session"));
+		if (restTemplate != null) {
+			restTemplate.delete(restUrl("/rest/auth/1/session"));
+			restTemplate = null;
+		}
 		jiraConnectionProperties = null;
 		restTemplate = null;
 		url = null;
