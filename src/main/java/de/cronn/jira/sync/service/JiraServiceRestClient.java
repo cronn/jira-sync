@@ -125,11 +125,17 @@ public class JiraServiceRestClient implements JiraService {
 	@Override
 	public void login(JiraConnectionProperties jiraConnectionProperties) {
 		this.jiraConnectionProperties = jiraConnectionProperties;
+		validate(jiraConnectionProperties);
 		this.url = jiraConnectionProperties.getUrl();
-		Assert.notNull(url, "url is missing");
 		this.restTemplate = createRestTemplate(jiraConnectionProperties);
 		JiraLoginRequest loginRequest = new JiraLoginRequest(jiraConnectionProperties.getUsername(), jiraConnectionProperties.getPassword());
 		restTemplate.postForObject(restUrl("/rest/auth/1/session"), loginRequest, JiraLoginResponse.class);
+	}
+
+	private void validate(JiraConnectionProperties jiraConnectionProperties) {
+		Assert.notNull(jiraConnectionProperties.getUrl(), "url is missing");
+		Assert.notNull(jiraConnectionProperties.getUsername(), "username is missing");
+		Assert.notNull(jiraConnectionProperties.getPassword(), "password is missing");
 	}
 
 	@Override
