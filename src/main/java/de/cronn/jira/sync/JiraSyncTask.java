@@ -15,7 +15,7 @@ import org.springframework.util.Assert;
 import de.cronn.jira.sync.config.JiraProjectSync;
 import de.cronn.jira.sync.config.JiraSyncConfig;
 import de.cronn.jira.sync.domain.JiraIssue;
-import de.cronn.jira.sync.resolve.JiraIssueResolver;
+import de.cronn.jira.sync.link.JiraIssueLinker;
 import de.cronn.jira.sync.service.JiraService;
 import de.cronn.jira.sync.strategy.ExistingTargetJiraIssueSyncStrategy;
 import de.cronn.jira.sync.strategy.IssueSyncStrategy;
@@ -31,15 +31,15 @@ public class JiraSyncTask implements CommandLineRunner {
 	private final JiraService jiraSource;
 	private final JiraService jiraTarget;
 	private final JiraSyncConfig jiraSyncConfig;
-	private final JiraIssueResolver jiraIssueResolver;
+	private final JiraIssueLinker jiraIssueLinker;
 	private final MissingTargetJiraIssueSyncStrategy missingTargetJiraIssueSyncStrategy;
 	private final ExistingTargetJiraIssueSyncStrategy existingTargetJiraIssueSyncStrategy;
 
-	public JiraSyncTask(JiraService jiraSource, JiraService jiraTarget, JiraSyncConfig jiraSyncConfig, JiraIssueResolver jiraIssueResolver, MissingTargetJiraIssueSyncStrategy missingTargetJiraIssueSyncStrategy, ExistingTargetJiraIssueSyncStrategy existingTargetJiraIssueSyncStrategy) {
+	public JiraSyncTask(JiraService jiraSource, JiraService jiraTarget, JiraSyncConfig jiraSyncConfig, JiraIssueLinker jiraIssueLinker, MissingTargetJiraIssueSyncStrategy missingTargetJiraIssueSyncStrategy, ExistingTargetJiraIssueSyncStrategy existingTargetJiraIssueSyncStrategy) {
 		this.jiraSource = jiraSource;
 		this.jiraTarget = jiraTarget;
 		this.jiraSyncConfig = jiraSyncConfig;
-		this.jiraIssueResolver = jiraIssueResolver;
+		this.jiraIssueLinker = jiraIssueLinker;
 		this.missingTargetJiraIssueSyncStrategy = missingTargetJiraIssueSyncStrategy;
 		this.existingTargetJiraIssueSyncStrategy = existingTargetJiraIssueSyncStrategy;
 	}
@@ -62,7 +62,7 @@ public class JiraSyncTask implements CommandLineRunner {
 			jiraSource.login(jiraSyncConfig.getSource());
 			jiraTarget.login(jiraSyncConfig.getTarget());
 
-			log.info("going to resolve source={} with target={}", jiraSource, jiraTarget);
+			log.info("going to link source={} with target={}", jiraSource, jiraTarget);
 			log.info("jiraSource server info: {}", jiraSource.getServerInfo());
 			log.info("jiraTarget server info: {}", jiraTarget.getServerInfo());
 
@@ -99,7 +99,7 @@ public class JiraSyncTask implements CommandLineRunner {
 			if (!sourceIssue.getFields().getProject().getKey().equals(projectSync.getSourceProject())) {
 				throw new JiraSyncException("Filter returned issue " + sourceIssue + " from unexpected project " + sourceIssue.getFields().getProject());
 			}
-			JiraIssue targetIssue = jiraIssueResolver.resolve(sourceIssue, jiraSource, jiraTarget);
+			JiraIssue targetIssue = jiraIssueLinker.resolve(sourceIssue, jiraSource, jiraTarget);
 			IssueSyncStrategy syncStrategy = getSyncStrategy(targetIssue);
 			SyncResult syncResult = syncStrategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
 			resultCounts.compute(syncResult, (k, v) -> v + 1);

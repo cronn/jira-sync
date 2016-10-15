@@ -1,4 +1,4 @@
-package de.cronn.jira.sync.resolve;
+package de.cronn.jira.sync.link;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
@@ -22,7 +22,7 @@ import de.cronn.jira.sync.domain.JiraServerInfo;
 import de.cronn.jira.sync.service.JiraService;
 
 @RunWith(MockitoJUnitRunner.class)
-public class JiraIssueByExternalLinkResolverTest {
+public class JiraIssueWebLinkerTest {
 
 	private static final String JIRA_SOURCE_URL = "https://jira.source";
 	private static final String JIRA_TARGET_URL = "https://jira.target";
@@ -45,7 +45,7 @@ public class JiraIssueByExternalLinkResolverTest {
 	@Test
 	public void testResolve_NoRemoteLinks() throws Exception {
 
-		JiraIssueResolver resolver = new JiraIssueByExternalLinkResolver();
+		JiraIssueLinker resolver = new JiraIssueWebLinker();
 
 		JiraIssue jiraIssue = new JiraIssue();
 
@@ -58,7 +58,7 @@ public class JiraIssueByExternalLinkResolverTest {
 
 	@Test
 	public void testResolve_OtherRemoteLinks() throws Exception {
-		JiraIssueResolver resolver = new JiraIssueByExternalLinkResolver();
+		JiraIssueLinker resolver = new JiraIssueWebLinker();
 
 		JiraIssue jiraIssue = new JiraIssue();
 
@@ -73,7 +73,7 @@ public class JiraIssueByExternalLinkResolverTest {
 
 	@Test
 	public void testResolve_HappyPath() throws Exception {
-		JiraIssueResolver resolver = new JiraIssueByExternalLinkResolver();
+		JiraIssueLinker resolver = new JiraIssueWebLinker();
 
 		JiraIssue sourceIssue = new JiraIssue("1", "SOURCE-12");
 		JiraIssue targetIssue = new JiraIssue("1", "TARGET-123");
@@ -93,7 +93,7 @@ public class JiraIssueByExternalLinkResolverTest {
 
 	@Test
 	public void testResolve_ExtraSlash() throws Exception {
-		JiraIssueResolver resolver = new JiraIssueByExternalLinkResolver();
+		JiraIssueLinker resolver = new JiraIssueWebLinker();
 
 		JiraIssue sourceIssue = new JiraIssue("1", "SOURCE-12");
 		JiraIssue targetIssue = new JiraIssue("1", "TARGET-123");
@@ -111,7 +111,7 @@ public class JiraIssueByExternalLinkResolverTest {
 
 	@Test
 	public void testResolve_CannotResolveFromTarget() throws Exception {
-		JiraIssueResolver resolver = new JiraIssueByExternalLinkResolver();
+		JiraIssueLinker resolver = new JiraIssueWebLinker();
 
 		JiraIssue sourceIssue = new JiraIssue("1", "SOURCE-123");
 		JiraIssue targetIssue = new JiraIssue("1", "TARGET-123");
@@ -126,7 +126,7 @@ public class JiraIssueByExternalLinkResolverTest {
 			resolver.resolve(sourceIssue, jiraSource, jiraTarget);
 			fail("JiraSyncException expected");
 		} catch (JiraSyncException e) {
-			assertThat(e.getMessage(), is("Failed to resolve TARGET-123 in target"));
+			assertThat(e.getMessage(), is("Failed to link TARGET-123 in target"));
 		}
 
 		verify(jiraTarget).getIssueByKey(targetIssue.getKey());
@@ -134,7 +134,7 @@ public class JiraIssueByExternalLinkResolverTest {
 
 	@Test
 	public void testResolve_MultipleRemoteIssues() throws Exception {
-		JiraIssueResolver resolver = new JiraIssueByExternalLinkResolver();
+		JiraIssueLinker resolver = new JiraIssueWebLinker();
 
 		JiraIssue sourceIssue = new JiraIssue("1", "SOURCE-123");
 		JiraIssue targetIssue1 = new JiraIssue("1", "TARGET-123");

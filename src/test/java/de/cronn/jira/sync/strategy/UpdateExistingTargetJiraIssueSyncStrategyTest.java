@@ -1,5 +1,6 @@
 package de.cronn.jira.sync.strategy;
 
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -14,9 +15,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
-import de.cronn.jira.sync.JiraSyncException;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueUpdate;
+import de.cronn.jira.sync.link.JiraIssueLinker;
 import de.cronn.jira.sync.mapping.DefaultDescriptionMapper;
 import de.cronn.jira.sync.mapping.DefaultIssueTypeMapper;
 import de.cronn.jira.sync.mapping.DefaultLabelMapper;
@@ -28,12 +29,11 @@ import de.cronn.jira.sync.mapping.LabelMapper;
 import de.cronn.jira.sync.mapping.PriorityMapper;
 import de.cronn.jira.sync.mapping.ResolutionMapper;
 import de.cronn.jira.sync.mapping.VersionMapper;
-import de.cronn.jira.sync.resolve.JiraIssueResolver;
 
 public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssueSyncStrategyTest {
 
 	@Mock
-	private JiraIssueResolver jiraIssueResolver;
+	private JiraIssueLinker jiraIssueLinker;
 
 	@InjectMocks
 	private UpdateExistingTargetJiraIssueSyncStrategy strategy;
@@ -77,7 +77,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		sourceIssue.getFields().setDescription("some description");
 		targetIssue.getFields().setDescription(descriptionMapper.mapSourceDescription("some description"));
 
-		when(jiraIssueResolver.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
+		when(jiraIssueLinker.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
 
 		// when
 		SyncResult result = strategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
@@ -87,47 +87,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 
 		verify(jiraTarget).getPriorities();
 		verify(jiraTarget).getVersions(TARGET_PROJECT_KEY);
-		verify(jiraIssueResolver).resolve(targetIssue, jiraTarget, jiraSource);
-		verifyNoMoreInteractions(jiraSource, jiraTarget, jiraIssueResolver);
-	}
-
-	@Test
-	public void testSync_MissingBacklink() throws Exception {
-		// given
-		JiraIssue sourceIssue = new JiraIssue("100", "SOURCE-123", "Some Summary", SOURCE_STATUS_OPEN);
-		JiraIssue targetIssue = new JiraIssue("400", "TARGET-123", "Some Summary", TARGET_STATUS_IN_PROGRESS);
-
-		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
-		targetIssue.getFields().setPriority(TARGET_PRIORITY_MAJOR);
-
-		// when
-		SyncResult result = strategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
-
-		// then
-		assertThat(result, is(SyncResult.UNCHANGED));
-
-		verify(jiraTarget).getPriorities();
-		verify(jiraTarget).addRemoteLink(targetIssue, sourceIssue, jiraSource, projectSync.getRemoteLinkIconInTarget());
-		verifyNoMoreInteractions(jiraSource, jiraTarget);
-	}
-
-	@Test
-	public void testSync_IllegalBacklink() throws Exception {
-		JiraIssue sourceIssue = new JiraIssue("100", "SOURCE-123", "Some Summary", SOURCE_STATUS_OPEN);
-		JiraIssue otherSourceIssue = new JiraIssue("200", "SOURCE-500", "Other", SOURCE_STATUS_OPEN);
-		JiraIssue targetIssue = new JiraIssue("400", "TARGET-123", "Some Summary", TARGET_STATUS_IN_PROGRESS);
-
-		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
-		targetIssue.getFields().setPriority(TARGET_PRIORITY_MAJOR);
-
-		when(jiraIssueResolver.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(otherSourceIssue);
-
-		try {
-			strategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
-			fail("JiraSyncException expected");
-		} catch (JiraSyncException e) {
-			assertThat(e.getMessage(), is("Backlink of JiraIssue[id=400,key=TARGET-123] points to JiraIssue[id=200,key=SOURCE-500]; expected: JiraIssue[id=100,key=SOURCE-123]"));
-		}
+		verifyNoMoreInteractions(jiraSource, jiraTarget, jiraIssueLinker);
 	}
 
 	@Test
@@ -144,7 +104,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 
 		when(jiraSource.getTransitions(sourceIssue)).thenReturn(Collections.singletonList(SOURCE_TRANSITION_RESOLVE));
 
-		when(jiraIssueResolver.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
+		when(jiraIssueLinker.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
 
 		// when
 		SyncResult result = strategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
@@ -174,7 +134,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 
 		when(jiraSource.getTransitions(sourceIssue)).thenReturn(Collections.singletonList(SOURCE_TRANSITION_RESOLVE));
 
-		when(jiraIssueResolver.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
+		when(jiraIssueLinker.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
 
 		// when
 		SyncResult result = strategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
@@ -209,7 +169,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 
 		when(jiraSource.getTransitions(sourceIssue)).thenReturn(Collections.singletonList(SOURCE_TRANSITION_RESOLVE));
 
-		when(jiraIssueResolver.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
+		when(jiraIssueLinker.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
 
 		// when
 		SyncResult result = strategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
@@ -246,7 +206,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 
 		when(jiraSource.getTransitions(sourceIssue)).thenReturn(Collections.singletonList(SOURCE_TRANSITION_RESOLVE));
 
-		when(jiraIssueResolver.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
+		when(jiraIssueLinker.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
 
 		// when
 		SyncResult result = strategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
@@ -277,7 +237,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		sourceIssue.getFields().setDescription("updated description");
 		targetIssue.getFields().setDescription("some description");
 
-		when(jiraIssueResolver.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
+		when(jiraIssueLinker.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
 
 		// when
 		SyncResult result = strategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
@@ -301,7 +261,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
 		targetIssue.getFields().setPriority(TARGET_PRIORITY_MAJOR);
 
-		when(jiraIssueResolver.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
+		when(jiraIssueLinker.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
 
 		// when
 		SyncResult result = strategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
@@ -325,7 +285,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		sourceIssue.getFields().setVersions(Collections.singleton(SOURCE_VERSION_1));
 		targetIssue.getFields().setVersions(Collections.singleton(TARGET_VERSION_2));
 
-		when(jiraIssueResolver.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
+		when(jiraIssueLinker.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
 
 		// when
 		SyncResult result = strategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
@@ -353,7 +313,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		sourceIssue.getFields().setFixVersions(new LinkedHashSet<>(Arrays.asList(SOURCE_VERSION_1, SOURCE_VERSION_2)));
 		targetIssue.getFields().setFixVersions(Collections.singleton(TARGET_VERSION_2));
 
-		when(jiraIssueResolver.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
+		when(jiraIssueLinker.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
 
 		// when
 		SyncResult result = strategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
@@ -380,7 +340,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 
 		sourceIssue.getFields().setLabels(Collections.singleton("some-label"));
 
-		when(jiraIssueResolver.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
+		when(jiraIssueLinker.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
 
 		// when
 		SyncResult result = strategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
@@ -408,7 +368,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		sourceIssue.getFields().setLabels(Collections.singleton("some-label"));
 		targetIssue.getFields().setLabels(new LinkedHashSet<>(Arrays.asList("internal-label", "other-label")));
 
-		when(jiraIssueResolver.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
+		when(jiraIssueLinker.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
 
 		projectSync.setLabelsToKeepInTarget(Collections.singleton("internal-label"));
 

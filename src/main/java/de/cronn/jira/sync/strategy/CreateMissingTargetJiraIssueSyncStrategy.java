@@ -12,6 +12,7 @@ import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueType;
 import de.cronn.jira.sync.domain.JiraPriority;
 import de.cronn.jira.sync.domain.JiraProject;
+import de.cronn.jira.sync.link.JiraIssueLinker;
 import de.cronn.jira.sync.mapping.DescriptionMapper;
 import de.cronn.jira.sync.mapping.IssueTypeMapper;
 import de.cronn.jira.sync.mapping.LabelMapper;
@@ -32,6 +33,7 @@ public class CreateMissingTargetJiraIssueSyncStrategy implements MissingTargetJi
 	private LabelMapper labelMapper;
 	private PriorityMapper priorityMapper;
 	private VersionMapper versionMapper;
+	private JiraIssueLinker issueResolver;
 
 	@Autowired
 	public void setJiraSyncConfig(JiraSyncConfig jiraSyncConfig) {
@@ -68,6 +70,11 @@ public class CreateMissingTargetJiraIssueSyncStrategy implements MissingTargetJi
 		this.priorityMapper = priorityMapper;
 	}
 
+	@Autowired
+	public void setIssueResolver(JiraIssueLinker issueResolver) {
+		this.issueResolver = issueResolver;
+	}
+
 	@Override
 	public SyncResult sync(JiraService jiraSource, JiraService jiraTarget, JiraIssue sourceIssue, JiraProjectSync projectSync) {
 		JiraProject targetProject = jiraTarget.getProjectByKey(projectSync.getTargetProject());
@@ -84,8 +91,7 @@ public class CreateMissingTargetJiraIssueSyncStrategy implements MissingTargetJi
 		copyFixVersions(sourceIssue, issueToCreate, jiraTarget, projectSync);
 
 		JiraIssue newIssue = jiraTarget.createIssue(issueToCreate);
-		jiraSource.addRemoteLink(sourceIssue, newIssue, jiraTarget, projectSync.getRemoteLinkIconInSource());
-		jiraTarget.addRemoteLink(newIssue, sourceIssue, jiraSource, projectSync.getRemoteLinkIconInTarget());
+		issueResolver.linkIssues(sourceIssue, newIssue, jiraSource, jiraTarget, projectSync);
 
 		return SyncResult.CREATED;
 	}

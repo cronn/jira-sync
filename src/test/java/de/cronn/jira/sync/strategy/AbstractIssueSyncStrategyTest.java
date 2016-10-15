@@ -42,7 +42,7 @@ public abstract class AbstractIssueSyncStrategyTest {
 	protected static final JiraIssueStatus TARGET_STATUS_IN_PROGRESS = new JiraIssueStatus("301", "In Progress");
 	protected static final JiraIssueStatus TARGET_STATUS_CLOSED = new JiraIssueStatus("303", "Closed");
 
-	protected static final JiraTransition SOURCE_TRANSITION_RESOLVE = new JiraTransition("1", "resolve it", SOURCE_STATUS_RESOLVED);
+	protected static final JiraTransition SOURCE_TRANSITION_RESOLVE = new JiraTransition("1", "link it", SOURCE_STATUS_RESOLVED);
 
 	protected static final JiraPriority SOURCE_PRIORITY_HIGH = new JiraPriority("10000", "High");
 	protected static final JiraPriority SOURCE_PRIORITY_LOW = new JiraPriority("20000", "Low");

@@ -28,12 +28,12 @@ import de.cronn.jira.sync.domain.JiraResolution;
 import de.cronn.jira.sync.domain.JiraTransition;
 import de.cronn.jira.sync.domain.JiraUser;
 import de.cronn.jira.sync.domain.JiraVersion;
+import de.cronn.jira.sync.link.JiraIssueLinker;
 import de.cronn.jira.sync.mapping.DescriptionMapper;
 import de.cronn.jira.sync.mapping.LabelMapper;
 import de.cronn.jira.sync.mapping.PriorityMapper;
 import de.cronn.jira.sync.mapping.ResolutionMapper;
 import de.cronn.jira.sync.mapping.VersionMapper;
-import de.cronn.jira.sync.resolve.JiraIssueResolver;
 import de.cronn.jira.sync.service.JiraService;
 
 @Component
@@ -41,7 +41,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 
 	private static final Logger log = LoggerFactory.getLogger(UpdateExistingTargetJiraIssueSyncStrategy.class);
 
-	private JiraIssueResolver jiraIssueResolver;
+	private JiraIssueLinker jiraIssueLinker;
 
 	private DescriptionMapper descriptionMapper;
 	private LabelMapper labelMapper;
@@ -50,8 +50,8 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 	private VersionMapper versionMapper;
 
 	@Autowired
-	public void setJiraIssueResolver(JiraIssueResolver jiraIssueResolver) {
-		this.jiraIssueResolver = jiraIssueResolver;
+	public void setJiraIssueLinker(JiraIssueLinker jiraIssueLinker) {
+		this.jiraIssueLinker = jiraIssueLinker;
 	}
 
 	@Autowired
@@ -96,8 +96,6 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		processVersions(jiraTarget, sourceIssue, targetIssue, JiraIssueFields::getVersions, versions -> targetIssueUpdate.getOrCreateFields().setVersions(versions), projectSync);
 		processVersions(jiraTarget, sourceIssue, targetIssue, JiraIssueFields::getFixVersions, versions -> targetIssueUpdate.getOrCreateFields().setFixVersions(versions), projectSync);
 
-		addBacklinkIfMissing(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
-
 		if (sourceIssueUpdate.isEmpty() && targetIssueUpdate.isEmpty()) {
 			return SyncResult.UNCHANGED;
 		}
@@ -119,16 +117,6 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 			return SyncResult.CHANGED_TRANSITION;
 		} else {
 			return SyncResult.CHANGED;
-		}
-	}
-
-	private void addBacklinkIfMissing(JiraService jiraSource, JiraService jiraTarget, JiraIssue sourceIssue, JiraIssue targetIssue, JiraProjectSync projectSync) {
-		JiraIssue resolvedIssue = jiraIssueResolver.resolve(targetIssue, jiraTarget, jiraSource);
-		if (resolvedIssue == null) {
-			log.warn("Backlink not found in {}", targetIssue);
-			jiraTarget.addRemoteLink(targetIssue, sourceIssue, jiraSource, projectSync.getRemoteLinkIconInTarget());
-		} else if (!resolvedIssue.getId().equals(sourceIssue.getId())) {
-			throw new JiraSyncException("Backlink of " + targetIssue + " points to " + resolvedIssue + "; expected: " + sourceIssue);
 		}
 	}
 

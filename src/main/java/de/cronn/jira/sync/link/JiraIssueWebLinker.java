@@ -1,4 +1,4 @@
-package de.cronn.jira.sync.resolve;
+package de.cronn.jira.sync.link;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -12,22 +12,23 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import de.cronn.jira.sync.JiraSyncException;
+import de.cronn.jira.sync.config.JiraProjectSync;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraRemoteLink;
 import de.cronn.jira.sync.service.JiraService;
 
 @Service
-public class JiraIssueByExternalLinkResolver implements JiraIssueResolver {
+public class JiraIssueWebLinker implements JiraIssueLinker {
 
-	private static final Logger log = LoggerFactory.getLogger(JiraIssueByExternalLinkResolver.class);
+	private static final Logger log = LoggerFactory.getLogger(JiraIssueWebLinker.class);
 
 	@Override
-	public JiraIssue resolve(JiraIssue fromIssue, JiraService fromJiraService, JiraService toJiraService) {
-		List<JiraIssue> jiraIssues = resolveIssues(fromIssue, fromJiraService, toJiraService);
+	public JiraIssue resolve(JiraIssue sourceIssue, JiraService jiraSource, JiraService jiraTarget) {
+		List<JiraIssue> jiraIssues = resolveIssues(sourceIssue, jiraSource, jiraTarget);
 		if (CollectionUtils.isEmpty(jiraIssues)) {
 			return null;
 		} else if (jiraIssues.size() > 1) {
-			throw new JiraSyncException("Illegal number of linked jira issues for " + fromIssue + ": " + jiraIssues);
+			throw new JiraSyncException("Illegal number of linked jira issues for " + sourceIssue + ": " + jiraIssues);
 		} else {
 			return jiraIssues.get(0);
 		}
@@ -46,7 +47,7 @@ public class JiraIssueByExternalLinkResolver implements JiraIssueResolver {
 				log.debug("{}: found remote link: {} with key {}", fromIssue, remoteLinkUrl, key);
 				JiraIssue resolvedIssue = toJiraService.getIssueByKey(key);
 				if (resolvedIssue == null) {
-					throw new JiraSyncException("Failed to resolve " + key + " in target");
+					throw new JiraSyncException("Failed to link " + key + " in target");
 				}
 				resolvedIssues.add(resolvedIssue);
 			} else {
@@ -56,4 +57,9 @@ public class JiraIssueByExternalLinkResolver implements JiraIssueResolver {
 		return resolvedIssues;
 	}
 
+	@Override
+	public void linkIssues(JiraIssue sourceIssue, JiraIssue targetIssue, JiraService jiraSource, JiraService jiraTarget, JiraProjectSync projectSync) {
+		jiraSource.addRemoteLink(sourceIssue, targetIssue, jiraTarget, projectSync.getRemoteLinkIconInSource());
+		jiraTarget.addRemoteLink(targetIssue, sourceIssue, jiraSource, projectSync.getRemoteLinkIconInTarget());
+	}
 }
