@@ -146,6 +146,8 @@ public class JiraSyncApplicationTests {
 
 		jiraDummyService.expectLoginRequest(SOURCE, "jira-sync", "secret in source");
 		jiraDummyService.expectLoginRequest(TARGET, "jira-sync", "secret in target");
+
+		jiraDummyService.expectBasicAuth(TARGET, "basic-auth-user", "secret");
 	}
 
 	@Test

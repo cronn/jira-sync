@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -45,6 +46,7 @@ public class JiraDummyService {
 	private static final Logger log = LoggerFactory.getLogger(JiraDummyService.class);
 
 	public static final String CONTEXT = "context";
+	public static final String AUTHORIZATION = "Authorization";
 
 	private final Map<Context, JiraDummyData> data = new EnumMap<>(Context.class);
 
@@ -62,6 +64,10 @@ public class JiraDummyService {
 
 	public void expectLoginRequest(Context context, String username, String password) throws Exception {
 		getData(context).setCredentials(new JiraLoginRequest(username, password));
+	}
+
+	public void expectBasicAuth(Context context, String username, String password) {
+		getData(context).setBasicAuthCredentials(username, password);
 	}
 
 	public void setDefaultStatus(Context context, JiraIssueStatus status) {
@@ -138,14 +144,10 @@ public class JiraDummyService {
 	}
 
 	@RequestMapping(path = "/auth/1/session", method = RequestMethod.POST)
-	public JiraLoginResponse login(@PathVariable(CONTEXT) Context context, @RequestBody JiraLoginRequest loginRequest) {
-		JiraLoginRequest credentials = getData(context).getCredentials();
-		if (!credentials.getUsername().equals(loginRequest.getUsername())) {
-			throw new IllegalArgumentException("Illegal username");
-		}
-		if (!credentials.getPassword().equals(loginRequest.getPassword())) {
-			throw new IllegalArgumentException("Illegal password");
-		}
+	public JiraLoginResponse login(@PathVariable(CONTEXT) Context context, @RequestBody JiraLoginRequest loginRequest,
+								   @RequestHeader(value = AUTHORIZATION, required = false) String authorization) {
+		validateLoginCredentials(context, loginRequest);
+		validateBasicAuthCredentials(context, authorization);
 		JiraLoginResponse loginResponse = new JiraLoginResponse();
 		JiraSession session = new JiraSession();
 		session.setName("test-session-" + context);
@@ -157,8 +159,28 @@ public class JiraDummyService {
 		return loginResponse;
 	}
 
+	private void validateLoginCredentials(@PathVariable(CONTEXT) Context context, @RequestBody JiraLoginRequest loginRequest) {
+		JiraLoginRequest credentials = getData(context).getCredentials();
+		if (!credentials.getUsername().equals(loginRequest.getUsername())) {
+			throw new IllegalArgumentException("Illegal username");
+		}
+		if (!credentials.getPassword().equals(loginRequest.getPassword())) {
+			throw new IllegalArgumentException("Illegal password");
+		}
+	}
+
+	private void validateBasicAuthCredentials(@PathVariable(CONTEXT) Context context, String authorization) {
+		BasicAuthCredentials credentials = getData(context).getBasicAuthCredentials();
+		if (credentials != null) {
+			String encoded = credentials.encodeBase64();
+			if (!encoded.equals(authorization)) {
+				throw new IllegalArgumentException("Illegal basic auth credentials");
+			}
+		}
+	}
+
 	@RequestMapping(path = "/auth/1/session", method = RequestMethod.DELETE)
-	public void login(@PathVariable(CONTEXT) Context context) {
+	public void logout(@PathVariable(CONTEXT) Context context) {
 		log.debug("[{}] logout", context);
 	}
 

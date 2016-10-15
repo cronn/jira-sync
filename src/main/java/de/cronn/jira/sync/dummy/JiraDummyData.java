@@ -30,6 +30,7 @@ public class JiraDummyData {
 	private final List<JiraTransition> transitions = new ArrayList<>();
 	private final List<JiraVersion> versions = new ArrayList<>();
 	private String baseUrl;
+	private BasicAuthCredentials basicAuthCredentials;
 
 	public JiraLoginRequest getCredentials() {
 		return credentials;
@@ -86,5 +87,13 @@ public class JiraDummyData {
 
 	public Map<String, JiraProject> getProjectAssociatedToFilterId() {
 		return projectAssociatedToFilterId;
+	}
+
+	public void setBasicAuthCredentials(String username, String password) {
+		basicAuthCredentials = new BasicAuthCredentials(username, password);
+	}
+
+	public BasicAuthCredentials getBasicAuthCredentials() {
+		return basicAuthCredentials;
 	}
 }
