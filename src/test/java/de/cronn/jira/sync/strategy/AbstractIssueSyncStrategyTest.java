@@ -6,7 +6,6 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 import org.junit.Before;
 import org.junit.runner.RunWith;
@@ -102,17 +101,17 @@ public abstract class AbstractIssueSyncStrategyTest {
 		projectSync.setRemoteLinkIconInTarget(new URL("https://remote-link-icon-in-target"));
 		projectSync.setTargetIssueTypeFallback(TARGET_ISSUE_TYPE_DEFAULT);
 
-		Map<String, String> versionMapping = new LinkedHashMap<>();
+		LinkedHashMap<String, String> versionMapping = new LinkedHashMap<>();
 		versionMapping.put(SOURCE_VERSION_1.getName(), TARGET_VERSION_1.getName());
 		versionMapping.put(SOURCE_VERSION_2.getName(), TARGET_VERSION_2.getName());
 		projectSync.setVersionMapping(versionMapping);
 
-		Map<String, String> priorityMapping = new LinkedHashMap<>();
+		LinkedHashMap<String, String> priorityMapping = new LinkedHashMap<>();
 		priorityMapping.put(SOURCE_PRIORITY_HIGH.getName(), TARGET_PRIORITY_MAJOR.getName());
 		priorityMapping.put(SOURCE_PRIORITY_LOW.getName(), TARGET_PRIORITY_MINOR.getName());
 		jiraSyncConfig.setPriorityMapping(priorityMapping);
 
-		Map<String, String> issueTypeMapping = new LinkedHashMap<>();
+		LinkedHashMap<String, String> issueTypeMapping = new LinkedHashMap<>();
 		issueTypeMapping.put(ISSUE_TYPE_TASK, ISSUE_TYPE_TASK);
 		issueTypeMapping.put(SOURCE_ISSUE_TYPE_NEW_FEATURE, TARGET_ISSUE_TYPE_IMPROVEMENT);
 		jiraSyncConfig.setIssueTypeMapping(issueTypeMapping);

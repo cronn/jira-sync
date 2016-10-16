@@ -370,7 +370,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 
 		when(jiraIssueLinker.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
 
-		projectSync.setLabelsToKeepInTarget(Collections.singleton("internal-label"));
+		projectSync.addLabelToKeepInTarget("internal-label");
 
 		// when
 		SyncResult result = strategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);

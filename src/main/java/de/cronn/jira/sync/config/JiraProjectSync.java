@@ -18,9 +18,9 @@ public class JiraProjectSync {
 	private URL remoteLinkIconInSource;
 	private URL remoteLinkIconInTarget;
 	private String targetIssueTypeFallback;
-	private Set<String> labelsToKeepInTarget = new LinkedHashSet<>();
-	private Map<String, TransitionConfig> transitions = new LinkedHashMap<>();
-	private Map<String, String> versionMapping = new LinkedHashMap<>();
+	private LinkedHashSet<String> labelsToKeepInTarget = new LinkedHashSet<>();
+	private LinkedHashMap<String, TransitionConfig> transitions = new LinkedHashMap<>();
+	private LinkedHashMap<String, String> versionMapping = new LinkedHashMap<>();
 
 	public String getSourceProject() {
 		return sourceProject;
@@ -70,15 +70,19 @@ public class JiraProjectSync {
 		this.remoteLinkIconInSource = remoteLinkIconInSource;
 	}
 
-	public void setLabelsToKeepInTarget(Set<String> labelsToKeepInTarget) {
+	public void setLabelsToKeepInTarget(LinkedHashSet<String> labelsToKeepInTarget) {
 		this.labelsToKeepInTarget = labelsToKeepInTarget;
+	}
+
+	public void addLabelToKeepInTarget(String label) {
+		this.labelsToKeepInTarget.add(label);
 	}
 
 	public Set<String> getLabelsToKeepInTarget() {
 		return labelsToKeepInTarget;
 	}
 
-	public void setTransitions(Map<String, TransitionConfig> transitions) {
+	public void setTransitions(LinkedHashMap<String, TransitionConfig> transitions) {
 		this.transitions = transitions;
 	}
 
@@ -105,7 +109,7 @@ public class JiraProjectSync {
 		return versionMapping;
 	}
 
-	public void setVersionMapping(Map<String, String> versionMapping) {
+	public void setVersionMapping(LinkedHashMap<String, String> versionMapping) {
 		this.versionMapping = versionMapping;
 	}
 

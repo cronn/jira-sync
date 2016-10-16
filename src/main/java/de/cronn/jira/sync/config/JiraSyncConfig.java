@@ -11,11 +11,11 @@ public class JiraSyncConfig {
 	private boolean autostart = true;
 	private JiraConnectionProperties source;
 	private JiraConnectionProperties target;
-	private Map<String, JiraProjectSync> projects = new LinkedHashMap<>();
+	private LinkedHashMap<String, JiraProjectSync> projects = new LinkedHashMap<>();
 
-	private Map<String, String> priorityMapping = new LinkedHashMap<>();
-	private Map<String, String> issueTypeMapping = new LinkedHashMap<>();
-	private Map<String, String> resolutionMapping = new LinkedHashMap<>();
+	private LinkedHashMap<String, String> priorityMapping = new LinkedHashMap<>();
+	private LinkedHashMap<String, String> issueTypeMapping = new LinkedHashMap<>();
+	private LinkedHashMap<String, String> resolutionMapping = new LinkedHashMap<>();
 
 	public JiraConnectionProperties getSource() {
 		return source;
@@ -33,7 +33,7 @@ public class JiraSyncConfig {
 		this.target = target;
 	}
 
-	public void setProjects(Map<String, JiraProjectSync> projects) {
+	public void setProjects(LinkedHashMap<String, JiraProjectSync> projects) {
 		this.projects = projects;
 	}
 
@@ -41,7 +41,7 @@ public class JiraSyncConfig {
 		return projects;
 	}
 
-	public void setPriorityMapping(Map<String, String> priorityMapping) {
+	public void setPriorityMapping(LinkedHashMap<String, String> priorityMapping) {
 		this.priorityMapping = priorityMapping;
 	}
 
@@ -53,11 +53,11 @@ public class JiraSyncConfig {
 		return issueTypeMapping;
 	}
 
-	public void setIssueTypeMapping(Map<String, String> issueTypeMapping) {
+	public void setIssueTypeMapping(LinkedHashMap<String, String> issueTypeMapping) {
 		this.issueTypeMapping = issueTypeMapping;
 	}
 
-	public void setResolutionMapping(Map<String, String> resolutionMapping) {
+	public void setResolutionMapping(LinkedHashMap<String, String> resolutionMapping) {
 		this.resolutionMapping = resolutionMapping;
 	}
 
