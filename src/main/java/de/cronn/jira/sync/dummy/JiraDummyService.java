@@ -1,5 +1,7 @@
 package de.cronn.jira.sync.dummy;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -10,6 +12,7 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -49,6 +52,13 @@ public class JiraDummyService {
 	public static final String AUTHORIZATION = "Authorization";
 
 	private final Map<Context, JiraDummyData> data = new EnumMap<>(Context.class);
+
+	private Clock clock;
+
+	@Autowired
+	public void setClock(Clock clock) {
+		this.clock = clock;
+	}
 
 	public void reset() {
 		data.clear();
@@ -260,6 +270,8 @@ public class JiraDummyService {
 	public void addRemoteLink(@PathVariable(CONTEXT) Context context, @PathVariable("issueKey") String issueKey, @RequestBody JiraRemoteLink newRemoteLink) {
 		JiraRemoteLinks remoteLinks = getData(context).getRemoteLinks().computeIfAbsent(issueKey, k -> new JiraRemoteLinks());
 		remoteLinks.add(newRemoteLink);
+		JiraIssue issue = getIssueByKey(context, issueKey);
+		refreshUpdatedTimestamp(issue);
 	}
 
 	@RequestMapping(path = "/api/2/issue", method = RequestMethod.POST)
@@ -291,6 +303,8 @@ public class JiraDummyService {
 		if (issue.getFields().getPriority() != null) {
 			validatePriority(context, issue.getFields().getPriority());
 		}
+
+		refreshUpdatedTimestamp(issue);
 
 		Object old = getIssueMap(context).put(issue.getKey(), issue);
 		Assert.isNull(old);
@@ -380,6 +394,12 @@ public class JiraDummyService {
 
 		Assert.isNull(fieldToUpdate.getLabels());
 		Assert.isNull(fieldToUpdate.getPriority());
+
+		refreshUpdatedTimestamp(issueInSystem);
+	}
+
+	private void refreshUpdatedTimestamp(JiraIssue issue) {
+		issue.getFields().setUpdated(Instant.now(clock));
 	}
 
 	@RequestMapping(path = "/api/2/issue/{issueKey}/transitions", method = RequestMethod.POST)

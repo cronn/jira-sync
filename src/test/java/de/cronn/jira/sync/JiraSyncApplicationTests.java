@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import java.net.URL;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -77,6 +78,9 @@ public class JiraSyncApplicationTests {
 	private static final JiraVersion TARGET_VERSION_11 = new JiraVersion("101", "11");
 
 	@Autowired
+	private TestClock clock;
+
+	@Autowired
 	private JiraDummyService jiraDummyService;
 
 	@Autowired
@@ -100,6 +104,11 @@ public class JiraSyncApplicationTests {
 	private String sourceBaseUrl;
 
 	private String targetBaseUrl;
+
+	@Before
+	public void resetClock() {
+		clock.reset();
+	}
 
 	@Before
 	public void setUp() throws Exception {
@@ -244,6 +253,8 @@ public class JiraSyncApplicationTests {
 		sourceIssue.getFields().setFixVersions(Collections.singleton(SOURCE_VERSION_11));
 		jiraDummyService.createIssue(SOURCE, sourceIssue);
 
+		clock.windForwardSeconds(30);
+
 		// when
 		syncTask.sync();
 
@@ -256,6 +267,11 @@ public class JiraSyncApplicationTests {
 		assertThat(targetIssue.getFields().getLabels(), contains("label1", "label2"));
 		assertThat(getNames(targetIssue.getFields().getVersions()), containsInAnyOrder("10", "11"));
 		assertThat(getNames(targetIssue.getFields().getFixVersions()), contains("11"));
+		assertThat(targetIssue.getFields().getUpdated(), is(Instant.now(clock)));
+
+		assertThat(jiraDummyService.getAllIssues(SOURCE), hasSize(1));
+		JiraIssue updatedSourceIssue = jiraDummyService.getAllIssues(SOURCE).get(0);
+		assertThat(updatedSourceIssue.getFields().getUpdated(), is(Instant.now(clock)));
 
 		List<JiraRemoteLink> remoteLinksInTarget = jiraDummyService.getRemoteLinks(TARGET, targetIssue);
 		List<JiraRemoteLink> remoteLinksInSource = jiraDummyService.getRemoteLinks(SOURCE, sourceIssue);
@@ -331,10 +347,20 @@ public class JiraSyncApplicationTests {
 		update.getOrCreateFields().setDescription("changed description");
 		jiraDummyService.updateIssue(SOURCE, createdSourceIssue.getKey(), update);
 
+		Instant beforeSecondUpdate = Instant.now(clock);
+		clock.windForwardSeconds(30);
+
 		syncTask.sync();
 
 		// then
+		assertThat(jiraDummyService.getAllIssues(TARGET), hasSize(1));
+		targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
 		assertThat(targetIssue.getFields().getDescription(), is("{panel:title=Original description|titleBGColor=#DDD|bgColor=#EEE}\nchanged description\n{panel}"));
+		assertThat(targetIssue.getFields().getUpdated(), is(Instant.now(clock)));
+
+		assertThat(jiraDummyService.getAllIssues(SOURCE), hasSize(1));
+		JiraIssue sourceIssue = jiraDummyService.getAllIssues(SOURCE).get(0);
+		assertThat(sourceIssue.getFields().getUpdated(), is(beforeSecondUpdate));
 	}
 
 	@Test

@@ -1,5 +1,6 @@
 package de.cronn.jira.sync.domain;
 
+import java.time.Instant;
 import java.util.Set;
 
 public class JiraIssueFields {
@@ -15,6 +16,7 @@ public class JiraIssueFields {
 	private Set<JiraVersion> versions;
 	private Set<JiraVersion> fixVersions;
 	private JiraUser assignee;
+	private Instant updated;
 
 	public JiraIssueFields() {
 	}
@@ -109,5 +111,13 @@ public class JiraIssueFields {
 
 	public void setAssignee(JiraUser assignee) {
 		this.assignee = assignee;
+	}
+
+	public void setUpdated(Instant updated) {
+		this.updated = updated;
+	}
+
+	public Instant getUpdated() {
+		return updated;
 	}
 }

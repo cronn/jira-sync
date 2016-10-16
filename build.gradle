@@ -65,6 +65,7 @@ dependencies {
 
 	compile("org.springframework:spring-web")
 	compile("com.fasterxml.jackson.core:jackson-databind")
+	compile("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
 	compile "de.cronn:ssh-proxy:1.0"
 

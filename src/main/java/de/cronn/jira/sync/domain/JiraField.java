@@ -13,7 +13,9 @@ public enum JiraField {
 	LABELS("labels"),
 	VERSIONS("versions"),
 	FIX_VERSIONS("fixVersions"),
-	ASSIGNEE("assignee");
+	ASSIGNEE("assignee"),
+	UPDATED("updated"),
+	;
 
 	private final String name;
 
