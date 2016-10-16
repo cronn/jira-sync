@@ -38,12 +38,12 @@ public class JiraVersion extends JiraIdResource {
 	}
 
 	@Override
-	public boolean equals(Object o) {
+	public final boolean equals(Object o) {
 		if (this == o) {
 			return true;
 		}
 
-		if (o == null || getClass() != o.getClass()) {
+		if (!(o instanceof JiraVersion)) {
 			return false;
 		}
 
@@ -56,7 +56,7 @@ public class JiraVersion extends JiraIdResource {
 	}
 
 	@Override
-	public int hashCode() {
+	public final int hashCode() {
 		return new HashCodeBuilder(17, 37)
 			.append(getId())
 			.append(name)
