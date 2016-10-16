@@ -2,10 +2,6 @@ package de.cronn.jira.sync.domain;
 
 import java.util.Set;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-
-@JsonInclude(Include.NON_NULL)
 public class JiraFieldsUpdate {
 
 	private String description;
