@@ -27,10 +27,6 @@ public class DefaultPriorityMapper implements PriorityMapper {
 
 	@Override
 	public JiraPriority mapPriority(JiraService jiraTarget, JiraIssue sourceIssue) {
-		if (syncConfig.getPriorityMapping() == null) {
-			return null;
-		}
-
 		String sourcePriorityName = getSourcePriorityName(sourceIssue);
 		if (sourcePriorityName == null) {
 			return null;

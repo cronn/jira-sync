@@ -1,6 +1,6 @@
 package de.cronn.jira.sync.config;
 
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -11,11 +11,11 @@ public class JiraSyncConfig {
 	private boolean autostart = true;
 	private JiraConnectionProperties source;
 	private JiraConnectionProperties target;
-	private Map<String, JiraProjectSync> projects;
+	private Map<String, JiraProjectSync> projects = new LinkedHashMap<>();
 
-	private Map<String, String> priorityMapping;
-	private Map<String, String> issueTypeMapping;
-	private Map<String, String> resolutionMapping;
+	private Map<String, String> priorityMapping = new LinkedHashMap<>();
+	private Map<String, String> issueTypeMapping = new LinkedHashMap<>();
+	private Map<String, String> resolutionMapping = new LinkedHashMap<>();
 
 	public JiraConnectionProperties getSource() {
 		return source;

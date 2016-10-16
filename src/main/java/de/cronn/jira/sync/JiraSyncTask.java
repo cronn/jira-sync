@@ -1,6 +1,5 @@
 package de.cronn.jira.sync;
 
-import java.util.Collection;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -68,7 +67,7 @@ public class JiraSyncTask implements CommandLineRunner {
 			log.info("jiraTarget server info: {}", jiraTarget.getServerInfo());
 
 			Map<String, JiraProjectSync> projects = jiraSyncConfig.getProjects();
-			if (projects == null || projects.isEmpty()) {
+			if (projects.isEmpty()) {
 				log.warn("No projects configured");
 				return;
 			}

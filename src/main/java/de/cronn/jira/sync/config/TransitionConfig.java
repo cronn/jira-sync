@@ -6,8 +6,8 @@ import java.util.Set;
 
 public class TransitionConfig {
 
-	private Set<String> sourceStatusIn;
-	private Set<String> targetStatusIn;
+	private Set<String> sourceStatusIn = new LinkedHashSet<>();
+	private Set<String> targetStatusIn = new LinkedHashSet<>();
 	private String sourceStatusToSet;
 	private boolean copyResolutionToSource = false;
 	private boolean copyFixVersionsToSource = false;

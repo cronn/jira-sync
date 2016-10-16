@@ -124,7 +124,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 
 	private void processTransition(JiraService jiraSource, JiraIssue sourceIssue, JiraIssue targetIssue, JiraProjectSync projectSync, JiraIssueUpdate sourceIssueUpdate) {
 		Map<String, TransitionConfig> transitions = projectSync.getTransitions();
-		if (transitions == null || transitions.isEmpty()) {
+		if (transitions.isEmpty()) {
 			log.trace("No transitions configured");
 			return;
 		}

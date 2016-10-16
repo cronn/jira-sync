@@ -2,7 +2,7 @@ package de.cronn.jira.sync.config;
 
 import java.net.URL;
 import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -18,9 +18,9 @@ public class JiraProjectSync {
 	private URL remoteLinkIconInSource;
 	private URL remoteLinkIconInTarget;
 	private String targetIssueTypeFallback;
-	private Set<String> labelsToKeepInTarget;
-	private Map<String, TransitionConfig> transitions;
-	private Map<String, String> versionMapping;
+	private Set<String> labelsToKeepInTarget = new LinkedHashSet<>();
+	private Map<String, TransitionConfig> transitions = new LinkedHashMap<>();
+	private Map<String, String> versionMapping = new LinkedHashMap<>();
 
 	public String getSourceProject() {
 		return sourceProject;

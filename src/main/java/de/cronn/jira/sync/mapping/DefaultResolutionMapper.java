@@ -27,10 +27,6 @@ public class DefaultResolutionMapper implements ResolutionMapper {
 
 	@Override
 	public JiraResolution mapResolution(JiraService jiraService, JiraIssue jiraIssue) {
-		if (syncConfig.getPriorityMapping() == null) {
-			return null;
-		}
-
 		String sourceResolutionName = getSourceResolutionName(jiraIssue);
 		if (sourceResolutionName == null) {
 			return null;
