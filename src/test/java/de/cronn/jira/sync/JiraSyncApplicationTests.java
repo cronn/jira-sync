@@ -104,7 +104,7 @@ public class JiraSyncApplicationTests {
 	@Before
 	public void setUp() throws Exception {
 
-		String commonBaseUrl = "http://localhost:" + port + "/";
+		String commonBaseUrl = "https://localhost:" + port + "/";
 		sourceBaseUrl = commonBaseUrl + Context.SOURCE + "/";
 		targetBaseUrl = commonBaseUrl + Context.TARGET + "/";
 
