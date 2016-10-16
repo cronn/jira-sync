@@ -11,7 +11,7 @@ public class JiraSyncConfig {
 	private boolean autostart = true;
 	private JiraConnectionProperties source;
 	private JiraConnectionProperties target;
-	private List<JiraProjectSync> projects;
+	private Map<String, JiraProjectSync> projects;
 
 	private Map<String, String> priorityMapping;
 	private Map<String, String> issueTypeMapping;
@@ -33,11 +33,11 @@ public class JiraSyncConfig {
 		this.target = target;
 	}
 
-	public void setProjects(List<JiraProjectSync> projects) {
+	public void setProjects(Map<String, JiraProjectSync> projects) {
 		this.projects = projects;
 	}
 
-	public List<JiraProjectSync> getProjects() {
+	public Map<String, JiraProjectSync> getProjects() {
 		return projects;
 	}
 

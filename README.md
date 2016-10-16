@@ -83,33 +83,33 @@ de.cronn.jira.sync.resolutionMapping[Cannot\ Reproduce]=Cannot Reproduce
 
 ### Project Configuration ###
 
-de.cronn.jira.sync.projects[0].sourceProject=EXAMPLE
-de.cronn.jira.sync.projects[0].targetProject=EX
-de.cronn.jira.sync.projects[0].sourceFilterId=12345
-de.cronn.jira.sync.projects[0].remoteLinkIconInSource=${de.cronn.jira.sync.source.url}/favicon.ico
-de.cronn.jira.sync.projects[0].remoteLinkIconInTarget=${de.cronn.jira.sync.target.url}/favicon.ico
+de.cronn.jira.sync.projects[EX].sourceProject=EXAMPLE
+de.cronn.jira.sync.projects[EX].targetProject=EX
+de.cronn.jira.sync.projects[EX].sourceFilterId=12345
+de.cronn.jira.sync.projects[EX].remoteLinkIconInSource=${de.cronn.jira.sync.source.url}/favicon.ico
+de.cronn.jira.sync.projects[EX].remoteLinkIconInTarget=${de.cronn.jira.sync.target.url}/favicon.ico
 
 # Optional
-# de.cronn.jira.sync.projects[0].labelsToKeepInTarget=internal,readyToAssign
+# de.cronn.jira.sync.projects[EX].labelsToKeepInTarget=internal,readyToAssign
 
-de.cronn.jira.sync.projects[0].transitions[0].sourceStatusIn=Open,Reopened,In Progress
-de.cronn.jira.sync.projects[0].transitions[0].targetStatusIn=Closed
-de.cronn.jira.sync.projects[0].transitions[0].sourceStatusToSet=Resolved
-de.cronn.jira.sync.projects[0].transitions[0].copyResolutionToSource=true
-de.cronn.jira.sync.projects[0].transitions[0].copyFixVersionsToSource=true
+de.cronn.jira.sync.projects[EX].transitions[0].sourceStatusIn=Open,Reopened,In Progress
+de.cronn.jira.sync.projects[EX].transitions[0].targetStatusIn=Closed
+de.cronn.jira.sync.projects[EX].transitions[0].sourceStatusToSet=Resolved
+de.cronn.jira.sync.projects[EX].transitions[0].copyResolutionToSource=true
+de.cronn.jira.sync.projects[EX].transitions[0].copyFixVersionsToSource=true
 
-de.cronn.jira.sync.projects[0].transitions[1].sourceStatusIn=Open,Reopened
-de.cronn.jira.sync.projects[0].transitions[1].targetStatusIn=Open,Reopened,Blocked,In Progress,In Review
-de.cronn.jira.sync.projects[0].transitions[1].sourceStatusToSet=In Progress
-de.cronn.jira.sync.projects[0].transitions[1].onlyIfAssignedInTarget=true
-de.cronn.jira.sync.projects[0].transitions[1].assignToMyselfInSource=true
+de.cronn.jira.sync.projects[EX].transitions[1].sourceStatusIn=Open,Reopened
+de.cronn.jira.sync.projects[EX].transitions[1].targetStatusIn=Open,Reopened,Blocked,In Progress,In Review
+de.cronn.jira.sync.projects[EX].transitions[1].sourceStatusToSet=In Progress
+de.cronn.jira.sync.projects[EX].transitions[1].onlyIfAssignedInTarget=true
+de.cronn.jira.sync.projects[EX].transitions[1].assignToMyselfInSource=true
 
-de.cronn.jira.sync.projects[0].targetIssueTypeFallback=Task
+de.cronn.jira.sync.projects[EX].targetIssueTypeFallback=Task
 
 # cf. https://jira-source/rest/api/2/project/EXAMPLE/versions and https://jira.target/rest/api/2/project/EX/versions
-de.cronn.jira.sync.projects[0].versionMapping[10.0]=10
-de.cronn.jira.sync.projects[0].versionMapping[11.0]=11
-de.cronn.jira.sync.projects[0].versionMapping[12.0]=12
+de.cronn.jira.sync.projects[EX].versionMapping[10.0]=10
+de.cronn.jira.sync.projects[EX].versionMapping[11.0]=11
+de.cronn.jira.sync.projects[EX].versionMapping[12.0]=12
 ```
 
 ### Running
