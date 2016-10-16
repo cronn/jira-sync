@@ -2,6 +2,17 @@
 
 ## Jira-to-Jira Synchronisation
 
+Asynchronous synchronisation of two Jira instances implemented with [Spring Boot][spring-boot].
+
+                                                   ·----·
+       _ _                                         | cr |
+      (_|_)_ __ __ _      ___ _   _ _ __   ___     | nn | cronn
+      | | | '__/ _` |____/ __| | | | '_ \ / __|    ·----·
+      | | | | | (_| |____\__ \ |_| | | | | (__
+     _/ |_|_|  \__,_|    |___/\__, |_| |_|\___|
+    |__/                      |___/
+
+
 ### Prerequisites
 
 - Java 8
@@ -123,5 +134,6 @@ build/libs/jira-sync-1.0.jar --spring.config.location=file:/path/to/config/
 ```
 
 
+[spring-boot]: https://projects.spring.io/spring-boot/
 [jira-rest-api]: https://docs.atlassian.com/jira/REST/cloud/
 [spring-fat-jar]: http://docs.spring.io/spring-boot/docs/current/reference/html/executable-jar.html
