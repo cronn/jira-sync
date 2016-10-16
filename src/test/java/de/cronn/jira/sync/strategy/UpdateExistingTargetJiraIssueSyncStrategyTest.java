@@ -194,8 +194,8 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 	@Test
 	public void testSync_StatusTransitionAndFieldChange_DoCopyFixedVersions() throws Exception {
 		// given
-		assertThat(projectSync.getTransitions(), hasSize(1));
-		projectSync.getTransitions().get(0).setCopyFixVersionsToSource(true);
+		assertThat(projectSync.getTransitions().keySet(), hasSize(1));
+		projectSync.getTransition(TRANSITION).setCopyFixVersionsToSource(true);
 
 		JiraIssue sourceIssue = new JiraIssue("100", "SOURCE-123", "Some Summary", SOURCE_STATUS_OPEN);
 		JiraIssue targetIssue = new JiraIssue("400", "TARGET-123", "Some Summary", TARGET_STATUS_CLOSED);

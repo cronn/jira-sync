@@ -92,17 +92,17 @@ de.cronn.jira.sync.projects[EX].remoteLinkIconInTarget=${de.cronn.jira.sync.targ
 # Optional
 # de.cronn.jira.sync.projects[EX].labelsToKeepInTarget=internal,readyToAssign
 
-de.cronn.jira.sync.projects[EX].transitions[0].sourceStatusIn=Open,Reopened,In Progress
-de.cronn.jira.sync.projects[EX].transitions[0].targetStatusIn=Closed
-de.cronn.jira.sync.projects[EX].transitions[0].sourceStatusToSet=Resolved
-de.cronn.jira.sync.projects[EX].transitions[0].copyResolutionToSource=true
-de.cronn.jira.sync.projects[EX].transitions[0].copyFixVersionsToSource=true
+de.cronn.jira.sync.projects[EX].transitions[ResolveWhenClosed].sourceStatusIn=Open,Reopened,In Progress
+de.cronn.jira.sync.projects[EX].transitions[ResolveWhenClosed].targetStatusIn=Closed
+de.cronn.jira.sync.projects[EX].transitions[ResolveWhenClosed].sourceStatusToSet=Resolved
+de.cronn.jira.sync.projects[EX].transitions[ResolveWhenClosed].copyResolutionToSource=true
+de.cronn.jira.sync.projects[EX].transitions[ResolveWhenClosed].copyFixVersionsToSource=true
 
-de.cronn.jira.sync.projects[EX].transitions[1].sourceStatusIn=Open,Reopened
-de.cronn.jira.sync.projects[EX].transitions[1].targetStatusIn=Open,Reopened,Blocked,In Progress,In Review
-de.cronn.jira.sync.projects[EX].transitions[1].sourceStatusToSet=In Progress
-de.cronn.jira.sync.projects[EX].transitions[1].onlyIfAssignedInTarget=true
-de.cronn.jira.sync.projects[EX].transitions[1].assignToMyselfInSource=true
+de.cronn.jira.sync.projects[EX].transitions[TakeInProgress].sourceStatusIn=Open,Reopened
+de.cronn.jira.sync.projects[EX].transitions[TakeInProgress].targetStatusIn=Open,Reopened,Blocked,In Progress,In Review
+de.cronn.jira.sync.projects[EX].transitions[TakeInProgress].sourceStatusToSet=In Progress
+de.cronn.jira.sync.projects[EX].transitions[TakeInProgress].onlyIfAssignedInTarget=true
+de.cronn.jira.sync.projects[EX].transitions[TakeInProgress].assignToMyselfInSource=true
 
 de.cronn.jira.sync.projects[EX].targetIssueTypeFallback=Task
 

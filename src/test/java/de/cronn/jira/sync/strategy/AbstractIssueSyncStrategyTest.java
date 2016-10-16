@@ -56,6 +56,8 @@ public abstract class AbstractIssueSyncStrategyTest {
 	protected static final JiraVersion TARGET_VERSION_1 = new JiraVersion("100", "TARGET 1");
 	protected static final JiraVersion TARGET_VERSION_2 = new JiraVersion("200", "TARGET 2");
 
+	protected static final String TRANSITION = "transition";
+
 	@Mock
 	protected JiraService jiraSource;
 
@@ -115,13 +117,13 @@ public abstract class AbstractIssueSyncStrategyTest {
 		issueTypeMapping.put(SOURCE_ISSUE_TYPE_NEW_FEATURE, TARGET_ISSUE_TYPE_IMPROVEMENT);
 		jiraSyncConfig.setIssueTypeMapping(issueTypeMapping);
 
-		projectSync.setTransitions(Collections.singletonList(
+		projectSync.addTransition(TRANSITION,
 			new TransitionConfig(
 				Collections.singletonList(SOURCE_STATUS_OPEN.getName()),
 				Collections.singletonList(TARGET_STATUS_CLOSED.getName()),
 				SOURCE_STATUS_RESOLVED.getName()
 			)
-		));
+		);
 	}
 
 }

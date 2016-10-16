@@ -1,7 +1,9 @@
 package de.cronn.jira.sync.strategy;
 
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -121,13 +123,13 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 	}
 
 	private void processTransition(JiraService jiraSource, JiraIssue sourceIssue, JiraIssue targetIssue, JiraProjectSync projectSync, JiraIssueUpdate sourceIssueUpdate) {
-		List<TransitionConfig> transitions = projectSync.getTransitions();
-		if (transitions == null) {
+		Map<String, TransitionConfig> transitions = projectSync.getTransitions();
+		if (transitions == null || transitions.isEmpty()) {
 			log.trace("No transitions configured");
 			return;
 		}
 
-		TransitionConfig transition = findTransition(sourceIssue, targetIssue, transitions);
+		TransitionConfig transition = findTransition(sourceIssue, targetIssue, transitions.values());
 		if (transition != null) {
 
 			if (transition.isAssignToMyselfInSource()) {
@@ -175,11 +177,11 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		return Objects.equals(jiraUser.getKey(), assignee.getKey());
 	}
 
-	private TransitionConfig findTransition(JiraIssue sourceIssue, JiraIssue targetIssue, List<TransitionConfig> statusTransitions) {
+	private TransitionConfig findTransition(JiraIssue sourceIssue, JiraIssue targetIssue, Collection<TransitionConfig> transitions) {
 		String sourceIssueStatus = getStatusName(sourceIssue);
 		String targetIssueStatus = getStatusName(targetIssue);
 
-		List<TransitionConfig> transitionConfigs = statusTransitions.stream()
+		List<TransitionConfig> transitionConfigs = transitions.stream()
 			.filter(transitionConfig -> transitionConfig.getSourceStatusIn().contains(sourceIssueStatus))
 			.filter(transitionConfig -> transitionConfig.getTargetStatusIn().contains(targetIssueStatus))
 			.filter(transitionConfig -> filterOnlyIfAssignedInTarget(transitionConfig, targetIssue))

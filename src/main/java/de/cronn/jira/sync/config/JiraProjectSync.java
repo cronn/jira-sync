@@ -1,12 +1,14 @@
 package de.cronn.jira.sync.config;
 
 import java.net.URL;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import org.springframework.util.Assert;
 
 public class JiraProjectSync {
 
@@ -17,7 +19,7 @@ public class JiraProjectSync {
 	private URL remoteLinkIconInTarget;
 	private String targetIssueTypeFallback;
 	private Set<String> labelsToKeepInTarget;
-	private List<TransitionConfig> transitions;
+	private Map<String, TransitionConfig> transitions;
 	private Map<String, String> versionMapping;
 
 	public String getSourceProject() {
@@ -76,12 +78,27 @@ public class JiraProjectSync {
 		return labelsToKeepInTarget;
 	}
 
-	public void setTransitions(List<TransitionConfig> transitions) {
+	public void setTransitions(Map<String, TransitionConfig> transitions) {
 		this.transitions = transitions;
 	}
 
-	public List<TransitionConfig> getTransitions() {
+	public void addTransition(String key, TransitionConfig transition) {
+		if (this.transitions == null) {
+			this.transitions = new LinkedHashMap<>();
+		}
+		Object old = this.transitions.put(key, transition);
+		Assert.isNull(old);
+	}
+
+	public Map<String, TransitionConfig> getTransitions() {
 		return transitions;
+	}
+
+	public TransitionConfig getTransition(String key) {
+		if (transitions == null) {
+			return null;
+		}
+		return transitions.get(key);
 	}
 
 	public Map<String, String> getVersionMapping() {
