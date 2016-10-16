@@ -1,7 +1,7 @@
 package de.cronn.jira.sync.dummy;
 
 import java.time.Clock;
-import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -399,7 +399,7 @@ public class JiraDummyService {
 	}
 
 	private void refreshUpdatedTimestamp(JiraIssue issue) {
-		issue.getFields().setUpdated(Instant.now(clock));
+		issue.getFields().setUpdated(ZonedDateTime.now(clock));
 	}
 
 	@RequestMapping(path = "/api/2/issue/{issueKey}/transitions", method = RequestMethod.POST)

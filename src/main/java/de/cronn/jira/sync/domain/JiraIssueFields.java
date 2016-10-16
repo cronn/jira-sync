@@ -1,7 +1,9 @@
 package de.cronn.jira.sync.domain;
 
-import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.Set;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 public class JiraIssueFields {
 
@@ -16,7 +18,8 @@ public class JiraIssueFields {
 	private Set<JiraVersion> versions;
 	private Set<JiraVersion> fixVersions;
 	private JiraUser assignee;
-	private Instant updated;
+	@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+	private ZonedDateTime updated;
 
 	public JiraIssueFields() {
 	}
@@ -113,11 +116,11 @@ public class JiraIssueFields {
 		this.assignee = assignee;
 	}
 
-	public void setUpdated(Instant updated) {
+	public void setUpdated(ZonedDateTime updated) {
 		this.updated = updated;
 	}
 
-	public Instant getUpdated() {
+	public ZonedDateTime getUpdated() {
 		return updated;
 	}
 }
