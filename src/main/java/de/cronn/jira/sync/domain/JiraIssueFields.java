@@ -1,11 +1,14 @@
 package de.cronn.jira.sync.domain;
 
+import java.io.Serializable;
 import java.time.ZonedDateTime;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-public class JiraIssueFields {
+public class JiraIssueFields implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	private JiraProject project;
 	private String summary;

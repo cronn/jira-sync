@@ -1,11 +1,14 @@
 package de.cronn.jira.sync.domain;
 
+import java.io.Serializable;
 import java.net.URL;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-public class JiraRemoteLinkObject {
+public class JiraRemoteLinkObject implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	private URL url;
 

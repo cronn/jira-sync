@@ -7,6 +7,9 @@ import org.junit.Test;
 public class JiraIdResourceTest {
 
 	private static class TestJiraIdResource extends JiraIdResource {
+
+		private static final long serialVersionUID = 1L;
+
 	}
 
 	@Test

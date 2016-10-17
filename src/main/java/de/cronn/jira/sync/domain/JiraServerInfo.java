@@ -5,6 +5,8 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 
 public class JiraServerInfo extends JiraResource {
 
+	private static final long serialVersionUID = 1L;
+
 	private String baseUrl;
 	private String serverTitle;
 	private String version;

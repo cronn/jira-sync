@@ -1,6 +1,10 @@
 package de.cronn.jira.sync.domain;
 
-public class JiraFilterResult {
+import java.io.Serializable;
+
+public class JiraFilterResult implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	private String jql;
 

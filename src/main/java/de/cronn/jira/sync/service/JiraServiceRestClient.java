@@ -1,5 +1,7 @@
 package de.cronn.jira.sync.service;
 
+import static de.cronn.jira.sync.service.JiraServiceCacheConfig.*;
+
 import java.io.IOException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
@@ -24,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Scope;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
@@ -64,13 +65,6 @@ import de.cronn.proxy.ssh.SshProxy;
 public class JiraServiceRestClient implements JiraService {
 
 	private static final Logger log = LoggerFactory.getLogger(JiraServiceRestClient.class);
-
-	private static final String CACHE_NAME_PRIORITIES = "priorities";
-	private static final String CACHE_NAME_SERVER_INFO = "serverInfo";
-	private static final String CACHE_NAME_MYSELF = "myself";
-	private static final String CACHE_NAME_PROJECTS = "projects";
-	private static final String CACHE_NAME_VERSIONS = "versions";
-	private static final String CACHE_NAME_RESOLUTIONS = "resolutions";
 
 	private final RestTemplateBuilder restTemplateBuilder;
 
@@ -139,14 +133,6 @@ public class JiraServiceRestClient implements JiraService {
 	}
 
 	@Override
-	@CacheEvict(cacheNames = {
-		CACHE_NAME_PRIORITIES,
-		CACHE_NAME_SERVER_INFO,
-		CACHE_NAME_MYSELF,
-		CACHE_NAME_PROJECTS,
-		CACHE_NAME_VERSIONS,
-		CACHE_NAME_RESOLUTIONS
-	}, allEntries = true)
 	public void logout() {
 		if (restTemplate != null) {
 			restTemplate.delete(restUrl("/rest/auth/1/session"));

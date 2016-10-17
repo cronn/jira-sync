@@ -44,3 +44,5 @@ out/
 
 # personal (non-versioned) logback configuration file that can be defined with -Dlogback.configurationFile=/path/to/logback.user.groovy
 logback.user*.groovy
+
+/cache/

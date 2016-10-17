@@ -1,9 +1,13 @@
 package de.cronn.jira.sync.domain;
 
+import java.io.Serializable;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-public abstract class JiraResource {
+public abstract class JiraResource implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	private String self;
 

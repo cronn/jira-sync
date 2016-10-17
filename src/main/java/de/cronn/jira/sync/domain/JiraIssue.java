@@ -5,6 +5,8 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 
 public class JiraIssue extends JiraIdResource {
 
+	private static final long serialVersionUID = 1L;
+
 	private String key;
 
 	private JiraIssueFields fields;

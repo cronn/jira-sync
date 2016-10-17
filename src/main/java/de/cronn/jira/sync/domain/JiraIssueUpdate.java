@@ -1,8 +1,12 @@
 package de.cronn.jira.sync.domain;
 
+import java.io.Serializable;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-public class JiraIssueUpdate {
+public class JiraIssueUpdate implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	private JiraFieldsUpdate fields;
 

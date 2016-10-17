@@ -5,6 +5,8 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 
 public abstract class JiraIdResource extends JiraResource {
 
+	private static final long serialVersionUID = 1L;
+
 	private String id;
 
 	protected JiraIdResource() {

@@ -180,10 +180,12 @@ public class JiraSyncApplicationTests {
 			jiraSource.login(jiraSyncConfig.getSource());
 			jiraTarget.login(jiraSyncConfig.getTarget());
 
+			jiraSource.getResolutions();
 			List<JiraResolution> sourceResolutions1 = jiraSource.getResolutions();
 			List<JiraResolution> sourceResolutions2 = jiraSource.getResolutions();
 			assertThat(sourceResolutions1).isSameAs(sourceResolutions2);
 
+			jiraTarget.getResolutions();
 			List<JiraResolution> targetResolutions1 = jiraTarget.getResolutions();
 			List<JiraResolution> targetResolutions2 = jiraTarget.getResolutions();
 			assertThat(targetResolutions1).isSameAs(targetResolutions2);
@@ -200,35 +202,16 @@ public class JiraSyncApplicationTests {
 		try {
 			jiraSource.login(jiraSyncConfig.getSource());
 
+			jiraSource.getResolutions();
 			List<JiraResolution> sourceResolutions1 = jiraSource.getResolutions();
-			List<JiraPriority> sourcePriorities1 = jiraSource.getPriorities();
 			List<JiraResolution> sourceResolutions2 = jiraSource.getResolutions();
+
+			jiraSource.getPriorities();
+			List<JiraPriority> sourcePriorities1 = jiraSource.getPriorities();
 			List<JiraPriority> sourcePriorities2 = jiraSource.getPriorities();
 			assertThat(sourceResolutions1).isSameAs(sourceResolutions2);
 			assertThat(sourcePriorities1).isSameAs(sourcePriorities2);
 			assertThat(sourcePriorities1).isNotSameAs(sourceResolutions1);
-		} finally {
-			jiraSource.logout();
-		}
-	}
-
-	@Test
-	public void testCacheGetsEvictedOnLogout() throws Exception {
-		try {
-			jiraSource.login(jiraSyncConfig.getSource());
-
-			List<JiraResolution> resolutions1 = jiraSource.getResolutions();
-			List<JiraResolution> resolutions2 = jiraSource.getResolutions();
-			assertThat(resolutions1).isSameAs(resolutions2);
-
-			jiraSource.logout();
-			jiraSource.login(jiraSyncConfig.getSource());
-
-			List<JiraResolution> resolutions3 = jiraSource.getResolutions();
-			List<JiraResolution> resolutions4 = jiraSource.getResolutions();
-			assertThat(resolutions1).isNotSameAs(resolutions3);
-			assertThat(resolutions3).isSameAs(resolutions4);
-
 		} finally {
 			jiraSource.logout();
 		}

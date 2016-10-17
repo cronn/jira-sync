@@ -8,6 +8,8 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 
 public class JiraRemoteLink extends JiraIdResource {
 
+	private static final long serialVersionUID = 1L;
+
 	private JiraRemoteLinkObject object;
 
 	public JiraRemoteLink() {
