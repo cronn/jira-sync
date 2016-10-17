@@ -1,6 +1,7 @@
 package de.cronn.jira.sync.service;
 
 import java.net.URL;
+import java.time.Instant;
 import java.util.List;
 
 import de.cronn.jira.sync.config.JiraConnectionProperties;
@@ -23,6 +24,8 @@ public interface JiraService extends AutoCloseable {
 
 	void logout();
 
+	void evictAllCaches();
+
 	@Override
 	void close();
 
@@ -42,7 +45,7 @@ public interface JiraService extends AutoCloseable {
 
 	List<JiraIssue> getIssuesByFilterId(String filterId);
 
-	List<JiraRemoteLink> getRemoteLinks(String issueKey);
+	List<JiraRemoteLink> getRemoteLinks(String issueKey, Instant ifModifiedSince);
 
 	List<JiraTransition> getTransitions(String issueKey);
 

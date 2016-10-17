@@ -123,6 +123,9 @@ public class JiraSyncApplicationTests {
 
 		jiraDummyService.reset();
 
+		jiraSource.evictAllCaches();
+		jiraTarget.evictAllCaches();
+
 		jiraDummyService.setBaseUrl(SOURCE, sourceBaseUrl);
 		jiraDummyService.setBaseUrl(TARGET, targetBaseUrl);
 

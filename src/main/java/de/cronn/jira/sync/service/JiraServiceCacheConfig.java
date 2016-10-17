@@ -35,6 +35,7 @@ public class JiraServiceCacheConfig {
 	static final String CACHE_NAME_PROJECTS = "projects";
 	static final String CACHE_NAME_VERSIONS = "versions";
 	static final String CACHE_NAME_RESOLUTIONS = "resolutions";
+	static final String CACHE_NAME_REMOTE_LINKS = "remoteLinks";
 
 	private static final Duration ONE_HOUR = Duration.of(1, TimeUnit.HOURS);
 	private static final Duration THIRTY_SECONDS = Duration.of(30, TimeUnit.SECONDS);
@@ -50,6 +51,7 @@ public class JiraServiceCacheConfig {
 		createCache(cacheManager, CACHE_NAME_PRIORITIES, ONE_HOUR, jiraSyncConfig.isPersistentCaching());
 		createCache(cacheManager, CACHE_NAME_RESOLUTIONS, ONE_HOUR, jiraSyncConfig.isPersistentCaching());
 		createCache(cacheManager, CACHE_NAME_VERSIONS, ONE_HOUR, jiraSyncConfig.isPersistentCaching());
+		createCache(cacheManager, CACHE_NAME_REMOTE_LINKS, ONE_HOUR, jiraSyncConfig.isPersistentCaching());
 		createCache(cacheManager, CACHE_NAME_MYSELF, ONE_HOUR, false);
 		createCache(cacheManager, CACHE_NAME_SERVER_INFO, THIRTY_SECONDS, false);
 		return cacheManager;

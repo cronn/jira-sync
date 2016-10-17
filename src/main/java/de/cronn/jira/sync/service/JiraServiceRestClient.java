@@ -5,6 +5,7 @@ import static de.cronn.jira.sync.service.JiraServiceCacheConfig.*;
 import java.io.IOException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -26,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Scope;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
@@ -114,6 +116,19 @@ public class JiraServiceRestClient implements JiraService {
 		} catch (GeneralSecurityException | IOException e) {
 			throw new JiraSyncException("Failed to build custom http client", e);
 		}
+	}
+
+	@Override
+	@CacheEvict(cacheNames = {
+		CACHE_NAME_PRIORITIES,
+		CACHE_NAME_SERVER_INFO,
+		CACHE_NAME_MYSELF,
+		CACHE_NAME_PROJECTS,
+		CACHE_NAME_VERSIONS,
+		CACHE_NAME_RESOLUTIONS,
+		CACHE_NAME_REMOTE_LINKS }, allEntries = true)
+	public void evictAllCaches() {
+		log.info("all caches evicted");
 	}
 
 	@Override
@@ -222,7 +237,8 @@ public class JiraServiceRestClient implements JiraService {
 	}
 
 	@Override
-	public List<JiraRemoteLink> getRemoteLinks(String issueKey) {
+	@Cacheable(value = CACHE_NAME_REMOTE_LINKS, key = "{ #root.target.url, #issueKey, #ifModifiedSince }")
+	public List<JiraRemoteLink> getRemoteLinks(String issueKey, Instant ifModifiedSince) {
 		Assert.hasText(issueKey);
 		return getForObject("/rest/api/2/issue/{issueId}/remotelink", JiraRemoteLinks.class, issueKey);
 	}
@@ -242,6 +258,7 @@ public class JiraServiceRestClient implements JiraService {
 	}
 
 	@Override
+	@CacheEvict(cacheNames = CACHE_NAME_REMOTE_LINKS, allEntries = true)
 	public void addRemoteLink(JiraIssue fromIssue, JiraIssue toIssue, JiraService toJiraService, URL remoteLinkIcon) {
 		Assert.hasText(fromIssue.getKey());
 		Assert.hasText(toIssue.getKey());

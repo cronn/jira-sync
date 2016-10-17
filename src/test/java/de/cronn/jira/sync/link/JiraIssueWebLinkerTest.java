@@ -4,6 +4,9 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.net.URL;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -16,6 +19,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import de.cronn.jira.sync.JiraSyncException;
 import de.cronn.jira.sync.domain.JiraIssue;
+import de.cronn.jira.sync.domain.JiraIssueFields;
 import de.cronn.jira.sync.domain.JiraRemoteLink;
 import de.cronn.jira.sync.domain.JiraServerInfo;
 import de.cronn.jira.sync.service.JiraService;
@@ -25,6 +29,8 @@ public class JiraIssueWebLinkerTest {
 
 	private static final String JIRA_SOURCE_URL = "https://jira.source";
 	private static final String JIRA_TARGET_URL = "https://jira.target";
+
+	private static final Instant UPDATED = Instant.parse("2016-01-01T00:00:00.000Z");
 
 	@Mock
 	private JiraService jiraSource;
@@ -46,25 +52,32 @@ public class JiraIssueWebLinkerTest {
 
 		JiraIssueLinker resolver = new JiraIssueWebLinker();
 
-		JiraIssue jiraIssue = new JiraIssue();
+		JiraIssue jiraIssue = createJiraIssue("1", "KEY-1");
 
 		List<JiraRemoteLink> remoteLinks = new ArrayList<>();
-		when(jiraSource.getRemoteLinks(jiraIssue.getKey())).thenReturn(remoteLinks);
+		when(jiraSource.getRemoteLinks(jiraIssue.getKey(), UPDATED)).thenReturn(remoteLinks);
 
 		JiraIssue resolvedIssue = resolver.resolve(jiraIssue, jiraSource, jiraTarget);
 		assertThat(resolvedIssue).isNull();
+	}
+
+	private JiraIssue createJiraIssue(String key, String id) {
+		JiraIssue issue = new JiraIssue(id, key);
+		issue.setFields(new JiraIssueFields());
+		issue.getFields().setUpdated(ZonedDateTime.ofInstant(UPDATED, ZoneOffset.UTC));
+		return issue;
 	}
 
 	@Test
 	public void testResolve_OtherRemoteLinks() throws Exception {
 		JiraIssueLinker resolver = new JiraIssueWebLinker();
 
-		JiraIssue jiraIssue = new JiraIssue();
+		JiraIssue jiraIssue = createJiraIssue("1", "KEY-1");
 
 		List<JiraRemoteLink> remoteLinks = new ArrayList<>();
 		remoteLinks.add(new JiraRemoteLink("http://some.thing"));
 		remoteLinks.add(new JiraRemoteLink("http://other.thing"));
-		when(jiraSource.getRemoteLinks(jiraIssue.getKey())).thenReturn(remoteLinks);
+		when(jiraSource.getRemoteLinks(jiraIssue.getKey(), UPDATED)).thenReturn(remoteLinks);
 
 		JiraIssue resolvedIssue = resolver.resolve(jiraIssue, jiraSource, jiraTarget);
 		assertThat(resolvedIssue).isNull();
@@ -74,15 +87,15 @@ public class JiraIssueWebLinkerTest {
 	public void testResolve_HappyPath() throws Exception {
 		JiraIssueLinker resolver = new JiraIssueWebLinker();
 
-		JiraIssue sourceIssue = new JiraIssue("1", "SOURCE-12");
-		JiraIssue targetIssue = new JiraIssue("1", "TARGET-123");
+		JiraIssue sourceIssue = createJiraIssue("SOURCE-12", "1");
+		JiraIssue targetIssue = createJiraIssue("TARGET-123", "1");
 
 		when(jiraTarget.getIssueByKey(targetIssue.getKey())).thenReturn(targetIssue);
 
 		List<JiraRemoteLink> remoteLinks = new ArrayList<>();
 		remoteLinks.add(new JiraRemoteLink("http://some.thing"));
 		remoteLinks.add(new JiraRemoteLink(JIRA_TARGET_URL + "/browse/" + targetIssue.getKey()));
-		when(jiraSource.getRemoteLinks(sourceIssue.getKey())).thenReturn(remoteLinks);
+		when(jiraSource.getRemoteLinks(sourceIssue.getKey(), UPDATED)).thenReturn(remoteLinks);
 
 		JiraIssue resolvedIssue = resolver.resolve(sourceIssue, jiraSource, jiraTarget);
 		assertThat(resolvedIssue).isSameAs(targetIssue);
@@ -94,13 +107,13 @@ public class JiraIssueWebLinkerTest {
 	public void testResolve_ExtraSlash() throws Exception {
 		JiraIssueLinker resolver = new JiraIssueWebLinker();
 
-		JiraIssue sourceIssue = new JiraIssue("1", "SOURCE-12");
-		JiraIssue targetIssue = new JiraIssue("1", "TARGET-123");
+		JiraIssue sourceIssue = createJiraIssue("SOURCE-12", "1");
+		JiraIssue targetIssue = createJiraIssue("TARGET-123", "1");
 
 		when(jiraTarget.getIssueByKey(targetIssue.getKey())).thenReturn(targetIssue);
 
 		List<JiraRemoteLink> remoteLinks = Collections.singletonList(new JiraRemoteLink("https://jira.target//browse/" + targetIssue.getKey()));
-		when(jiraSource.getRemoteLinks(sourceIssue.getKey())).thenReturn(remoteLinks);
+		when(jiraSource.getRemoteLinks(sourceIssue.getKey(), UPDATED)).thenReturn(remoteLinks);
 
 		JiraIssue resolvedIssue = resolver.resolve(sourceIssue, jiraSource, jiraTarget);
 		assertThat(resolvedIssue).isSameAs(targetIssue);
@@ -112,14 +125,14 @@ public class JiraIssueWebLinkerTest {
 	public void testResolve_CannotResolveFromTarget() throws Exception {
 		JiraIssueLinker resolver = new JiraIssueWebLinker();
 
-		JiraIssue sourceIssue = new JiraIssue("1", "SOURCE-123");
-		JiraIssue targetIssue = new JiraIssue("1", "TARGET-123");
+		JiraIssue sourceIssue = createJiraIssue("SOURCE-123", "1");
+		JiraIssue targetIssue = createJiraIssue("TARGET-123", "1");
 
 		when(jiraTarget.getIssueByKey(targetIssue.getKey())).thenReturn(null);
 
 		List<JiraRemoteLink> remoteLinks = new ArrayList<>();
 		remoteLinks.add(new JiraRemoteLink(JIRA_TARGET_URL + "/browse/" + targetIssue.getKey()));
-		when(jiraSource.getRemoteLinks(sourceIssue.getKey())).thenReturn(remoteLinks);
+		when(jiraSource.getRemoteLinks(sourceIssue.getKey(), UPDATED)).thenReturn(remoteLinks);
 
 		try {
 			resolver.resolve(sourceIssue, jiraSource, jiraTarget);
@@ -135,9 +148,9 @@ public class JiraIssueWebLinkerTest {
 	public void testResolve_MultipleRemoteIssues() throws Exception {
 		JiraIssueLinker resolver = new JiraIssueWebLinker();
 
-		JiraIssue sourceIssue = new JiraIssue("1", "SOURCE-123");
-		JiraIssue targetIssue1 = new JiraIssue("1", "TARGET-123");
-		JiraIssue targetIssue2 = new JiraIssue("2", "TARGET-456");
+		JiraIssue sourceIssue = createJiraIssue("SOURCE-123", "1");
+		JiraIssue targetIssue1 = createJiraIssue("TARGET-123", "1");
+		JiraIssue targetIssue2 = createJiraIssue("TARGET-456", "2");
 
 		when(jiraTarget.getIssueByKey(targetIssue1.getKey())).thenReturn(targetIssue1);
 		when(jiraTarget.getIssueByKey(targetIssue2.getKey())).thenReturn(targetIssue2);
@@ -145,7 +158,7 @@ public class JiraIssueWebLinkerTest {
 		List<JiraRemoteLink> remoteLinks = new ArrayList<>();
 		remoteLinks.add(new JiraRemoteLink(JIRA_TARGET_URL + "/browse/" + targetIssue1.getKey()));
 		remoteLinks.add(new JiraRemoteLink(JIRA_TARGET_URL + "/browse/" + targetIssue2.getKey()));
-		when(jiraSource.getRemoteLinks(sourceIssue.getKey())).thenReturn(remoteLinks);
+		when(jiraSource.getRemoteLinks(sourceIssue.getKey(), UPDATED)).thenReturn(remoteLinks);
 
 		try {
 			resolver.resolve(sourceIssue, jiraSource, jiraTarget);
