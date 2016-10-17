@@ -11,10 +11,6 @@ public class JiraIssueUpdate {
 	public JiraIssueUpdate() {
 	}
 
-	public JiraIssueUpdate(JiraFieldsUpdate fields) {
-		this.fields = fields;
-	}
-
 	public JiraFieldsUpdate getFields() {
 		return fields;
 	}
