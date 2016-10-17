@@ -48,7 +48,7 @@ public abstract class AbstractIssueSyncStrategyTest {
 	protected static final JiraPriority SOURCE_PRIORITY_LOW = new JiraPriority("20000", "Low");
 
 	protected static final JiraPriority TARGET_PRIORITY_MAJOR = new JiraPriority("800", "Major");
-	protected static final JiraPriority TARGET_PRIORITY_MINOR =  new JiraPriority("700", "Minor");
+	protected static final JiraPriority TARGET_PRIORITY_MINOR = new JiraPriority("700", "Minor");
 
 	protected static final JiraVersion SOURCE_VERSION_1 = new JiraVersion("1", "1.0-SOURCE");
 	protected static final JiraVersion SOURCE_VERSION_2 = new JiraVersion("2", "2.0-SOURCE");

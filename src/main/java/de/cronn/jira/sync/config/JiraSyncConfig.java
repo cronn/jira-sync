@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@ConfigurationProperties(prefix="de.cronn.jira.sync")
+@ConfigurationProperties(prefix = "de.cronn.jira.sync")
 public class JiraSyncConfig {
 
 	private boolean autostart = true;

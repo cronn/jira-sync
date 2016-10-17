@@ -1,4 +1,3 @@
-
 package de.cronn.jira.sync.domain;
 
 public enum JiraField {

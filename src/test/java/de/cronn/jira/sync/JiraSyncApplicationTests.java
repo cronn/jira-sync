@@ -407,7 +407,7 @@ public class JiraSyncApplicationTests {
 		List<JiraTransition> filteredTransitions = transitions.stream()
 			.filter(transition -> transition.getTo().getName().equals(statusToTransitionTo.getName()))
 			.collect(Collectors.toList());
- 		assertThat(filteredTransitions).hasSize(1);
+		assertThat(filteredTransitions).hasSize(1);
 		return filteredTransitions.get(0);
 	}
 
