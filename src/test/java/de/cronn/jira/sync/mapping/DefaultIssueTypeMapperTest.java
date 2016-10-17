@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -45,7 +46,7 @@ public class DefaultIssueTypeMapperTest {
 			TARGET_ISSUE_TYPE_NEW_FEATURE
 		));
 
-		LinkedHashMap<String, String> issueTypeMapping = new LinkedHashMap<>();
+		Map<String, String> issueTypeMapping = new LinkedHashMap<>();
 		issueTypeMapping.put(SOURCE_ISSUE_TYPE_IMPROVEMENT.getName(), TARGET_ISSUE_TYPE_NEW_FEATURE.getName());
 		syncConfig.setIssueTypeMapping(issueTypeMapping);
 

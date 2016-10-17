@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.junit.Before;
@@ -48,7 +49,7 @@ public class DefaultVersionMapperTest {
 		projectSync.setSourceProject(SOURCE_PROJECT);
 		projectSync.setTargetProject(TARGET_PROJECT);
 
-		LinkedHashMap<String, String> versionMapping = new LinkedHashMap<>();
+		Map<String, String> versionMapping = new LinkedHashMap<>();
 		versionMapping.put(SOURCE_VERSION_1.getName(), TARGET_VERSION_1.getName());
 		versionMapping.put(SOURCE_VERSION_2.getName(), TARGET_VERSION_2.getName());
 
