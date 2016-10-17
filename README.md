@@ -110,6 +110,7 @@ de.cronn.jira.sync.projects[EX].targetIssueTypeFallback=Task
 de.cronn.jira.sync.projects[EX].versionMapping[10.0]=10
 de.cronn.jira.sync.projects[EX].versionMapping[11.0]=11
 de.cronn.jira.sync.projects[EX].versionMapping[12.0]=12
+de.cronn.jira.sync.projects[EX].versionsToIgnore=Undefined
 ```
 
 ### Running

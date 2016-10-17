@@ -29,14 +29,15 @@ public class DefaultVersionMapper implements VersionMapper {
 	public Set<JiraVersion> mapSourceToTarget(JiraService jiraService, Collection<JiraVersion> versionsToMap, JiraProjectSync projectSync) {
 		Map<String, String> versionMapping = projectSync.getVersionMapping();
 		String project = projectSync.getTargetProject();
-		return mapVersions(jiraService, versionsToMap, versionMapping, project);
+		Set<String> versionsToIgnore = projectSync.getVersionsToIgnore();
+		return mapVersions(jiraService, versionsToMap, versionMapping, versionsToIgnore, project);
 	}
 
 	@Override
 	public Set<JiraVersion> mapTargetToSource(JiraService jiraService, Collection<JiraVersion> versionsToMap, JiraProjectSync projectSync) {
 		Map<String, String> inverseVersionMapping = calculateInverseMapping(projectSync.getVersionMapping());
 		String project = projectSync.getSourceProject();
-		return mapVersions(jiraService, versionsToMap, inverseVersionMapping, project);
+		return mapVersions(jiraService, versionsToMap, inverseVersionMapping, Collections.emptySet(), project);
 	}
 
 	private static Map<String, String> calculateInverseMapping(Map<String, String> versionMapping) {
@@ -48,9 +49,9 @@ public class DefaultVersionMapper implements VersionMapper {
 		return inverse;
 	}
 
-	private Set<JiraVersion> mapVersions(JiraService jiraService, Collection<JiraVersion> versionsToMap, Map<String, String> versionMapping, String project) {
+	private Set<JiraVersion> mapVersions(JiraService jiraService, Collection<JiraVersion> versionsToMap, Map<String, String> versionMapping, Set<String> versionsToIgnore, String projectKey) {
 		if (versionMapping == null) {
-			log.warn("no version mapping configured for project '{}'", project);
+			log.warn("no version mapping configured for project '{}'", projectKey);
 			return Collections.emptySet();
 		}
 
@@ -58,7 +59,7 @@ public class DefaultVersionMapper implements VersionMapper {
 			return Collections.emptySet();
 		}
 
-		List<JiraVersion> projectVersions = jiraService.getVersions(project);
+		List<JiraVersion> projectVersions = jiraService.getVersions(projectKey);
 
 		Set<JiraVersion> mappedVersions = new LinkedHashSet<>();
 		for (JiraVersion versionToMap : versionsToMap) {
@@ -67,9 +68,14 @@ public class DefaultVersionMapper implements VersionMapper {
 				throw new JiraSyncException("versionName not set: " + versionToMap);
 			}
 
+			if (versionsToIgnore.contains(versionName)) {
+				log.debug("ignoring version '{}'", versionName);
+				continue;
+			}
+
 			String mappedVersionName = versionMapping.get(versionName);
 			if (mappedVersionName == null) {
-				log.warn("no mapping defined for {}", versionToMap);
+				log.warn("no mapping defined for '{}'", versionToMap);
 				continue;
 			}
 

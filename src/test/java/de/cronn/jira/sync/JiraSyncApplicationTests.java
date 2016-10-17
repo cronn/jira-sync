@@ -25,6 +25,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import de.cronn.jira.sync.config.JiraSyncConfig;
 import de.cronn.jira.sync.domain.JiraIssue;
+import de.cronn.jira.sync.domain.JiraIssueFields;
 import de.cronn.jira.sync.domain.JiraIssueStatus;
 import de.cronn.jira.sync.domain.JiraIssueType;
 import de.cronn.jira.sync.domain.JiraIssueUpdate;
@@ -71,6 +72,7 @@ public class JiraSyncApplicationTests {
 
 	private static final JiraVersion SOURCE_VERSION_10 = new JiraVersion("1", "10.0");
 	private static final JiraVersion SOURCE_VERSION_11 = new JiraVersion("2", "11.0");
+	private static final JiraVersion SOURCE_VERSION_UNDEFINED = new JiraVersion("98", "Undefined");
 	private static final JiraVersion SOURCE_VERSION_UNMAPPED = new JiraVersion("99", "Unmapped version");
 
 	private static final JiraVersion TARGET_VERSION_10 = new JiraVersion("100", "10");
@@ -143,6 +145,7 @@ public class JiraSyncApplicationTests {
 
 		jiraDummyService.addVersion(SOURCE, SOURCE_VERSION_10);
 		jiraDummyService.addVersion(SOURCE, SOURCE_VERSION_11);
+		jiraDummyService.addVersion(SOURCE, SOURCE_VERSION_UNDEFINED);
 		jiraDummyService.addVersion(SOURCE, SOURCE_VERSION_UNMAPPED);
 
 		jiraDummyService.addVersion(TARGET, TARGET_VERSION_10);
@@ -248,7 +251,7 @@ public class JiraSyncApplicationTests {
 		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_BUG);
 		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
 		sourceIssue.getFields().setLabels(new LinkedHashSet<>(Arrays.asList("label1", "label2")));
-		sourceIssue.getFields().setVersions(new LinkedHashSet<>(Arrays.asList(SOURCE_VERSION_10, SOURCE_VERSION_11)));
+		sourceIssue.getFields().setVersions(new LinkedHashSet<>(Arrays.asList(SOURCE_VERSION_10, SOURCE_VERSION_11, SOURCE_VERSION_UNDEFINED)));
 		sourceIssue.getFields().setFixVersions(Collections.singleton(SOURCE_VERSION_11));
 		jiraDummyService.createIssue(SOURCE, sourceIssue);
 
@@ -260,13 +263,14 @@ public class JiraSyncApplicationTests {
 		// then
 		assertThat(jiraDummyService.getAllIssues(TARGET)).hasSize(1);
 		JiraIssue targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
-		assertThat(targetIssue.getFields().getSummary()).isEqualTo("PROJECT_ONE-1: My first bug");
-		assertThat(targetIssue.getFields().getIssuetype().getName()).isEqualTo(TARGET_TYPE_BUG.getName());
-		assertThat(targetIssue.getFields().getPriority().getName()).isEqualTo(TARGET_PRIORITY_CRITICAL.getName());
-		assertThat(targetIssue.getFields().getLabels()).containsExactly("label1", "label2");
-		assertThat(getNames(targetIssue.getFields().getVersions())).containsExactlyInAnyOrder("10", "11");
-		assertThat(getNames(targetIssue.getFields().getFixVersions())).containsExactly("11");
-		assertThat(targetIssue.getFields().getUpdated().toInstant()).isEqualTo(Instant.now(clock));
+		JiraIssueFields targetIssueFields = targetIssue.getFields();
+		assertThat(targetIssueFields.getSummary()).isEqualTo("PROJECT_ONE-1: My first bug");
+		assertThat(targetIssueFields.getIssuetype().getName()).isEqualTo(TARGET_TYPE_BUG.getName());
+		assertThat(targetIssueFields.getPriority().getName()).isEqualTo(TARGET_PRIORITY_CRITICAL.getName());
+		assertThat(targetIssueFields.getLabels()).containsExactly("label1", "label2");
+		assertThat(getNames(targetIssueFields.getVersions())).containsExactlyInAnyOrder("10", "11");
+		assertThat(getNames(targetIssueFields.getFixVersions())).containsExactly("11");
+		assertThat(targetIssueFields.getUpdated().toInstant()).isEqualTo(Instant.now(clock));
 
 		assertThat(jiraDummyService.getAllIssues(SOURCE)).hasSize(1);
 		JiraIssue updatedSourceIssue = jiraDummyService.getAllIssues(SOURCE).get(0);

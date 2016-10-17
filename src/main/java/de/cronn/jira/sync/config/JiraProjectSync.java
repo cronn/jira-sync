@@ -21,6 +21,7 @@ public class JiraProjectSync {
 	private Set<String> labelsToKeepInTarget = new LinkedHashSet<>();
 	private Map<String, TransitionConfig> transitions = new LinkedHashMap<>();
 	private Map<String, String> versionMapping = new LinkedHashMap<>();
+	private Set<String> versionsToIgnore = new LinkedHashSet<>();
 
 	public String getSourceProject() {
 		return sourceProject;
@@ -107,6 +108,14 @@ public class JiraProjectSync {
 
 	public void setVersionMapping(Map<String, String> versionMapping) {
 		this.versionMapping = versionMapping;
+	}
+
+	public void setVersionsToIgnore(Set<String> versionsToIgnore) {
+		this.versionsToIgnore = versionsToIgnore;
+	}
+
+	public Set<String> getVersionsToIgnore() {
+		return versionsToIgnore;
 	}
 
 	@Override
