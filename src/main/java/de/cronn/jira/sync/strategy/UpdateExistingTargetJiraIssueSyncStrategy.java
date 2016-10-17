@@ -141,8 +141,8 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 				}
 			}
 
-			JiraTransition jiraTransition = getJiraTransition(jiraSource, sourceIssue, transition);
-			sourceIssueUpdate.setTransition(jiraTransition);
+			JiraTransition issueTransition = findIssueTransition(jiraSource, sourceIssue, transition);
+			sourceIssueUpdate.setTransition(issueTransition);
 
 			if (transition.isCopyResolutionToSource()) {
 				processResolution(jiraSource, sourceIssue, targetIssue, sourceIssueUpdate);
@@ -207,7 +207,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		}
 	}
 
-	private JiraTransition getJiraTransition(JiraService jiraTarget, JiraIssue targetIssue, TransitionConfig transitionConfig) {
+	private JiraTransition findIssueTransition(JiraService jiraTarget, JiraIssue targetIssue, TransitionConfig transitionConfig) {
 		String sourceStatusToSet = transitionConfig.getSourceStatusToSet();
 		List<JiraTransition> allTransitions = jiraTarget.getTransitions(targetIssue.getKey());
 		List<JiraTransition> filteredTransitions = allTransitions.stream()
