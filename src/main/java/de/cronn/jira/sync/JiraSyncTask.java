@@ -99,6 +99,7 @@ public class JiraSyncTask implements CommandLineRunner {
 			if (!sourceIssue.getFields().getProject().getKey().equals(projectSync.getSourceProject())) {
 				throw new JiraSyncException("Filter returned issue " + sourceIssue + " from unexpected project " + sourceIssue.getFields().getProject());
 			}
+			log.info("synching issue '{}'", sourceIssue.getKey());
 			JiraIssue targetIssue = jiraIssueLinker.resolve(sourceIssue, jiraSource, jiraTarget);
 			IssueSyncStrategy syncStrategy = getSyncStrategy(targetIssue);
 			SyncResult syncResult = syncStrategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
