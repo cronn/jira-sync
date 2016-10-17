@@ -100,7 +100,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		sourceIssue.getFields().setDescription("some description");
 		targetIssue.getFields().setDescription(descriptionMapper.mapSourceDescription("some description"));
 
-		when(jiraSource.getTransitions(sourceIssue)).thenReturn(Collections.singletonList(SOURCE_TRANSITION_RESOLVE));
+		when(jiraSource.getTransitions(sourceIssue.getKey())).thenReturn(Collections.singletonList(SOURCE_TRANSITION_RESOLVE));
 
 		when(jiraIssueLinker.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
 
@@ -115,7 +115,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		assertThat(update.getTransition()).isEqualTo(SOURCE_TRANSITION_RESOLVE);
 
 		verify(jiraTarget).getPriorities();
-		verify(jiraSource).getTransitions(sourceIssue);
+		verify(jiraSource).getTransitions(sourceIssue.getKey());
 		verifyNoMoreInteractions(jiraSource, jiraTarget);
 	}
 
@@ -130,7 +130,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 
 		sourceIssue.getFields().setDescription("some description");
 
-		when(jiraSource.getTransitions(sourceIssue)).thenReturn(Collections.singletonList(SOURCE_TRANSITION_RESOLVE));
+		when(jiraSource.getTransitions(sourceIssue.getKey())).thenReturn(Collections.singletonList(SOURCE_TRANSITION_RESOLVE));
 
 		when(jiraIssueLinker.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
 
@@ -151,7 +151,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		assertThat(targetIssueUpdate.getTransition()).isNull();
 
 		verify(jiraTarget).getPriorities();
-		verify(jiraSource).getTransitions(sourceIssue);
+		verify(jiraSource).getTransitions(sourceIssue.getKey());
 		verifyNoMoreInteractions(jiraSource, jiraTarget);
 	}
 
@@ -165,7 +165,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		targetIssue.getFields().setPriority(TARGET_PRIORITY_MAJOR);
 		targetIssue.getFields().setFixVersions(Collections.singleton(TARGET_VERSION_2));
 
-		when(jiraSource.getTransitions(sourceIssue)).thenReturn(Collections.singletonList(SOURCE_TRANSITION_RESOLVE));
+		when(jiraSource.getTransitions(sourceIssue.getKey())).thenReturn(Collections.singletonList(SOURCE_TRANSITION_RESOLVE));
 
 		when(jiraIssueLinker.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
 
@@ -185,7 +185,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		assertThat(targetIssueUpdate.getTransition()).isNull();
 
 		verify(jiraTarget).getPriorities();
-		verify(jiraSource).getTransitions(sourceIssue);
+		verify(jiraSource).getTransitions(sourceIssue.getKey());
 		verifyNoMoreInteractions(jiraSource, jiraTarget);
 	}
 
@@ -202,7 +202,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		targetIssue.getFields().setPriority(TARGET_PRIORITY_MAJOR);
 		targetIssue.getFields().setFixVersions(Collections.singleton(TARGET_VERSION_2));
 
-		when(jiraSource.getTransitions(sourceIssue)).thenReturn(Collections.singletonList(SOURCE_TRANSITION_RESOLVE));
+		when(jiraSource.getTransitions(sourceIssue.getKey())).thenReturn(Collections.singletonList(SOURCE_TRANSITION_RESOLVE));
 
 		when(jiraIssueLinker.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
 
@@ -219,7 +219,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		verify(jiraTarget).getPriorities();
 		verify(jiraSource).getVersions(SOURCE_PROJECT_KEY);
 		verify(jiraTarget).getVersions(TARGET_PROJECT_KEY);
-		verify(jiraSource).getTransitions(sourceIssue);
+		verify(jiraSource).getTransitions(sourceIssue.getKey());
 		verifyNoMoreInteractions(jiraSource, jiraTarget);
 	}
 

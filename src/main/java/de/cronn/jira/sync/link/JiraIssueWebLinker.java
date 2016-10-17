@@ -35,7 +35,7 @@ public class JiraIssueWebLinker implements JiraIssueLinker {
 	}
 
 	private List<JiraIssue> resolveIssues(JiraIssue fromIssue, JiraService fromJiraService, JiraService toJiraService) {
-		List<JiraRemoteLink> remoteLinks = fromJiraService.getRemoteLinks(fromIssue);
+		List<JiraRemoteLink> remoteLinks = fromJiraService.getRemoteLinks(fromIssue.getKey());
 		String toBaseUrl = toJiraService.getServerInfo().getBaseUrl();
 		Pattern pattern = Pattern.compile("^" + Pattern.quote(toBaseUrl) + "/+browse/([A-Z_]+-\\d+)$");
 		List<JiraIssue> resolvedIssues = new ArrayList<>();

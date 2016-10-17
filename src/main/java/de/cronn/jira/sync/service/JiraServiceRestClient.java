@@ -222,15 +222,15 @@ public class JiraServiceRestClient implements JiraService {
 	}
 
 	@Override
-	public List<JiraRemoteLink> getRemoteLinks(JiraIssue issue) {
-		Assert.hasText(issue.getKey());
-		return getForObject("/rest/api/2/issue/{issueId}/remotelink", JiraRemoteLinks.class, issue.getKey());
+	public List<JiraRemoteLink> getRemoteLinks(String issueKey) {
+		Assert.hasText(issueKey);
+		return getForObject("/rest/api/2/issue/{issueId}/remotelink", JiraRemoteLinks.class, issueKey);
 	}
 
 	@Override
-	public List<JiraTransition> getTransitions(JiraIssue issue) {
-		Assert.hasText(issue.getKey());
-		JiraTransitions transitions = getForObject("/rest/api/2/issue/{issueId}/transitions", JiraTransitions.class, issue.getKey());
+	public List<JiraTransition> getTransitions(String issueKey) {
+		Assert.hasText(issueKey);
+		JiraTransitions transitions = getForObject("/rest/api/2/issue/{issueId}/transitions", JiraTransitions.class, issueKey);
 		return transitions.getTransitions();
 	}
 

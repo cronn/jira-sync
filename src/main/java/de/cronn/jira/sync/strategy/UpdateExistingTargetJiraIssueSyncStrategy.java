@@ -209,7 +209,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 
 	private JiraTransition getJiraTransition(JiraService jiraTarget, JiraIssue targetIssue, TransitionConfig transitionConfig) {
 		String sourceStatusToSet = transitionConfig.getSourceStatusToSet();
-		List<JiraTransition> allTransitions = jiraTarget.getTransitions(targetIssue);
+		List<JiraTransition> allTransitions = jiraTarget.getTransitions(targetIssue.getKey());
 		List<JiraTransition> filteredTransitions = allTransitions.stream()
 			.filter(jiraTransition -> jiraTransition.getTo().getName().equals(sourceStatusToSet))
 			.collect(Collectors.toList());

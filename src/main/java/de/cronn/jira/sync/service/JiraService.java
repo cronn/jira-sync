@@ -42,9 +42,9 @@ public interface JiraService extends AutoCloseable {
 
 	List<JiraIssue> getIssuesByFilterId(String filterId);
 
-	List<JiraRemoteLink> getRemoteLinks(JiraIssue issue);
+	List<JiraRemoteLink> getRemoteLinks(String issueKey);
 
-	List<JiraTransition> getTransitions(JiraIssue issue);
+	List<JiraTransition> getTransitions(String issueKey);
 
 	void addRemoteLink(JiraIssue fromIssue, JiraIssue toIssue, JiraService toJiraService, URL remoteLinkIcon);
 
