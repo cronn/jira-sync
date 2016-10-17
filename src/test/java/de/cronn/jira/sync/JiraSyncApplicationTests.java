@@ -1,8 +1,7 @@
 package de.cronn.jira.sync;
 
 import static de.cronn.jira.sync.dummy.JiraDummyService.Context.*;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.net.URL;
 import java.time.Instant;
@@ -162,17 +161,17 @@ public class JiraSyncApplicationTests {
 	@Test
 	public void testConfiguration() throws Exception {
 		Map<String, String> resolutionMapping = syncConfig.getResolutionMapping();
-		assertThat(resolutionMapping.keySet(), containsInAnyOrder("Fixed", "Duplicate", "Incomplete", "Won't Fix", "Won't Do", "Cannot Reproduce", "Done"));
+		assertThat(resolutionMapping.keySet()).containsExactlyInAnyOrder("Fixed", "Duplicate", "Incomplete", "Won't Fix", "Won't Do", "Cannot Reproduce", "Done");
 
-		assertThat(resolutionMapping.get("Fixed"), is("Fixed"));
-		assertThat(resolutionMapping.get("Done"), is("Fixed"));
-		assertThat(resolutionMapping.get("Cannot Reproduce"), is("Cannot Reproduce"));
-		assertThat(resolutionMapping.get("Won't Fix"), is("Won't Fix"));
+		assertThat(resolutionMapping).containsEntry("Fixed", "Fixed");
+		assertThat(resolutionMapping).containsEntry("Done", "Fixed");
+		assertThat(resolutionMapping).containsEntry("Cannot Reproduce", "Cannot Reproduce");
+		assertThat(resolutionMapping).containsEntry("Won't Fix", "Won't Fix");
 	}
 
 	@Test
 	public void testResolutionsAreCached() throws Exception {
-		assertNotSame(jiraSource, jiraTarget);
+		assertThat(jiraSource).isNotSameAs(jiraTarget);
 
 		try {
 			jiraSource.login(jiraSyncConfig.getSource());
@@ -180,13 +179,13 @@ public class JiraSyncApplicationTests {
 
 			List<JiraResolution> sourceResolutions1 = jiraSource.getResolutions();
 			List<JiraResolution> sourceResolutions2 = jiraSource.getResolutions();
-			assertSame(sourceResolutions1, sourceResolutions2);
+			assertThat(sourceResolutions1).isSameAs(sourceResolutions2);
 
 			List<JiraResolution> targetResolutions1 = jiraTarget.getResolutions();
 			List<JiraResolution> targetResolutions2 = jiraTarget.getResolutions();
-			assertSame(targetResolutions1, targetResolutions2);
+			assertThat(targetResolutions1).isSameAs(targetResolutions2);
 
-			assertNotSame(sourceResolutions1, targetResolutions1);
+			assertThat(sourceResolutions1).isNotSameAs(targetResolutions1);
 		} finally {
 			jiraSource.logout();
 			jiraTarget.logout();
@@ -202,9 +201,9 @@ public class JiraSyncApplicationTests {
 			List<JiraPriority> sourcePriorities1 = jiraSource.getPriorities();
 			List<JiraResolution> sourceResolutions2 = jiraSource.getResolutions();
 			List<JiraPriority> sourcePriorities2 = jiraSource.getPriorities();
-			assertSame(sourceResolutions1, sourceResolutions2);
-			assertSame(sourcePriorities1, sourcePriorities2);
-			assertNotSame(sourcePriorities1, sourceResolutions1);
+			assertThat(sourceResolutions1).isSameAs(sourceResolutions2);
+			assertThat(sourcePriorities1).isSameAs(sourcePriorities2);
+			assertThat(sourcePriorities1).isNotSameAs(sourceResolutions1);
 		} finally {
 			jiraSource.logout();
 		}
@@ -217,15 +216,15 @@ public class JiraSyncApplicationTests {
 
 			List<JiraResolution> resolutions1 = jiraSource.getResolutions();
 			List<JiraResolution> resolutions2 = jiraSource.getResolutions();
-			assertSame(resolutions1, resolutions2);
+			assertThat(resolutions1).isSameAs(resolutions2);
 
 			jiraSource.logout();
 			jiraSource.login(jiraSyncConfig.getSource());
 
 			List<JiraResolution> resolutions3 = jiraSource.getResolutions();
 			List<JiraResolution> resolutions4 = jiraSource.getResolutions();
-			assertNotSame(resolutions1, resolutions3);
-			assertSame(resolutions3, resolutions4);
+			assertThat(resolutions1).isNotSameAs(resolutions3);
+			assertThat(resolutions3).isSameAs(resolutions4);
 
 		} finally {
 			jiraSource.logout();
@@ -238,7 +237,7 @@ public class JiraSyncApplicationTests {
 		syncTask.sync();
 
 		// then
-		assertThat(jiraDummyService.getAllIssues(TARGET), empty());
+		assertThat(jiraDummyService.getAllIssues(TARGET)).isEmpty();
 	}
 
 	@Test
@@ -259,32 +258,32 @@ public class JiraSyncApplicationTests {
 		syncTask.sync();
 
 		// then
-		assertThat(jiraDummyService.getAllIssues(TARGET), hasSize(1));
+		assertThat(jiraDummyService.getAllIssues(TARGET)).hasSize(1);
 		JiraIssue targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
-		assertThat(targetIssue.getFields().getSummary(), is("PROJECT_ONE-1: My first bug"));
-		assertThat(targetIssue.getFields().getIssuetype().getName(), is(TARGET_TYPE_BUG.getName()));
-		assertThat(targetIssue.getFields().getPriority().getName(), is(TARGET_PRIORITY_CRITICAL.getName()));
-		assertThat(targetIssue.getFields().getLabels(), contains("label1", "label2"));
-		assertThat(getNames(targetIssue.getFields().getVersions()), containsInAnyOrder("10", "11"));
-		assertThat(getNames(targetIssue.getFields().getFixVersions()), contains("11"));
-		assertThat(targetIssue.getFields().getUpdated().toInstant(), is(Instant.now(clock)));
+		assertThat(targetIssue.getFields().getSummary()).isEqualTo("PROJECT_ONE-1: My first bug");
+		assertThat(targetIssue.getFields().getIssuetype().getName()).isEqualTo(TARGET_TYPE_BUG.getName());
+		assertThat(targetIssue.getFields().getPriority().getName()).isEqualTo(TARGET_PRIORITY_CRITICAL.getName());
+		assertThat(targetIssue.getFields().getLabels()).containsExactly("label1", "label2");
+		assertThat(getNames(targetIssue.getFields().getVersions())).containsExactlyInAnyOrder("10", "11");
+		assertThat(getNames(targetIssue.getFields().getFixVersions())).containsExactly("11");
+		assertThat(targetIssue.getFields().getUpdated().toInstant()).isEqualTo(Instant.now(clock));
 
-		assertThat(jiraDummyService.getAllIssues(SOURCE), hasSize(1));
+		assertThat(jiraDummyService.getAllIssues(SOURCE)).hasSize(1);
 		JiraIssue updatedSourceIssue = jiraDummyService.getAllIssues(SOURCE).get(0);
-		assertThat(updatedSourceIssue.getFields().getUpdated().toInstant(), is(Instant.now(clock)));
+		assertThat(updatedSourceIssue.getFields().getUpdated().toInstant()).isEqualTo(Instant.now(clock));
 
 		List<JiraRemoteLink> remoteLinksInTarget = jiraDummyService.getRemoteLinks(TARGET, targetIssue);
 		List<JiraRemoteLink> remoteLinksInSource = jiraDummyService.getRemoteLinks(SOURCE, sourceIssue);
-		assertThat(remoteLinksInTarget, hasSize(1));
-		assertThat(remoteLinksInSource, hasSize(1));
+		assertThat(remoteLinksInTarget).hasSize(1);
+		assertThat(remoteLinksInSource).hasSize(1);
 
 		JiraRemoteLinkObject firstRemoteLinkInSource = remoteLinksInSource.get(0).getObject();
-		assertThat(firstRemoteLinkInSource.getUrl(), is(new URL(targetBaseUrl + "/browse/PRJ_ONE-1")));
-		assertThat(firstRemoteLinkInSource.getIcon().getUrl16x16(), is(new URL("https://jira-source/favicon.ico")));
+		assertThat(firstRemoteLinkInSource.getUrl()).isEqualTo(new URL(targetBaseUrl + "/browse/PRJ_ONE-1"));
+		assertThat(firstRemoteLinkInSource.getIcon().getUrl16x16()).isEqualTo(new URL("https://jira-source/favicon.ico"));
 
 		JiraRemoteLinkObject firstRemoteLinkInTarget = remoteLinksInTarget.get(0).getObject();
-		assertThat(firstRemoteLinkInTarget.getUrl(), is(new URL(sourceBaseUrl + "/browse/PROJECT_ONE-1")));
-		assertThat(firstRemoteLinkInTarget.getIcon().getUrl16x16(), is(new URL("https://jira-target/favicon.ico")));
+		assertThat(firstRemoteLinkInTarget.getUrl()).isEqualTo(new URL(sourceBaseUrl + "/browse/PROJECT_ONE-1"));
+		assertThat(firstRemoteLinkInTarget.getIcon().getUrl16x16()).isEqualTo(new URL("https://jira-target/favicon.ico"));
 	}
 
 	@Test
@@ -301,11 +300,11 @@ public class JiraSyncApplicationTests {
 		syncTask.sync();
 
 		// then
-		assertThat(jiraDummyService.getAllIssues(TARGET), hasSize(1));
+		assertThat(jiraDummyService.getAllIssues(TARGET)).hasSize(1);
 		JiraIssue targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
-		assertThat(targetIssue.getFields().getIssuetype().getName(), is(TARGET_TYPE_BUG.getName()));
-		assertNull(targetIssue.getFields().getPriority());
-		assertThat(targetIssue.getFields().getVersions(), empty());
+		assertThat(targetIssue.getFields().getIssuetype().getName()).isEqualTo(TARGET_TYPE_BUG.getName());
+		assertThat(targetIssue.getFields().getPriority()).isNull();
+		assertThat(targetIssue.getFields().getVersions()).isEmpty();
 	}
 
 	private static List<String> getNames(Set<JiraVersion> versions) {
@@ -326,9 +325,9 @@ public class JiraSyncApplicationTests {
 		syncTask.sync();
 
 		// then
-		assertThat(jiraDummyService.getAllIssues(TARGET), hasSize(1));
+		assertThat(jiraDummyService.getAllIssues(TARGET)).hasSize(1);
 		JiraIssue targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
-		assertThat(targetIssue.getFields().getIssuetype().getName(), is(TARGET_TYPE_TASK.getName()));
+		assertThat(targetIssue.getFields().getIssuetype().getName()).isEqualTo(TARGET_TYPE_TASK.getName());
 	}
 
 	@Test
@@ -338,9 +337,9 @@ public class JiraSyncApplicationTests {
 
 		syncTask.sync();
 
-		assertThat(jiraDummyService.getAllIssues(TARGET), hasSize(1));
+		assertThat(jiraDummyService.getAllIssues(TARGET)).hasSize(1);
 		JiraIssue targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
-		assertThat(targetIssue.getFields().getDescription(), is(""));
+		assertThat(targetIssue.getFields().getDescription()).isEqualTo("");
 
 		// when
 		JiraIssueUpdate update = new JiraIssueUpdate();
@@ -353,14 +352,14 @@ public class JiraSyncApplicationTests {
 		syncTask.sync();
 
 		// then
-		assertThat(jiraDummyService.getAllIssues(TARGET), hasSize(1));
+		assertThat(jiraDummyService.getAllIssues(TARGET)).hasSize(1);
 		targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
-		assertThat(targetIssue.getFields().getDescription(), is("{panel:title=Original description|titleBGColor=#DDD|bgColor=#EEE}\nchanged description\n{panel}"));
-		assertThat(targetIssue.getFields().getUpdated().toInstant(), is(Instant.now(clock)));
+		assertThat(targetIssue.getFields().getDescription()).isEqualTo("{panel:title=Original description|titleBGColor=#DDD|bgColor=#EEE}\nchanged description\n{panel}");
+		assertThat(targetIssue.getFields().getUpdated().toInstant()).isEqualTo(Instant.now(clock));
 
-		assertThat(jiraDummyService.getAllIssues(SOURCE), hasSize(1));
+		assertThat(jiraDummyService.getAllIssues(SOURCE)).hasSize(1);
 		JiraIssue sourceIssue = jiraDummyService.getAllIssues(SOURCE).get(0);
-		assertThat(sourceIssue.getFields().getUpdated().toInstant(), is(beforeSecondUpdate));
+		assertThat(sourceIssue.getFields().getUpdated().toInstant()).isEqualTo(beforeSecondUpdate);
 	}
 
 	@Test
@@ -370,7 +369,7 @@ public class JiraSyncApplicationTests {
 
 		syncTask.sync();
 
-		assertThat(jiraDummyService.getAllIssues(TARGET), hasSize(1));
+		assertThat(jiraDummyService.getAllIssues(TARGET)).hasSize(1);
 		JiraIssue targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
 
 		// when
@@ -386,9 +385,9 @@ public class JiraSyncApplicationTests {
 
 		// then
 		JiraIssue updatedSourceIssue = jiraDummyService.getIssueByKey(SOURCE, createdSourceIssue.getKey());
-		assertThat(updatedSourceIssue.getFields().getStatus().getName(), is(SOURCE_STATUS_RESOLVED.getName()));
-		assertThat(updatedSourceIssue.getFields().getResolution().getName(), is(SOURCE_RESOLUTION_FIXED.getName()));
-		assertThat(getNames(updatedSourceIssue.getFields().getFixVersions()), contains(SOURCE_VERSION_10.getName()));
+		assertThat(updatedSourceIssue.getFields().getStatus().getName()).isEqualTo(SOURCE_STATUS_RESOLVED.getName());
+		assertThat(updatedSourceIssue.getFields().getResolution().getName()).isEqualTo(SOURCE_RESOLUTION_FIXED.getName());
+		assertThat(getNames(updatedSourceIssue.getFields().getFixVersions())).containsExactly(SOURCE_VERSION_10.getName());
 	}
 
 	private JiraIssue createIssueInSource(String summary) {
@@ -408,7 +407,7 @@ public class JiraSyncApplicationTests {
 		List<JiraTransition> filteredTransitions = transitions.stream()
 			.filter(transition -> transition.getTo().getName().equals(statusToTransitionTo.getName()))
 			.collect(Collectors.toList());
- 		assertThat(filteredTransitions, hasSize(1));
+ 		assertThat(filteredTransitions).hasSize(1);
 		return filteredTransitions.get(0);
 	}
 
@@ -420,14 +419,14 @@ public class JiraSyncApplicationTests {
 		syncTask.sync();
 		syncTask.sync();
 
-		assertThat(jiraDummyService.getAllIssues(TARGET), hasSize(1));
+		assertThat(jiraDummyService.getAllIssues(TARGET)).hasSize(1);
 		JiraIssue currentSourceIssue = jiraDummyService.getAllIssues(TARGET).get(0);
 
-		assertThat(currentSourceIssue.getFields().getStatus().getName(), is(SOURCE_STATUS_OPEN.getName()));
+		assertThat(currentSourceIssue.getFields().getStatus().getName()).isEqualTo(SOURCE_STATUS_OPEN.getName());
 
 		// when
 
-		assertThat(jiraDummyService.getAllIssues(TARGET), hasSize(1));
+		assertThat(jiraDummyService.getAllIssues(TARGET)).hasSize(1);
 		JiraIssue targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
 		targetIssue.getFields().setAssignee(new JiraUser("some", "body"));
 
@@ -436,8 +435,8 @@ public class JiraSyncApplicationTests {
 		// then
 		JiraIssue updatedSourceIssue = jiraDummyService.getIssueByKey(SOURCE, createdSourceIssue.getKey());
 
-		assertThat(updatedSourceIssue.getFields().getStatus().getName(), is(SOURCE_STATUS_IN_PROGRESS.getName()));
-		assertThat(updatedSourceIssue.getFields().getAssignee().getKey(), is("myself"));
+		assertThat(updatedSourceIssue.getFields().getStatus().getName()).isEqualTo(SOURCE_STATUS_IN_PROGRESS.getName());
+		assertThat(updatedSourceIssue.getFields().getAssignee().getKey()).isEqualTo("myself");
 	}
 
 }

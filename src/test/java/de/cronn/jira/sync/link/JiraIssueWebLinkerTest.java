@@ -1,7 +1,6 @@
 package de.cronn.jira.sync.link;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.net.URL;
@@ -53,7 +52,7 @@ public class JiraIssueWebLinkerTest {
 		when(jiraSource.getRemoteLinks(jiraIssue)).thenReturn(remoteLinks);
 
 		JiraIssue resolvedIssue = resolver.resolve(jiraIssue, jiraSource, jiraTarget);
-		assertNull(resolvedIssue);
+		assertThat(resolvedIssue).isNull();
 	}
 
 	@Test
@@ -68,7 +67,7 @@ public class JiraIssueWebLinkerTest {
 		when(jiraSource.getRemoteLinks(jiraIssue)).thenReturn(remoteLinks);
 
 		JiraIssue resolvedIssue = resolver.resolve(jiraIssue, jiraSource, jiraTarget);
-		assertNull(resolvedIssue);
+		assertThat(resolvedIssue).isNull();
 	}
 
 	@Test
@@ -86,7 +85,7 @@ public class JiraIssueWebLinkerTest {
 		when(jiraSource.getRemoteLinks(sourceIssue)).thenReturn(remoteLinks);
 
 		JiraIssue resolvedIssue = resolver.resolve(sourceIssue, jiraSource, jiraTarget);
-		assertThat(resolvedIssue, sameInstance(targetIssue));
+		assertThat(resolvedIssue).isSameAs(targetIssue);
 
 		verify(jiraTarget).getIssueByKey(targetIssue.getKey());
 	}
@@ -104,7 +103,7 @@ public class JiraIssueWebLinkerTest {
 		when(jiraSource.getRemoteLinks(sourceIssue)).thenReturn(remoteLinks);
 
 		JiraIssue resolvedIssue = resolver.resolve(sourceIssue, jiraSource, jiraTarget);
-		assertThat(resolvedIssue, sameInstance(targetIssue));
+		assertThat(resolvedIssue).isSameAs(targetIssue);
 
 		verify(jiraTarget).getIssueByKey(targetIssue.getKey());
 	}
@@ -126,7 +125,7 @@ public class JiraIssueWebLinkerTest {
 			resolver.resolve(sourceIssue, jiraSource, jiraTarget);
 			fail("JiraSyncException expected");
 		} catch (JiraSyncException e) {
-			assertThat(e.getMessage(), is("Failed to link TARGET-123 in target"));
+			assertThat(e).hasMessage("Failed to link TARGET-123 in target");
 		}
 
 		verify(jiraTarget).getIssueByKey(targetIssue.getKey());
@@ -152,7 +151,7 @@ public class JiraIssueWebLinkerTest {
 			resolver.resolve(sourceIssue, jiraSource, jiraTarget);
 			fail("JiraSyncException expected");
 		} catch (JiraSyncException e) {
-			assertThat(e.getMessage(), is("Illegal number of linked jira issues for JiraIssue[id=1,key=SOURCE-123]: [JiraIssue[id=1,key=TARGET-123], JiraIssue[id=2,key=TARGET-456]]"));
+			assertThat(e).hasMessage("Illegal number of linked jira issues for JiraIssue[id=1,key=SOURCE-123]: [JiraIssue[id=1,key=TARGET-123], JiraIssue[id=2,key=TARGET-456]]");
 		}
 	}
 

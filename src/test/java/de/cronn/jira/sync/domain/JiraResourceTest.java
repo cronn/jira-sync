@@ -1,7 +1,6 @@
 package de.cronn.jira.sync.domain;
 
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 import org.junit.Test;
 
@@ -14,7 +13,7 @@ public class JiraResourceTest {
 	public void testToString() {
 		JiraResource resource = new TestJiraResource();
 		resource.setSelf("self");
-		assertThat(resource.toString(), is("JiraResourceTest.TestJiraResource[self=self]"));
+		assertThat(resource).hasToString("JiraResourceTest.TestJiraResource[self=self]");
 	}
 
 }

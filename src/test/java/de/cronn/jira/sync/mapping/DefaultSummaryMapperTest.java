@@ -1,7 +1,6 @@
 package de.cronn.jira.sync.mapping;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -29,7 +28,7 @@ public class DefaultSummaryMapperTest {
 		String summary = summaryMapper.mapSummary(issue);
 
 		// then
-		assertThat(summary, is("TEST-123: Some Summary"));
+		assertThat(summary).isEqualTo("TEST-123: Some Summary");
 	}
 
 	@Test
@@ -41,7 +40,7 @@ public class DefaultSummaryMapperTest {
 		String summary = summaryMapper.mapSummary(issue);
 
 		// then
-		assertThat(summary, is("TEST-123: "));
+		assertThat(summary).isEqualTo("TEST-123: ");
 	}
 
 	@Test
@@ -52,7 +51,7 @@ public class DefaultSummaryMapperTest {
 			summaryMapper.mapSummary(issue);
 			fail("IllegalArgumentException expected");
 		} catch (IllegalArgumentException e) {
-			assertThat(e.getMessage(), is("key must not be null"));
+			assertThat(e).hasMessage("key must not be null");
 		}
 	}
 
@@ -64,7 +63,7 @@ public class DefaultSummaryMapperTest {
 			summaryMapper.mapSummary(issue);
 			fail("IllegalArgumentException expected");
 		} catch (IllegalArgumentException e) {
-			assertThat(e.getMessage(), is("summary must not be null"));
+			assertThat(e).hasMessage("summary must not be null");
 		}
 	}
 

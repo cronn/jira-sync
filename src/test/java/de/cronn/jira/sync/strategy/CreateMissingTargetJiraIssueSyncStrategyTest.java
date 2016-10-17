@@ -1,16 +1,12 @@
 package de.cronn.jira.sync.strategy;
 
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.any;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 
-import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
@@ -87,17 +83,17 @@ public class CreateMissingTargetJiraIssueSyncStrategyTest extends AbstractIssueS
 		SyncResult syncResult = strategy.sync(jiraSource, jiraTarget, sourceIssue, projectSync);
 
 		// then
-		assertThat(syncResult, is(SyncResult.CREATED));
+		assertThat(syncResult).isEqualTo(SyncResult.CREATED);
 		JiraIssue createdIssue = issueCaptor.getValue();
-		assertNull(createdIssue.getKey());
-		assertThat(createdIssue.getFields().getIssuetype().getName(), is(TARGET_ISSUE_TYPE_IMPROVEMENT));
-		assertThat(createdIssue.getFields().getProject(), Matchers.is(targetProject));
-		assertThat(createdIssue.getFields().getSummary(), is("SOURCE-123: some summary"));
-		assertThat(createdIssue.getFields().getDescription(), is(descriptionMapper.mapSourceDescription("the description")));
-		assertThat(createdIssue.getFields().getLabels(), contains("label1", "label2"));
-		assertThat(createdIssue.getFields().getPriority().getName(), Matchers.is(TARGET_PRIORITY_MAJOR.getName()));
-		assertThat(createdIssue.getFields().getVersions(), contains(TARGET_VERSION_2));
-		assertThat(createdIssue.getFields().getFixVersions(), contains(TARGET_VERSION_2));
+		assertThat(createdIssue.getKey()).isNull();
+		assertThat(createdIssue.getFields().getIssuetype().getName()).isEqualTo(TARGET_ISSUE_TYPE_IMPROVEMENT);
+		assertThat(createdIssue.getFields().getProject()).isEqualTo(targetProject);
+		assertThat(createdIssue.getFields().getSummary()).isEqualTo("SOURCE-123: some summary");
+		assertThat(createdIssue.getFields().getDescription()).isEqualTo(descriptionMapper.mapSourceDescription("the description"));
+		assertThat(createdIssue.getFields().getLabels()).containsExactly("label1", "label2");
+		assertThat(createdIssue.getFields().getPriority().getName()).isEqualTo(TARGET_PRIORITY_MAJOR.getName());
+		assertThat(createdIssue.getFields().getVersions()).containsExactly(TARGET_VERSION_2);
+		assertThat(createdIssue.getFields().getFixVersions()).containsExactly(TARGET_VERSION_2);
 
 		verify(jiraTarget).getProjectByKey(TARGET_PROJECT_KEY);
 		verify(jiraTarget).getPriorities();
@@ -120,12 +116,12 @@ public class CreateMissingTargetJiraIssueSyncStrategyTest extends AbstractIssueS
 		SyncResult syncResult = strategy.sync(jiraSource, jiraTarget, sourceIssue, projectSync);
 
 		// then
-		assertThat(syncResult, is(SyncResult.CREATED));
+		assertThat(syncResult).isEqualTo(SyncResult.CREATED);
 		JiraIssue createdIssue = issueCaptor.getValue();
-		assertThat(createdIssue.getFields().getDescription(), is(""));
-		assertThat(createdIssue.getFields().getIssuetype().getName(), is(TARGET_ISSUE_TYPE_DEFAULT));
-		assertThat(createdIssue.getFields().getLabels(), empty());
-		assertNull(createdIssue.getFields().getPriority());
+		assertThat(createdIssue.getFields().getDescription()).isEqualTo("");
+		assertThat(createdIssue.getFields().getIssuetype().getName()).isEqualTo(TARGET_ISSUE_TYPE_DEFAULT);
+		assertThat(createdIssue.getFields().getLabels()).isEmpty();
+		assertThat(createdIssue.getFields().getPriority()).isNull();
 	}
 
 	@Test
@@ -141,9 +137,9 @@ public class CreateMissingTargetJiraIssueSyncStrategyTest extends AbstractIssueS
 		SyncResult syncResult = strategy.sync(jiraSource, jiraTarget, sourceIssue, projectSync);
 
 		// then
-		assertThat(syncResult, is(SyncResult.CREATED));
+		assertThat(syncResult).isEqualTo(SyncResult.CREATED);
 		JiraIssue createdIssue = issueCaptor.getValue();
-		assertNull(createdIssue.getFields().getPriority());
+		assertThat(createdIssue.getFields().getPriority()).isNull();
 	}
 
 }

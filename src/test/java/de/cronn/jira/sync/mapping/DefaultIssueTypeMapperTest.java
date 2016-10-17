@@ -1,7 +1,6 @@
 package de.cronn.jira.sync.mapping;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -65,7 +64,7 @@ public class DefaultIssueTypeMapperTest {
 		JiraIssueType mappedIssueType = issueTypeMapper.mapIssueType(sourceIssue, syncConfig, projectSync, targetProject);
 
 		// then
-		assertThat(mappedIssueType, sameInstance(TARGET_ISSUE_TYPE_NEW_FEATURE));
+		assertThat(mappedIssueType).isSameAs(TARGET_ISSUE_TYPE_NEW_FEATURE);
 	}
 
 
@@ -76,7 +75,7 @@ public class DefaultIssueTypeMapperTest {
 			issueTypeMapper.mapIssueType(sourceIssue, syncConfig, projectSync, targetProject);
 			fail("JiraSyncException expected");
 		} catch (JiraSyncException e) {
-			assertThat(e.getMessage(), is("targetIssueTypeFallback must be configured"));
+			assertThat(e).hasMessage("targetIssueTypeFallback must be configured");
 		}
 	}
 
@@ -88,7 +87,7 @@ public class DefaultIssueTypeMapperTest {
 		JiraIssueType issueType = issueTypeMapper.mapIssueType(sourceIssue, syncConfig, projectSync, targetProject);
 
 		// then
-		assertThat(issueType, sameInstance(TARGET_ISSUE_TYPE_TASK));
+		assertThat(issueType).isSameAs(TARGET_ISSUE_TYPE_TASK);
 	}
 
 	@Test
@@ -99,7 +98,7 @@ public class DefaultIssueTypeMapperTest {
 			issueTypeMapper.mapIssueType(sourceIssue, syncConfig, projectSync, targetProject);
 			fail("JiraSyncException expected");
 		} catch (JiraSyncException e) {
-			assertThat(e.getMessage(), is("targetIssueTypeFallback Unknown not found"));
+			assertThat(e).hasMessage("targetIssueTypeFallback Unknown not found");
 		}
 	}
 

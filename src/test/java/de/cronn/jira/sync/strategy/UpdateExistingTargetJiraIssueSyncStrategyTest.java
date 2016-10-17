@@ -1,8 +1,6 @@
 package de.cronn.jira.sync.strategy;
 
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
@@ -83,7 +81,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		SyncResult result = strategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
 
 		// then
-		assertThat(result, is(SyncResult.UNCHANGED));
+		assertThat(result).isEqualTo(SyncResult.UNCHANGED);
 
 		verify(jiraTarget).getPriorities();
 		verify(jiraTarget).getVersions(TARGET_PROJECT_KEY);
@@ -110,11 +108,11 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		SyncResult result = strategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
 
 		// then
-		assertThat(result, is(SyncResult.CHANGED_TRANSITION));
+		assertThat(result).isEqualTo(SyncResult.CHANGED_TRANSITION);
 
 		JiraIssueUpdate update = expectTransitionInSource(sourceIssue);
-		assertNull(update.getFields());
-		assertThat(update.getTransition(), is(SOURCE_TRANSITION_RESOLVE));
+		assertThat(update.getFields()).isNull();
+		assertThat(update.getTransition()).isEqualTo(SOURCE_TRANSITION_RESOLVE);
 
 		verify(jiraTarget).getPriorities();
 		verify(jiraSource).getTransitions(sourceIssue);
@@ -140,17 +138,17 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		SyncResult result = strategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
 
 		// then
-		assertThat(result, is(SyncResult.CHANGED_TRANSITION));
+		assertThat(result).isEqualTo(SyncResult.CHANGED_TRANSITION);
 
 		JiraIssueUpdate sourceIssueUpdate = expectTransitionInSource(sourceIssue);
-		assertNull(sourceIssueUpdate.getFields());
-		assertThat(sourceIssueUpdate.getTransition(), is(SOURCE_TRANSITION_RESOLVE));
+		assertThat(sourceIssueUpdate.getFields()).isNull();
+		assertThat(sourceIssueUpdate.getTransition()).isEqualTo(SOURCE_TRANSITION_RESOLVE);
 
 		JiraIssueUpdate targetIssueUpdate = expectUpdateInTarget(targetIssue);
 
-		assertThat(targetIssueUpdate.getFields().getDescription(), is(descriptionMapper.mapTargetDescription("some description", null)));
+		assertThat(targetIssueUpdate.getFields().getDescription()).isEqualTo(descriptionMapper.mapTargetDescription("some description", null));
 
-		assertNull(targetIssueUpdate.getTransition());
+		assertThat(targetIssueUpdate.getTransition()).isNull();
 
 		verify(jiraTarget).getPriorities();
 		verify(jiraSource).getTransitions(sourceIssue);
@@ -175,16 +173,16 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		SyncResult result = strategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
 
 		// then
-		assertThat(result, is(SyncResult.CHANGED_TRANSITION));
+		assertThat(result).isEqualTo(SyncResult.CHANGED_TRANSITION);
 
 		JiraIssueUpdate sourceIssueUpdate = expectTransitionInSource(sourceIssue);
-		assertNull(sourceIssueUpdate.getFields());
-		assertThat(sourceIssueUpdate.getTransition(), is(SOURCE_TRANSITION_RESOLVE));
+		assertThat(sourceIssueUpdate.getFields()).isNull();
+		assertThat(sourceIssueUpdate.getTransition()).isEqualTo(SOURCE_TRANSITION_RESOLVE);
 
 		JiraIssueUpdate targetIssueUpdate = expectUpdateInTarget(targetIssue);
 
-		assertThat(targetIssueUpdate.getFields().getFixVersions(), empty());
-		assertNull(targetIssueUpdate.getTransition());
+		assertThat(targetIssueUpdate.getFields().getFixVersions()).isEmpty();
+		assertThat(targetIssueUpdate.getTransition()).isNull();
 
 		verify(jiraTarget).getPriorities();
 		verify(jiraSource).getTransitions(sourceIssue);
@@ -194,7 +192,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 	@Test
 	public void testSync_StatusTransitionAndFieldChange_DoCopyFixedVersions() throws Exception {
 		// given
-		assertThat(projectSync.getTransitions().keySet(), hasSize(1));
+		assertThat(projectSync.getTransitions().keySet()).hasSize(1);
 		projectSync.getTransition(TRANSITION).setCopyFixVersionsToSource(true);
 
 		JiraIssue sourceIssue = new JiraIssue("100", "SOURCE-123", "Some Summary", SOURCE_STATUS_OPEN);
@@ -212,11 +210,11 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		SyncResult result = strategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
 
 		// then
-		assertThat(result, is(SyncResult.CHANGED_TRANSITION));
+		assertThat(result).isEqualTo(SyncResult.CHANGED_TRANSITION);
 
 		JiraIssueUpdate sourceIssueUpdate = expectTransitionInSource(sourceIssue);
-		assertThat(sourceIssueUpdate.getFields().getFixVersions(), contains(SOURCE_VERSION_2));
-		assertThat(sourceIssueUpdate.getTransition(), is(SOURCE_TRANSITION_RESOLVE));
+		assertThat(sourceIssueUpdate.getFields().getFixVersions()).containsExactly(SOURCE_VERSION_2);
+		assertThat(sourceIssueUpdate.getTransition()).isEqualTo(SOURCE_TRANSITION_RESOLVE);
 
 		verify(jiraTarget).getPriorities();
 		verify(jiraSource).getVersions(SOURCE_PROJECT_KEY);
@@ -243,10 +241,10 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		SyncResult result = strategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
 
 		// then
-		assertThat(result, is(SyncResult.CHANGED));
+		assertThat(result).isEqualTo(SyncResult.CHANGED);
 
 		JiraIssueUpdate update = expectUpdateInTarget(targetIssue);
-		assertThat(update.getFields().getDescription(), is(descriptionMapper.mapTargetDescription("updated description", "some description")));
+		assertThat(update.getFields().getDescription()).isEqualTo(descriptionMapper.mapTargetDescription("updated description", "some description"));
 
 		verify(jiraTarget).getPriorities();
 		verifyNoMoreInteractions(jiraSource, jiraTarget);
@@ -267,7 +265,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		SyncResult result = strategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
 
 		// then
-		assertThat(result, is(SyncResult.UNCHANGED));
+		assertThat(result).isEqualTo(SyncResult.UNCHANGED);
 
 		verify(jiraTarget).getPriorities();
 		verifyNoMoreInteractions(jiraSource, jiraTarget);
@@ -291,10 +289,10 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		SyncResult result = strategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
 
 		// then
-		assertThat(result, is(SyncResult.CHANGED));
+		assertThat(result).isEqualTo(SyncResult.CHANGED);
 
 		JiraIssueUpdate update = expectUpdateInTarget(targetIssue);
-		assertThat(update.getFields().getVersions(), is(Collections.singleton(TARGET_VERSION_1)));
+		assertThat(update.getFields().getVersions()).containsExactly(TARGET_VERSION_1);
 
 		verify(jiraTarget).getPriorities();
 		verify(jiraTarget).getVersions(TARGET_PROJECT_KEY);
@@ -319,10 +317,10 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		SyncResult result = strategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
 
 		// then
-		assertThat(result, is(SyncResult.CHANGED));
+		assertThat(result).isEqualTo(SyncResult.CHANGED);
 
 		JiraIssueUpdate update = expectUpdateInTarget(targetIssue);
-		assertThat(update.getFields().getFixVersions(), is(new LinkedHashSet<>(Arrays.asList(TARGET_VERSION_1, TARGET_VERSION_2))));
+		assertThat(update.getFields().getFixVersions()).containsExactly(TARGET_VERSION_1, TARGET_VERSION_2);
 
 		verify(jiraTarget).getPriorities();
 		verify(jiraTarget).getVersions(TARGET_PROJECT_KEY);
@@ -346,11 +344,11 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		SyncResult result = strategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
 
 		// then
-		assertThat(result, is(SyncResult.CHANGED));
+		assertThat(result).isEqualTo(SyncResult.CHANGED);
 
 		JiraIssueUpdate update = expectUpdateInTarget(targetIssue);
-		assertThat(update.getFields().getLabels(), is(Collections.singleton("some-label")));
-		assertThat(update.getFields().getPriority(), is(TARGET_PRIORITY_MINOR));
+		assertThat(update.getFields().getLabels()).containsExactly("some-label");
+		assertThat(update.getFields().getPriority()).isEqualTo(TARGET_PRIORITY_MINOR);
 
 		verify(jiraTarget).getPriorities();
 		verifyNoMoreInteractions(jiraSource, jiraTarget);
@@ -376,10 +374,10 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		SyncResult result = strategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
 
 		// then
-		assertThat(result, is(SyncResult.CHANGED));
+		assertThat(result).isEqualTo(SyncResult.CHANGED);
 
 		JiraIssueUpdate update = expectUpdateInTarget(targetIssue);
-		assertThat(update.getFields().getLabels(), containsInAnyOrder("some-label", "internal-label"));
+		assertThat(update.getFields().getLabels()).containsExactlyInAnyOrder("some-label", "internal-label");
 
 		verify(jiraTarget).getPriorities();
 		verifyNoMoreInteractions(jiraSource, jiraTarget);

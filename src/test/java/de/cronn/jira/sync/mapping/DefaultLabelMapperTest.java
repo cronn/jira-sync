@@ -1,7 +1,6 @@
 package de.cronn.jira.sync.mapping;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -33,8 +32,8 @@ public class DefaultLabelMapperTest {
 		Set<String> labels = labelMapper.mapLabels(jiraIssue);
 
 		// then
-		assertNotSame(jiraIssue.getFields().getLabels(), labels);
-		assertThat(labels, contains("label1", "label2", "label3"));
+		assertThat(jiraIssue.getFields().getLabels()).isNotSameAs(labels);
+		assertThat(labels).containsExactly("label1", "label2", "label3");
 	}
 
 	@Test
@@ -47,7 +46,7 @@ public class DefaultLabelMapperTest {
 		Set<String> labels = labelMapper.mapLabels(jiraIssue);
 
 		// then
-		assertThat(labels, empty());
+		assertThat(labels).isEmpty();
 	}
 
 }

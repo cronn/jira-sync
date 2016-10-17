@@ -1,7 +1,6 @@
 package de.cronn.jira.sync.mapping;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
@@ -64,10 +63,10 @@ public class DefaultVersionMapperTest {
 		projectSync = new JiraProjectSync();
 
 		Set<JiraVersion> versions = versionMapper.mapSourceToTarget(jiraService, null, projectSync);
-		assertThat(versions, empty());
+		assertThat(versions).isEmpty();
 
 		versions = versionMapper.mapSourceToTarget(jiraService, Collections.emptySet(), projectSync);
-		assertThat(versions, empty());
+		assertThat(versions).isEmpty();
 
 		verifyNoMoreInteractions(jiraService);
 	}
@@ -81,7 +80,7 @@ public class DefaultVersionMapperTest {
 		Set<JiraVersion> targetVersions = versionMapper.mapSourceToTarget(jiraService, versions, projectSync);
 
 		// then
-		assertThat(targetVersions, contains(TARGET_VERSION_2));
+		assertThat(targetVersions).containsExactly(TARGET_VERSION_2);
 
 		verify(jiraService).getVersions(TARGET_PROJECT);
 		verifyNoMoreInteractions(jiraService);
@@ -96,7 +95,7 @@ public class DefaultVersionMapperTest {
 		Set<JiraVersion> targetVersions = versionMapper.mapTargetToSource(jiraService, versions, projectSync);
 
 		// then
-		assertThat(targetVersions, contains(SOURCE_VERSION_2));
+		assertThat(targetVersions).containsExactly(SOURCE_VERSION_2);
 
 		verify(jiraService).getVersions(SOURCE_PROJECT);
 		verifyNoMoreInteractions(jiraService);
@@ -111,7 +110,7 @@ public class DefaultVersionMapperTest {
 		Set<JiraVersion> targetVersions = versionMapper.mapSourceToTarget(jiraService, versions, projectSync);
 
 		// then
-		assertThat(targetVersions, contains(TARGET_VERSION_2, TARGET_VERSION_1));
+		assertThat(targetVersions).containsExactly(TARGET_VERSION_2, TARGET_VERSION_1);
 
 		verify(jiraService).getVersions(TARGET_PROJECT);
 		verifyNoMoreInteractions(jiraService);

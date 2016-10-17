@@ -45,4 +45,10 @@ public class JiraIssueJsonTest {
         assertThat(jiraIssue.getFields().getUpdated().toInstant()).isEqualTo(Instant.parse("2016-10-13T07:21:13Z"));
     }
 
+	@Test
+	public void testToString() {
+		JiraIssue issue = new JiraIssue("1", "KEY-123");
+		assertThat(issue).hasToString("JiraIssue[id=1,key=KEY-123]");
+	}
+
 }
