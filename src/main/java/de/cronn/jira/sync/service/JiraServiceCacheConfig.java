@@ -22,6 +22,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.Resource;
 
+import de.cronn.jira.sync.config.JiraSyncConfig;
+
 @Configuration
 public class JiraServiceCacheConfig {
 
@@ -39,15 +41,15 @@ public class JiraServiceCacheConfig {
 
 	@Bean
 	@Primary
-	public CacheManager ehCacheManager(ApplicationContext context) throws Exception {
+	public CacheManager ehCacheManager(ApplicationContext context, JiraSyncConfig jiraSyncConfig) throws Exception {
 		CachingProvider cachingProvider = Caching.getCachingProvider();
 		Resource configLocation = context.getResource("classpath:ehcache.xml");
 		CacheManager cacheManager = cachingProvider.getCacheManager(configLocation.getURI(),
 			cachingProvider.getDefaultClassLoader(), new Properties());
-		createCache(cacheManager, CACHE_NAME_PROJECTS, ONE_HOUR, true);
-		createCache(cacheManager, CACHE_NAME_PRIORITIES, ONE_HOUR, true);
-		createCache(cacheManager, CACHE_NAME_RESOLUTIONS, ONE_HOUR, true);
-		createCache(cacheManager, CACHE_NAME_VERSIONS, ONE_HOUR, true);
+		createCache(cacheManager, CACHE_NAME_PROJECTS, ONE_HOUR, jiraSyncConfig.isPersistentCaching());
+		createCache(cacheManager, CACHE_NAME_PRIORITIES, ONE_HOUR, jiraSyncConfig.isPersistentCaching());
+		createCache(cacheManager, CACHE_NAME_RESOLUTIONS, ONE_HOUR, jiraSyncConfig.isPersistentCaching());
+		createCache(cacheManager, CACHE_NAME_VERSIONS, ONE_HOUR, jiraSyncConfig.isPersistentCaching());
 		createCache(cacheManager, CACHE_NAME_MYSELF, ONE_HOUR, false);
 		createCache(cacheManager, CACHE_NAME_SERVER_INFO, THIRTY_SECONDS, false);
 		return cacheManager;

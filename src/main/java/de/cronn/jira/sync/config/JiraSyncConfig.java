@@ -9,6 +9,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class JiraSyncConfig {
 
 	private boolean autostart = true;
+	private boolean persistentCaching;
 	private JiraConnectionProperties source;
 	private JiraConnectionProperties target;
 	private Map<String, JiraProjectSync> projects = new LinkedHashMap<>();
@@ -71,5 +72,13 @@ public class JiraSyncConfig {
 
 	public boolean isAutostart() {
 		return autostart;
+	}
+
+	public void setPersistentCaching(boolean persistentCaching) {
+		this.persistentCaching = persistentCaching;
+	}
+
+	public boolean isPersistentCaching() {
+		return persistentCaching;
 	}
 }
