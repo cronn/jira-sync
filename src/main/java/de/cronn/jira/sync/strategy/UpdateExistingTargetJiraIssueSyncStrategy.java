@@ -83,7 +83,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 
 	@Override
 	public SyncResult sync(JiraService jiraSource, JiraService jiraTarget, JiraIssue sourceIssue, JiraIssue targetIssue, JiraProjectSync projectSync) {
-		log.debug("sourceIssue={}, targetIssue={}", sourceIssue, targetIssue);
+		log.info("synchronizing '{}' with '{}'", sourceIssue.getKey(), targetIssue.getKey());
 
 		assertRequiredFieldsArePresent(sourceIssue);
 		assertRequiredFieldsArePresent(targetIssue);
@@ -131,7 +131,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 
 		TransitionConfig transition = findTransition(sourceIssue, targetIssue, transitions.values());
 		if (transition != null) {
-
+			log.info("triggering transition from status '{}' to '{}'", sourceIssue.getFields().getStatus().getName(), transition.getSourceStatusToSet());
 			if (transition.isAssignToMyselfInSource()) {
 				JiraUser myself = jiraSource.getMyself();
 				if (!isEqual(sourceIssue, myself)) {

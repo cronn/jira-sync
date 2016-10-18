@@ -79,7 +79,7 @@ public class CreateMissingTargetJiraIssueSyncStrategy implements MissingTargetJi
 	public SyncResult sync(JiraService jiraSource, JiraService jiraTarget, JiraIssue sourceIssue, JiraProjectSync projectSync) {
 		JiraProject targetProject = jiraTarget.getProjectByKey(projectSync.getTargetProject());
 		Assert.notNull(targetProject, "target project '" + projectSync.getTargetProject() + "' not found");
-		log.info("going to create issue in {}", targetProject);
+		log.info("creating issue for {} in {}", sourceIssue.getKey(), targetProject);
 		JiraIssue issueToCreate = new JiraIssue(targetProject);
 
 		copyIssueType(sourceIssue, projectSync, targetProject, issueToCreate);
