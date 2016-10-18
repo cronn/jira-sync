@@ -237,8 +237,8 @@ public class JiraServiceRestClient implements JiraService {
 	}
 
 	@Override
-	@Cacheable(value = CACHE_NAME_REMOTE_LINKS, key = "{ #root.target.url, #issueKey, #ifModifiedSince }")
-	public List<JiraRemoteLink> getRemoteLinks(String issueKey, Instant ifModifiedSince) {
+	@Cacheable(value = CACHE_NAME_REMOTE_LINKS, key = "{ #root.target.url, #issueKey, #issueUpdated }")
+	public List<JiraRemoteLink> getRemoteLinks(String issueKey, Instant issueUpdated) {
 		Assert.hasText(issueKey);
 		return getForObject("/rest/api/2/issue/{issueId}/remotelink", JiraRemoteLinks.class, issueKey);
 	}
