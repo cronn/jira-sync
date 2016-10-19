@@ -52,7 +52,7 @@ public class DefaultCommentMapper implements CommentMapper {
 	public boolean isMapped(JiraComment commentInSource, String commentTextInTarget) {
 		String sourceCommentId = commentInSource.getId();
 		Assert.hasText(sourceCommentId);
-		return commentTextInTarget.contains("focusedCommentId=" + sourceCommentId + "&");
+		return commentTextInTarget.startsWith("{panel:title=") && commentTextInTarget.contains("focusedCommentId=" + sourceCommentId + "&");
 	}
 
 	private String buildCommentLink(JiraService jiraSource, String originalCommentId, String sourceKey) {
