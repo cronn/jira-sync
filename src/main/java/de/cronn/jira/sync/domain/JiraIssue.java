@@ -3,6 +3,8 @@ package de.cronn.jira.sync.domain;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class JiraIssue extends JiraIdResource {
 
 	private static final long serialVersionUID = 1L;
@@ -43,6 +45,14 @@ public class JiraIssue extends JiraIdResource {
 	}
 
 	public JiraIssueFields getFields() {
+		return fields;
+	}
+
+	@JsonIgnore
+	public JiraIssueFields getOrCreateFields() {
+		if (fields == null) {
+			fields = new JiraIssueFields();
+		}
 		return fields;
 	}
 

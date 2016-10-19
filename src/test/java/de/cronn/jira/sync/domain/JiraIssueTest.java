@@ -22,8 +22,7 @@ public class JiraIssueTest {
 	@Test
 	public void testSerialize() throws Exception {
 		JiraIssue issue = new JiraIssue("1", "ISSUE-1");
-		issue.setFields(new JiraIssueFields());
-		issue.getFields().setUpdated(ZonedDateTime.parse("2016-10-13T07:21:13+02:00"));
+		issue.getOrCreateFields().setUpdated(ZonedDateTime.parse("2016-10-13T07:21:13+02:00"));
 
 		String expectedJson = "{ \"id\" : \"1\", key : \"ISSUE-1\", \"fields\" : {" +
 			"\"updated\" : \"2016-10-13T07:21:13.000+0200\"" +

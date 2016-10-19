@@ -98,32 +98,32 @@ public class CreateMissingTargetJiraIssueSyncStrategy implements MissingTargetJi
 
 	private void copyIssueType(JiraIssue sourceIssue, JiraProjectSync projectSync, JiraProject targetProject, JiraIssue issueToCreate) {
 		JiraIssueType targetIssueType = issueTypeMapper.mapIssueType(sourceIssue, jiraSyncConfig, projectSync, targetProject);
-		issueToCreate.getFields().setIssuetype(targetIssueType);
+		issueToCreate.getOrCreateFields().setIssuetype(targetIssueType);
 	}
 
 	private void copyPriority(JiraService jiraTarget, JiraIssue sourceIssue, JiraIssue issueToCreate) {
 		JiraPriority targetPriority = priorityMapper.mapPriority(jiraTarget, sourceIssue);
-		issueToCreate.getFields().setPriority(targetPriority);
+		issueToCreate.getOrCreateFields().setPriority(targetPriority);
 	}
 
 	private void copyLabels(JiraIssue sourceIssue, JiraIssue issueToCreate) {
-		issueToCreate.getFields().setLabels(labelMapper.mapLabels(sourceIssue));
+		issueToCreate.getOrCreateFields().setLabels(labelMapper.mapLabels(sourceIssue));
 	}
 
 	private void copyVersions(JiraIssue sourceIssue, JiraIssue issueToCreate, JiraService jiraTarget, JiraProjectSync projectSync) {
-		issueToCreate.getFields().setVersions(versionMapper.mapSourceToTarget(jiraTarget, sourceIssue.getFields().getVersions(), projectSync));
+		issueToCreate.getOrCreateFields().setVersions(versionMapper.mapSourceToTarget(jiraTarget, sourceIssue.getFields().getVersions(), projectSync));
 	}
 
 	private void copyFixVersions(JiraIssue sourceIssue, JiraIssue issueToCreate, JiraService jiraTarget, JiraProjectSync projectSync) {
-		issueToCreate.getFields().setFixVersions(versionMapper.mapSourceToTarget(jiraTarget, sourceIssue.getFields().getFixVersions(), projectSync));
+		issueToCreate.getOrCreateFields().setFixVersions(versionMapper.mapSourceToTarget(jiraTarget, sourceIssue.getFields().getFixVersions(), projectSync));
 	}
 
 	private void copySummary(JiraIssue sourceIssue, JiraIssue issueToCreate) {
-		issueToCreate.getFields().setSummary(summaryMapper.mapSummary(sourceIssue));
+		issueToCreate.getOrCreateFields().setSummary(summaryMapper.mapSummary(sourceIssue));
 	}
 
 	private void copyDescription(JiraIssue sourceIssue, JiraIssue issueToCreate) {
-		issueToCreate.getFields().setDescription(descriptionMapper.mapSourceDescription(sourceIssue));
+		issueToCreate.getOrCreateFields().setDescription(descriptionMapper.mapSourceDescription(sourceIssue));
 	}
 
 }

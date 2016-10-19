@@ -15,6 +15,7 @@ import org.springframework.util.Assert;
 import de.cronn.jira.sync.config.JiraProjectSync;
 import de.cronn.jira.sync.config.JiraSyncConfig;
 import de.cronn.jira.sync.domain.JiraIssue;
+import de.cronn.jira.sync.domain.JiraProject;
 import de.cronn.jira.sync.link.JiraIssueLinker;
 import de.cronn.jira.sync.service.JiraService;
 import de.cronn.jira.sync.strategy.ExistingTargetJiraIssueSyncStrategy;
@@ -96,8 +97,9 @@ public class JiraSyncTask implements CommandLineRunner {
 		}
 
 		for (JiraIssue sourceIssue : issues) {
-			if (!sourceIssue.getFields().getProject().getKey().equals(projectSync.getSourceProject())) {
-				throw new JiraSyncException("Filter returned issue " + sourceIssue + " from unexpected project " + sourceIssue.getFields().getProject());
+			JiraProject project = sourceIssue.getFields().getProject();
+			if (!project.getKey().equals(projectSync.getSourceProject())) {
+				throw new JiraSyncException("Filter returned issue " + sourceIssue + " from unexpected project " + project);
 			}
 			JiraIssue targetIssue = jiraIssueLinker.resolve(sourceIssue, jiraSource, jiraTarget);
 			IssueSyncStrategy syncStrategy = getSyncStrategy(targetIssue);
