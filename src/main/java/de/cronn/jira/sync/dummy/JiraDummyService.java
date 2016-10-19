@@ -24,6 +24,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import de.cronn.jira.sync.domain.JiraComment;
+import de.cronn.jira.sync.domain.JiraComments;
 import de.cronn.jira.sync.domain.JiraFieldsUpdate;
 import de.cronn.jira.sync.domain.JiraFilterResult;
 import de.cronn.jira.sync.domain.JiraIssue;
@@ -199,7 +201,7 @@ public class JiraDummyService {
 
 	@RequestMapping(path = "/api/2/myself", method = RequestMethod.GET)
 	public JiraUser getMyself(@PathVariable(CONTEXT) Context context) {
-		return new JiraUser("me", "myself");
+		return new JiraUser("me", "myself", "my self");
 	}
 
 	@RequestMapping(path = "/api/2/issue/{issueKey}", method = RequestMethod.GET)
@@ -249,10 +251,10 @@ public class JiraDummyService {
 		return getRemoteLinks(context, issue.getKey());
 	}
 
-	private List<JiraRemoteLink> getRemoteLinks(Context context, String key) {
-		Assert.notNull(key);
+	private List<JiraRemoteLink> getRemoteLinks(Context context, String issueKey) {
+		Assert.notNull(issueKey, "issueKey must be set");
 		Map<String, JiraRemoteLinks> remoteLinksPerIssueKey = getData(context).getRemoteLinks();
-		JiraRemoteLinks jiraRemoteLinks = remoteLinksPerIssueKey.get(key);
+		JiraRemoteLinks jiraRemoteLinks = remoteLinksPerIssueKey.get(issueKey);
 		if (jiraRemoteLinks == null) {
 			return Collections.emptyList();
 		}
@@ -275,6 +277,28 @@ public class JiraDummyService {
 		remoteLinks.add(newRemoteLink);
 		JiraIssue issue = getIssueByKey(context, issueKey);
 		refreshUpdatedTimestamp(issue);
+	}
+
+	@RequestMapping(path = "/api/2/issue/{issueKey}/comment", method = RequestMethod.POST)
+	public ResponseEntity<Object> addComment(@PathVariable(CONTEXT) Context context, @PathVariable("issueKey") String issueKey, @RequestBody JiraComment comment) {
+		String body = comment.getBody();
+		if (body == null) {
+			return new ResponseEntity<>("body must not be empty", HttpStatus.BAD_REQUEST);
+		}
+
+		JiraIssue issue = getIssueByKey(context, issueKey);
+		JiraIssueFields fields = issue.getOrCreateFields();
+		JiraComments comments = fields.getOrCreateComment();
+
+		ZonedDateTime now = ZonedDateTime.now(clock);
+		comment.setCreated(now);
+		comment.setUpdated(now);
+		comment.setId(issue.getId() + "." + (comments.getComments().size() + 1));
+		comment.setAuthor(getMyself(context));
+
+		comments.addComment(comment);
+
+		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
 	@RequestMapping(path = "/api/2/issue", method = RequestMethod.POST)

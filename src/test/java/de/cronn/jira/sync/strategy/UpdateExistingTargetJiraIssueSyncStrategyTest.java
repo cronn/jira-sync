@@ -3,6 +3,7 @@ package de.cronn.jira.sync.strategy;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.time.Clock;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -13,9 +14,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
+import de.cronn.jira.sync.TestClock;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueUpdate;
 import de.cronn.jira.sync.link.JiraIssueLinker;
+import de.cronn.jira.sync.mapping.CommentMapper;
+import de.cronn.jira.sync.mapping.DefaultCommentMapper;
 import de.cronn.jira.sync.mapping.DefaultDescriptionMapper;
 import de.cronn.jira.sync.mapping.DefaultIssueTypeMapper;
 import de.cronn.jira.sync.mapping.DefaultLabelMapper;
@@ -32,6 +36,9 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 
 	@Mock
 	private JiraIssueLinker jiraIssueLinker;
+
+	@Spy
+	private Clock clock = new TestClock();
 
 	@InjectMocks
 	private UpdateExistingTargetJiraIssueSyncStrategy strategy;
@@ -59,6 +66,10 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 	@InjectMocks
 	@Spy
 	private VersionMapper versionMapper = new DefaultVersionMapper();
+
+	@InjectMocks
+	@Spy
+	private CommentMapper commentMapper = new DefaultCommentMapper();
 
 	@Test
 	public void testSync_NoChanges() throws Exception {
@@ -385,13 +396,13 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 
 	private JiraIssueUpdate expectUpdateInTarget(JiraIssue targetIssue) {
 		ArgumentCaptor<JiraIssueUpdate> jiraIssueUpdateCaptor = ArgumentCaptor.forClass(JiraIssueUpdate.class);
-		verify(jiraTarget).updateIssue(eq(targetIssue), jiraIssueUpdateCaptor.capture());
+		verify(jiraTarget).updateIssue(eq(targetIssue.getKey()), jiraIssueUpdateCaptor.capture());
 		return jiraIssueUpdateCaptor.getValue();
 	}
 
 	private JiraIssueUpdate expectTransitionInSource(JiraIssue sourceIssue) {
 		ArgumentCaptor<JiraIssueUpdate> jiraIssueUpdateCaptor = ArgumentCaptor.forClass(JiraIssueUpdate.class);
-		verify(jiraSource).transitionIssue(eq(sourceIssue), jiraIssueUpdateCaptor.capture());
+		verify(jiraSource).transitionIssue(eq(sourceIssue.getKey()), jiraIssueUpdateCaptor.capture());
 		return jiraIssueUpdateCaptor.getValue();
 	}
 

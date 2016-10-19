@@ -8,11 +8,14 @@ import org.springframework.util.Assert;
 
 import de.cronn.jira.sync.config.JiraProjectSync;
 import de.cronn.jira.sync.config.JiraSyncConfig;
+import de.cronn.jira.sync.domain.JiraComment;
+import de.cronn.jira.sync.domain.JiraComments;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueType;
 import de.cronn.jira.sync.domain.JiraPriority;
 import de.cronn.jira.sync.domain.JiraProject;
 import de.cronn.jira.sync.link.JiraIssueLinker;
+import de.cronn.jira.sync.mapping.CommentMapper;
 import de.cronn.jira.sync.mapping.DescriptionMapper;
 import de.cronn.jira.sync.mapping.IssueTypeMapper;
 import de.cronn.jira.sync.mapping.LabelMapper;
@@ -33,6 +36,7 @@ public class CreateMissingTargetJiraIssueSyncStrategy implements MissingTargetJi
 	private LabelMapper labelMapper;
 	private PriorityMapper priorityMapper;
 	private VersionMapper versionMapper;
+	private CommentMapper commentMapper;
 	private JiraIssueLinker issueResolver;
 
 	@Autowired
@@ -71,6 +75,11 @@ public class CreateMissingTargetJiraIssueSyncStrategy implements MissingTargetJi
 	}
 
 	@Autowired
+	public void setCommentMapper(CommentMapper commentMapper) {
+		this.commentMapper = commentMapper;
+	}
+
+	@Autowired
 	public void setIssueResolver(JiraIssueLinker issueResolver) {
 		this.issueResolver = issueResolver;
 	}
@@ -92,6 +101,10 @@ public class CreateMissingTargetJiraIssueSyncStrategy implements MissingTargetJi
 
 		JiraIssue newIssue = jiraTarget.createIssue(issueToCreate);
 		issueResolver.linkIssues(sourceIssue, newIssue, jiraSource, jiraTarget, projectSync);
+
+		if (projectSync.isCopyCommentsToTarget()) {
+			copyComments(sourceIssue, jiraSource, newIssue, jiraTarget);
+		}
 
 		return SyncResult.CREATED;
 	}
@@ -124,6 +137,16 @@ public class CreateMissingTargetJiraIssueSyncStrategy implements MissingTargetJi
 
 	private void copyDescription(JiraIssue sourceIssue, JiraIssue issueToCreate) {
 		issueToCreate.getOrCreateFields().setDescription(descriptionMapper.mapSourceDescription(sourceIssue));
+	}
+
+	private void copyComments(JiraIssue sourceIssue, JiraService jiraSource, JiraIssue newIssue, JiraService jiraTarget) {
+		JiraComments comment = sourceIssue.getFields().getComment();
+		if (comment != null && comment.getComments() != null) {
+			for (JiraComment jiraComment : comment.getComments()) {
+				String commentText = commentMapper.map(sourceIssue, jiraComment, jiraSource, false);
+				jiraTarget.addComment(newIssue.getKey(), commentText);
+			}
+		}
 	}
 
 }

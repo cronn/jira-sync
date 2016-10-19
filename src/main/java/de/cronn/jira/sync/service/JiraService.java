@@ -51,9 +51,11 @@ public interface JiraService extends AutoCloseable {
 
 	void addRemoteLink(JiraIssue fromIssue, JiraIssue toIssue, JiraService toJiraService, URL remoteLinkIcon);
 
+	void addComment(String issueKey, String commentText);
+
 	JiraIssue createIssue(JiraIssue issue);
 
-	void updateIssue(JiraIssue issue, JiraIssueUpdate jiraIssueUpdate);
+	void updateIssue(String issueKey, JiraIssueUpdate issueUpdate);
 
-	void transitionIssue(JiraIssue issue, JiraIssueUpdate jiraIssueUpdate);
+	void transitionIssue(String issueKey, JiraIssueUpdate issueUpdate);
 }

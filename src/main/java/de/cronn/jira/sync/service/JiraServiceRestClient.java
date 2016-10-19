@@ -38,6 +38,7 @@ import org.springframework.web.client.RestTemplate;
 import de.cronn.jira.sync.JiraSyncException;
 import de.cronn.jira.sync.config.BasicAuthentication;
 import de.cronn.jira.sync.config.JiraConnectionProperties;
+import de.cronn.jira.sync.domain.JiraComment;
 import de.cronn.jira.sync.domain.JiraField;
 import de.cronn.jira.sync.domain.JiraFilterResult;
 import de.cronn.jira.sync.domain.JiraIssue;
@@ -274,15 +275,23 @@ public class JiraServiceRestClient implements JiraService {
 	}
 
 	@Override
-	public void updateIssue(JiraIssue issue, JiraIssueUpdate jiraIssueUpdate) {
-		Assert.hasText(issue.getKey());
-		restTemplate.put(restUrl("/rest/api/2/issue/{issueId}"), jiraIssueUpdate, issue.getKey());
+	public void addComment(String issueKey, String commentText) {
+		Assert.hasText(issueKey);
+		Assert.hasText(commentText);
+		JiraComment comment = new JiraComment(commentText);
+		restTemplate.postForObject(restUrl("/rest/api/2/issue/{issueId}/comment"), comment, Map.class, issueKey);
 	}
 
 	@Override
-	public void transitionIssue(JiraIssue issue, JiraIssueUpdate jiraIssueUpdate) {
-		Assert.hasText(issue.getKey());
-		restTemplate.postForObject(restUrl("/rest/api/2/issue/{issueId}/transitions"), jiraIssueUpdate, Void.class, issue.getKey());
+	public void updateIssue(String issueKey, JiraIssueUpdate issueUpdate) {
+		Assert.hasText(issueKey);
+		restTemplate.put(restUrl("/rest/api/2/issue/{issueId}"), issueUpdate, issueKey);
+	}
+
+	@Override
+	public void transitionIssue(String issueKey, JiraIssueUpdate issueUpdate) {
+		Assert.hasText(issueKey);
+		restTemplate.postForObject(restUrl("/rest/api/2/issue/{issueId}/transitions"), issueUpdate, Void.class, issueKey);
 	}
 
 	private String restUrl(String url) {

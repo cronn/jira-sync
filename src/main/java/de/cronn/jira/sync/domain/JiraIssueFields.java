@@ -1,28 +1,41 @@
 package de.cronn.jira.sync.domain;
 
-import java.io.Serializable;
 import java.time.ZonedDateTime;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
-public class JiraIssueFields implements Serializable {
+public class JiraIssueFields extends JiraResource {
 
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 2L;
 
 	private JiraProject project;
+
 	private String summary;
+
 	private String description;
+
 	private JiraIssueType issuetype;
+
 	private JiraPriority priority;
+
 	private JiraResolution resolution;
+
 	private Set<String> labels;
+
 	private JiraIssueStatus status;
+
 	private Set<JiraVersion> versions;
+
 	private Set<JiraVersion> fixVersions;
+
 	private JiraUser assignee;
-	@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+
+	@JsonFormat(pattern = JIRA_DATE_FORMAT)
 	private ZonedDateTime updated;
+
+	private JiraComments comment;
 
 	public JiraIssueFields() {
 	}
@@ -126,4 +139,21 @@ public class JiraIssueFields implements Serializable {
 	public ZonedDateTime getUpdated() {
 		return updated;
 	}
+
+	public void setComment(JiraComments comment) {
+		this.comment = comment;
+	}
+
+	public JiraComments getComment() {
+		return comment;
+	}
+
+	@JsonIgnore
+	public JiraComments getOrCreateComment() {
+		if (comment == null) {
+			comment = new JiraComments();
+		}
+		return comment;
+	}
+
 }

@@ -22,6 +22,7 @@ public class JiraProjectSync {
 	private Map<String, TransitionConfig> transitions = new LinkedHashMap<>();
 	private Map<String, String> versionMapping = new LinkedHashMap<>();
 	private Set<String> versionsToIgnore = new LinkedHashSet<>();
+	private boolean copyCommentsToTarget = false;
 
 	public String getSourceProject() {
 		return sourceProject;
@@ -116,6 +117,14 @@ public class JiraProjectSync {
 
 	public Set<String> getVersionsToIgnore() {
 		return versionsToIgnore;
+	}
+
+	public void setCopyCommentsToTarget(boolean copyCommentsToTarget) {
+		this.copyCommentsToTarget = copyCommentsToTarget;
+	}
+
+	public boolean isCopyCommentsToTarget() {
+		return copyCommentsToTarget;
 	}
 
 	@Override

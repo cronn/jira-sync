@@ -1,6 +1,7 @@
 package de.cronn.jira.sync.strategy;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,8 @@ import org.springframework.util.CollectionUtils;
 import de.cronn.jira.sync.JiraSyncException;
 import de.cronn.jira.sync.config.JiraProjectSync;
 import de.cronn.jira.sync.config.TransitionConfig;
+import de.cronn.jira.sync.domain.JiraComment;
+import de.cronn.jira.sync.domain.JiraComments;
 import de.cronn.jira.sync.domain.JiraIdResource;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueFields;
@@ -30,7 +33,7 @@ import de.cronn.jira.sync.domain.JiraResolution;
 import de.cronn.jira.sync.domain.JiraTransition;
 import de.cronn.jira.sync.domain.JiraUser;
 import de.cronn.jira.sync.domain.JiraVersion;
-import de.cronn.jira.sync.link.JiraIssueLinker;
+import de.cronn.jira.sync.mapping.CommentMapper;
 import de.cronn.jira.sync.mapping.DescriptionMapper;
 import de.cronn.jira.sync.mapping.LabelMapper;
 import de.cronn.jira.sync.mapping.PriorityMapper;
@@ -43,18 +46,12 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 
 	private static final Logger log = LoggerFactory.getLogger(UpdateExistingTargetJiraIssueSyncStrategy.class);
 
-	private JiraIssueLinker jiraIssueLinker;
-
 	private DescriptionMapper descriptionMapper;
 	private LabelMapper labelMapper;
 	private PriorityMapper priorityMapper;
 	private ResolutionMapper resolutionMapper;
 	private VersionMapper versionMapper;
-
-	@Autowired
-	public void setJiraIssueLinker(JiraIssueLinker jiraIssueLinker) {
-		this.jiraIssueLinker = jiraIssueLinker;
-	}
+	private CommentMapper commentMapper;
 
 	@Autowired
 	public void setDescriptionMapper(DescriptionMapper descriptionMapper) {
@@ -81,6 +78,11 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		this.resolutionMapper = resolutionMapper;
 	}
 
+	@Autowired
+	public void setCommentMapper(CommentMapper commentMapper) {
+		this.commentMapper = commentMapper;
+	}
+
 	@Override
 	public SyncResult sync(JiraService jiraSource, JiraService jiraTarget, JiraIssue sourceIssue, JiraIssue targetIssue, JiraProjectSync projectSync) {
 		log.info("synchronizing '{}' with '{}'", sourceIssue.getKey(), targetIssue.getKey());
@@ -98,13 +100,17 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		processVersions(jiraTarget, sourceIssue, targetIssue, JiraIssueFields::getVersions, versions -> targetIssueUpdate.getOrCreateFields().setVersions(versions), projectSync);
 		processVersions(jiraTarget, sourceIssue, targetIssue, JiraIssueFields::getFixVersions, versions -> targetIssueUpdate.getOrCreateFields().setFixVersions(versions), projectSync);
 
+		if (projectSync.isCopyCommentsToTarget()) {
+			processComments(sourceIssue, targetIssue, jiraSource, jiraTarget);
+		}
+
 		if (sourceIssueUpdate.isEmpty() && targetIssueUpdate.isEmpty()) {
 			return SyncResult.UNCHANGED;
 		}
 
 		if (!sourceIssueUpdate.isEmpty()) {
 			if (sourceIssueUpdate.getTransition() != null) {
-				jiraSource.transitionIssue(sourceIssue, sourceIssueUpdate);
+				jiraSource.transitionIssue(sourceIssue.getKey(), sourceIssueUpdate);
 			} else {
 				log.warn("Ignoring source issue update of {} without transition", sourceIssue);
 			}
@@ -112,7 +118,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 
 		if (!targetIssueUpdate.isEmpty()) {
 			Assert.isNull(targetIssueUpdate.getTransition());
-			jiraTarget.updateIssue(targetIssue, targetIssueUpdate);
+			jiraTarget.updateIssue(targetIssue.getKey(), targetIssueUpdate);
 		}
 
 		if (sourceIssueUpdate.getTransition() != null) {
@@ -120,6 +126,66 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		} else {
 			return SyncResult.CHANGED;
 		}
+	}
+
+	private void processComments(JiraIssue sourceIssue, JiraIssue targetIssue, JiraService jiraSource, JiraService jiraTarget) {
+		List<JiraComment> commentsInSource = getComments(sourceIssue);
+		List<JiraComment> commentsInTarget = getComments(targetIssue);
+
+		List<JiraComment> newCommentsInSource = commentsInSource.stream()
+			.filter(commentInSource -> !isCommentInTargetIssue(commentInSource, commentsInTarget))
+			.collect(Collectors.toList());
+
+		List<JiraComment> commentsOnlyInTarget = commentsInTarget.stream()
+			.filter(commentInTarget -> !isCommentInSourceIssue(commentInTarget, commentsInSource))
+			.collect(Collectors.toList());
+
+		boolean behindTime = isCommentBehindTime(commentsInTarget, newCommentsInSource, commentsOnlyInTarget);
+
+		for (JiraComment commentInSource : newCommentsInSource) {
+			String commentText = commentMapper.map(sourceIssue, commentInSource, jiraSource, behindTime);
+			jiraTarget.addComment(targetIssue.getKey(), commentText);
+		}
+	}
+
+	private boolean isCommentBehindTime(List<JiraComment> commentsInTarget, List<JiraComment> newCommentsInSource, List<JiraComment> commentsOnlyInTarget) {
+		if (!commentsOnlyInTarget.isEmpty() && !newCommentsInSource.isEmpty()) {
+			JiraComment latestCommentInTarget = commentsInTarget.get(commentsInTarget.size() - 1);
+			JiraComment firstCommentInSource = newCommentsInSource.get(0);
+			return (latestCommentInTarget.getUpdated().isAfter(firstCommentInSource.getCreated()));
+		} else {
+			return false;
+		}
+	}
+
+	private List<JiraComment> getComments(JiraIssue issue) {
+		JiraComments comment = issue.getFields().getComment();
+		if (comment == null) {
+			return Collections.emptyList();
+		}
+		List<JiraComment> comments = comment.getComments();
+		if (comments == null) {
+			return Collections.emptyList();
+		}
+		return comments;
+	}
+
+	private boolean isCommentInTargetIssue(JiraComment commentInSource, List<JiraComment> commentsInTarget) {
+		for (JiraComment commentInTarget : commentsInTarget) {
+			if (commentMapper.isMapped(commentInSource, commentInTarget.getBody())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean isCommentInSourceIssue(JiraComment commentInTarget, List<JiraComment> commentsInSource) {
+		for (JiraComment commentInSource : commentsInSource) {
+			if (commentMapper.isMapped(commentInSource, commentInTarget.getBody())) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private void processTransition(JiraService jiraSource, JiraIssue sourceIssue, JiraIssue targetIssue, JiraProjectSync projectSync, JiraIssueUpdate sourceIssueUpdate) {
@@ -137,7 +203,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 				if (!isEqual(sourceIssue, myself)) {
 					JiraIssueUpdate jiraIssueUpdate = new JiraIssueUpdate();
 					jiraIssueUpdate.getOrCreateFields().setAssignee(myself);
-					jiraSource.updateIssue(sourceIssue, jiraIssueUpdate);
+					jiraSource.updateIssue(sourceIssue.getKey(), jiraIssueUpdate);
 				}
 			}
 

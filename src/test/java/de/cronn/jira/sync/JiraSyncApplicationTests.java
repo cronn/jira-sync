@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -20,12 +21,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import de.cronn.jira.sync.config.JiraSyncConfig;
+import de.cronn.jira.sync.domain.JiraComment;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueFields;
 import de.cronn.jira.sync.domain.JiraIssueStatus;
@@ -91,9 +91,6 @@ public class JiraSyncApplicationTests {
 
 	@Autowired
 	private JiraService jiraTarget;
-
-	@Autowired
-	private JiraSyncConfig jiraSyncConfig;
 
 	@Autowired
 	private JiraSyncTask syncTask;
@@ -164,6 +161,15 @@ public class JiraSyncApplicationTests {
 		jiraDummyService.expectLoginRequest(TARGET, "jira-sync", "secret in target");
 
 		jiraDummyService.expectBasicAuth(TARGET, "basic-auth-user", "secret");
+
+		jiraSource.login(syncConfig.getSource());
+		jiraTarget.login(syncConfig.getTarget());
+	}
+
+	@After
+	public void logOut() {
+		jiraSource.logout();
+		jiraTarget.logout();
 	}
 
 	@Test
@@ -181,45 +187,31 @@ public class JiraSyncApplicationTests {
 	public void testResolutionsAreCached() throws Exception {
 		assertThat(jiraSource).isNotSameAs(jiraTarget);
 
-		try {
-			jiraSource.login(jiraSyncConfig.getSource());
-			jiraTarget.login(jiraSyncConfig.getTarget());
+		jiraSource.getResolutions();
+		List<JiraResolution> sourceResolutions1 = jiraSource.getResolutions();
+		List<JiraResolution> sourceResolutions2 = jiraSource.getResolutions();
+		assertThat(sourceResolutions1).isSameAs(sourceResolutions2);
 
-			jiraSource.getResolutions();
-			List<JiraResolution> sourceResolutions1 = jiraSource.getResolutions();
-			List<JiraResolution> sourceResolutions2 = jiraSource.getResolutions();
-			assertThat(sourceResolutions1).isSameAs(sourceResolutions2);
+		jiraTarget.getResolutions();
+		List<JiraResolution> targetResolutions1 = jiraTarget.getResolutions();
+		List<JiraResolution> targetResolutions2 = jiraTarget.getResolutions();
+		assertThat(targetResolutions1).isSameAs(targetResolutions2);
 
-			jiraTarget.getResolutions();
-			List<JiraResolution> targetResolutions1 = jiraTarget.getResolutions();
-			List<JiraResolution> targetResolutions2 = jiraTarget.getResolutions();
-			assertThat(targetResolutions1).isSameAs(targetResolutions2);
-
-			assertThat(sourceResolutions1).isNotSameAs(targetResolutions1);
-		} finally {
-			jiraSource.logout();
-			jiraTarget.logout();
-		}
+		assertThat(sourceResolutions1).isNotSameAs(targetResolutions1);
 	}
 
 	@Test
 	public void testResolutionsAndPrioritiesAreCached() throws Exception {
-		try {
-			jiraSource.login(jiraSyncConfig.getSource());
+		jiraSource.getResolutions();
+		List<JiraResolution> sourceResolutions1 = jiraSource.getResolutions();
+		List<JiraResolution> sourceResolutions2 = jiraSource.getResolutions();
 
-			jiraSource.getResolutions();
-			List<JiraResolution> sourceResolutions1 = jiraSource.getResolutions();
-			List<JiraResolution> sourceResolutions2 = jiraSource.getResolutions();
-
-			jiraSource.getPriorities();
-			List<JiraPriority> sourcePriorities1 = jiraSource.getPriorities();
-			List<JiraPriority> sourcePriorities2 = jiraSource.getPriorities();
-			assertThat(sourceResolutions1).isSameAs(sourceResolutions2);
-			assertThat(sourcePriorities1).isSameAs(sourcePriorities2);
-			assertThat(sourcePriorities1).isNotSameAs(sourceResolutions1);
-		} finally {
-			jiraSource.logout();
-		}
+		jiraSource.getPriorities();
+		List<JiraPriority> sourcePriorities1 = jiraSource.getPriorities();
+		List<JiraPriority> sourcePriorities2 = jiraSource.getPriorities();
+		assertThat(sourceResolutions1).isSameAs(sourceResolutions2);
+		assertThat(sourcePriorities1).isSameAs(sourcePriorities2);
+		assertThat(sourcePriorities1).isNotSameAs(sourceResolutions1);
 	}
 
 	@Test
@@ -241,7 +233,7 @@ public class JiraSyncApplicationTests {
 		sourceIssue.getFields().setLabels(new LinkedHashSet<>(Arrays.asList("label1", "label2")));
 		sourceIssue.getFields().setVersions(new LinkedHashSet<>(Arrays.asList(SOURCE_VERSION_10, SOURCE_VERSION_11, SOURCE_VERSION_UNDEFINED)));
 		sourceIssue.getFields().setFixVersions(Collections.singleton(SOURCE_VERSION_11));
-		jiraDummyService.createIssue(SOURCE, sourceIssue);
+		JiraIssue createdSourceIssue = jiraSource.createIssue(sourceIssue);
 
 		clock.windForwardSeconds(30);
 
@@ -265,7 +257,7 @@ public class JiraSyncApplicationTests {
 		assertThat(updatedSourceIssue.getFields().getUpdated().toInstant()).isEqualTo(Instant.now(clock));
 
 		List<JiraRemoteLink> remoteLinksInTarget = jiraDummyService.getRemoteLinks(TARGET, targetIssue);
-		List<JiraRemoteLink> remoteLinksInSource = jiraDummyService.getRemoteLinks(SOURCE, sourceIssue);
+		List<JiraRemoteLink> remoteLinksInSource = jiraDummyService.getRemoteLinks(SOURCE, createdSourceIssue);
 		assertThat(remoteLinksInTarget).hasSize(1);
 		assertThat(remoteLinksInSource).hasSize(1);
 
@@ -286,7 +278,7 @@ public class JiraSyncApplicationTests {
 		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_BUG);
 		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_UNMAPPED);
 		sourceIssue.getFields().setVersions(Collections.singleton(SOURCE_VERSION_UNMAPPED));
-		jiraDummyService.createIssue(SOURCE, sourceIssue);
+		jiraSource.createIssue(sourceIssue);
 
 		// when
 		syncTask.sync();
@@ -310,14 +302,11 @@ public class JiraSyncApplicationTests {
 
 	@Test
 	public void testErrorHandling() throws Exception {
-		jiraSource.login(jiraSyncConfig.getSource());
 		try {
 			jiraSource.createIssue(new JiraIssue());
 			fail("JiraSyncException expected");
 		} catch (JiraSyncException e) {
 			assertThat(e).hasMessage("Bad Request: fields are missing");
-		} finally {
-			jiraSource.logout();
 		}
 	}
 
@@ -349,7 +338,7 @@ public class JiraSyncApplicationTests {
 		// when
 		JiraIssueUpdate update = new JiraIssueUpdate();
 		update.getOrCreateFields().setDescription("changed description");
-		jiraDummyService.updateIssue(SOURCE, createdSourceIssue.getKey(), update);
+		jiraSource.updateIssue(createdSourceIssue.getKey(), update);
 
 		Instant beforeSecondUpdate = Instant.now(clock);
 		clock.windForwardSeconds(30);
@@ -389,7 +378,7 @@ public class JiraSyncApplicationTests {
 		syncTask.sync();
 
 		// then
-		JiraIssue updatedSourceIssue = jiraDummyService.getIssueByKey(SOURCE, createdSourceIssue.getKey());
+		JiraIssue updatedSourceIssue = jiraSource.getIssueByKey(createdSourceIssue.getKey());
 		assertThat(updatedSourceIssue.getFields().getStatus().getName()).isEqualTo(SOURCE_STATUS_RESOLVED.getName());
 		assertThat(updatedSourceIssue.getFields().getResolution().getName()).isEqualTo(SOURCE_RESOLUTION_FIXED.getName());
 		assertThat(getNames(updatedSourceIssue.getFields().getFixVersions())).containsExactly(SOURCE_VERSION_10.getName());
@@ -404,9 +393,8 @@ public class JiraSyncApplicationTests {
 		sourceIssue.getFields().setProject(SOURCE_PROJECT);
 		sourceIssue.getFields().setIssuetype(issueType);
 		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
-		ResponseEntity<Object> response = jiraDummyService.createIssue(SOURCE, sourceIssue);
-		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-		return (JiraIssue) response.getBody();
+
+		return jiraSource.createIssue(sourceIssue);
 	}
 
 	private JiraTransition findTransition(Context context, String issueKey, JiraIssueStatus statusToTransitionTo) {
@@ -444,6 +432,138 @@ public class JiraSyncApplicationTests {
 
 		assertThat(updatedSourceIssue.getFields().getStatus().getName()).isEqualTo(SOURCE_STATUS_IN_PROGRESS.getName());
 		assertThat(updatedSourceIssue.getFields().getAssignee().getKey()).isEqualTo("myself");
+	}
+
+	@Test
+	public void testCreateTicketInTarget_WithComments() throws Exception {
+		// given
+		JiraIssue createdIssue = createIssueInSource("some issue", SOURCE_TYPE_UNKNOWN);
+		jiraSource.addComment(createdIssue.getKey(), "some comment");
+		clock.windForwardSeconds(120);
+		jiraSource.addComment(createdIssue.getKey(), "some other comment");
+
+		// when
+		syncTask.sync();
+
+		// then
+		assertThat(jiraDummyService.getAllIssues(TARGET)).hasSize(1);
+		JiraIssue targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
+		assertThat(targetIssue.getFields().getIssuetype().getName()).isEqualTo(TARGET_TYPE_TASK.getName());
+		List<JiraComment> comments = targetIssue.getFields().getComment().getComments();
+		assertThat(comments).hasSize(2);
+
+		assertThat(comments.get(0).getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:00 CEST|titleBGColor=#DDD|bgColor=#EEE}\n" +
+			"some comment\n" +
+			"~??[comment 1.1|https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-1?focusedCommentId=1.1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1.1]??~\n" +
+			"{panel}");
+
+		assertThat(comments.get(1).getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:02:00 CEST|titleBGColor=#DDD|bgColor=#EEE}\n" +
+			"some other comment\n" +
+			"~??[comment 1.2|https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-1?focusedCommentId=1.2&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1.2]??~\n" +
+			"{panel}");
+	}
+
+	@Test
+	public void testUpdateTicketInTarget_addComment() throws Exception {
+		// given
+		JiraIssue createdSourceIssue = createIssueInSource("My first bug");
+
+		syncTask.sync();
+
+		assertThat(jiraDummyService.getAllIssues(TARGET)).hasSize(1);
+		JiraIssue targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
+		assertThat(targetIssue.getFields().getComment()).isNull();
+
+		// when
+		clock.windForwardSeconds(30);
+
+		jiraSource.addComment(createdSourceIssue.getKey(), "some comment");
+
+		clock.windForwardSeconds(30);
+
+		syncTask.sync();
+
+		// then
+		assertThat(jiraDummyService.getAllIssues(TARGET)).hasSize(1);
+		targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
+		List<JiraComment> comments = targetIssue.getFields().getComment().getComments();
+		assertThat(comments).hasSize(1);
+		assertThat(comments.get(0).getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:30 CEST|titleBGColor=#DDD|bgColor=#EEE}\n" +
+			"some comment\n" +
+			"~??[comment 1.1|https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-1?focusedCommentId=1.1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1.1]??~\n" +
+			"{panel}");
+	}
+
+	@Test
+	public void testCreateTicketInTargetWithComment_UpdateDoesNotAddItAgain() throws Exception {
+		// given
+		JiraIssue createdSourceIssue = createIssueInSource("My first bug");
+		jiraSource.addComment(createdSourceIssue.getKey(), "some comment");
+
+		syncTask.sync();
+
+		assertThat(jiraDummyService.getAllIssues(TARGET)).hasSize(1);
+		JiraIssue targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
+		assertThat(targetIssue.getFields().getComment().getComments()).hasSize(1);
+
+		syncTask.sync();
+
+		// then
+		assertThat(jiraDummyService.getAllIssues(TARGET)).hasSize(1);
+		targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
+		List<JiraComment> comments = targetIssue.getFields().getComment().getComments();
+		assertThat(comments).hasSize(1);
+	}
+
+
+	@Test
+	public void testUpdateTicketInTarget_addCommentAfterCommentWasAddedInTarget() throws Exception {
+		// given
+		JiraIssue createdSourceIssue = createIssueInSource("My first bug");
+
+		jiraSource.addComment(createdSourceIssue.getKey(), "first comment in source");
+
+		syncTask.sync();
+
+		assertThat(jiraDummyService.getAllIssues(TARGET)).hasSize(1);
+		JiraIssue targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
+		assertThat(targetIssue.getFields().getComment().getComments()).hasSize(1);
+
+		clock.windForwardSeconds(30);
+
+		jiraSource.addComment(createdSourceIssue.getKey(), "second comment in source");
+
+		clock.windForwardSeconds(30);
+
+		jiraSource.addComment(createdSourceIssue.getKey(), "third comment in source");
+
+		clock.windForwardSeconds(30);
+
+		jiraTarget.addComment(targetIssue.getKey(), "some comment in target");
+
+		// when
+
+		clock.windForwardSeconds(30);
+
+		syncTask.sync();
+
+		// then
+		assertThat(jiraDummyService.getAllIssues(TARGET)).hasSize(1);
+		targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
+		List<JiraComment> comments = targetIssue.getFields().getComment().getComments();
+		assertThat(comments).hasSize(4);
+		assertThat(comments.get(0).getBody()).contains("first comment in source").contains("2016-05-23 20:00:00 CEST|titleBGColor=#DDD|bgColor=#EEE");
+		assertThat(comments.get(1).getBody()).contains("some comment in target");
+
+		assertThat(comments.get(2).getBody())
+			.contains("second comment in source")
+			.contains("2016-05-23 20:00:30 CEST|titleBGColor=#CCC|bgColor=#DDD")
+			.contains("This comment was added behind time. The order of comments might not represent the real order.");
+
+		assertThat(comments.get(3).getBody())
+			.contains("third comment in source")
+			.contains("2016-05-23 20:01:00 CEST|titleBGColor=#CCC|bgColor=#DDD")
+			.contains("This comment was added behind time. The order of comments might not represent the real order.");
 	}
 
 }

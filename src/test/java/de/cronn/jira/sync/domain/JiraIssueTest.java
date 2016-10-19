@@ -24,8 +24,9 @@ public class JiraIssueTest {
 		JiraIssue issue = new JiraIssue("1", "ISSUE-1");
 		issue.getOrCreateFields().setUpdated(ZonedDateTime.parse("2016-10-13T07:21:13+02:00"));
 
-		String expectedJson = "{ \"id\" : \"1\", key : \"ISSUE-1\", \"fields\" : {" +
-			"\"updated\" : \"2016-10-13T07:21:13.000+0200\"" +
+		String expectedJson = "{ \"id\" : \"1\", \"key\" : \"ISSUE-1\", " +
+			"\"fields\" : {" +
+				"\"updated\" : \"2016-10-13T07:21:13.000+0200\"" +
 			"} }";
 		assertThat(json.write(issue)).isStrictlyEqualToJson(expectedJson);
 	}
