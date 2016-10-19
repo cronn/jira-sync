@@ -20,6 +20,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -307,6 +309,19 @@ public class JiraSyncApplicationTests {
 	}
 
 	@Test
+	public void testErrorHandling() throws Exception {
+		jiraSource.login(jiraSyncConfig.getSource());
+		try {
+			jiraSource.createIssue(new JiraIssue());
+			fail("JiraSyncException expected");
+		} catch (JiraSyncException e) {
+			assertThat(e).hasMessage("Bad Request: fields are missing");
+		} finally {
+			jiraSource.logout();
+		}
+	}
+
+	@Test
 	public void testCreateTicketInTarget_WithFallbackType() throws Exception {
 		// given
 		createIssueInSource("some issue", SOURCE_TYPE_UNKNOWN);
@@ -389,7 +404,9 @@ public class JiraSyncApplicationTests {
 		sourceIssue.getFields().setProject(SOURCE_PROJECT);
 		sourceIssue.getFields().setIssuetype(issueType);
 		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
-		return jiraDummyService.createIssue(SOURCE, sourceIssue);
+		ResponseEntity<Object> response = jiraDummyService.createIssue(SOURCE, sourceIssue);
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+		return (JiraIssue) response.getBody();
 	}
 
 	private JiraTransition findTransition(Context context, String issueKey, JiraIssueStatus statusToTransitionTo) {

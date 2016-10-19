@@ -13,6 +13,8 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 import de.cronn.jira.sync.domain.JiraFieldsUpdate;
 import de.cronn.jira.sync.domain.JiraFilterResult;
 import de.cronn.jira.sync.domain.JiraIssue;
+import de.cronn.jira.sync.domain.JiraIssueFields;
 import de.cronn.jira.sync.domain.JiraIssueStatus;
 import de.cronn.jira.sync.domain.JiraIssueUpdate;
 import de.cronn.jira.sync.domain.JiraLoginRequest;
@@ -275,9 +278,21 @@ public class JiraDummyService {
 	}
 
 	@RequestMapping(path = "/api/2/issue", method = RequestMethod.POST)
-	public JiraIssue createIssue(@PathVariable(CONTEXT) Context context, @RequestBody JiraIssue issue) {
-		JiraProject project = issue.getFields().getProject();
-		validateProject(context, project);
+	public ResponseEntity<Object> createIssue(@PathVariable(CONTEXT) Context context, @RequestBody JiraIssue issue) {
+		JiraIssueFields fields = issue.getFields();
+
+		if (fields == null) {
+			return new ResponseEntity<>("fields are missing", HttpStatus.BAD_REQUEST);
+		}
+
+		JiraProject project = fields.getProject();
+
+		try {
+			validateProject(context, project);
+		} catch (Exception e) {
+			log.error("createIssue failed", e);
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+		}
 
 		Assert.isNull(issue.getKey());
 		Assert.isNull(issue.getId());
@@ -288,27 +303,27 @@ public class JiraDummyService {
 			issue.setKey(projectKey + "-" + id);
 			issue.setId(String.valueOf(id));
 		}
-		if (issue.getFields().getStatus() == null) {
+		if (fields.getStatus() == null) {
 			JiraIssueStatus defaultStatus = getData(context).getDefaultStatus();
 			Assert.notNull(defaultStatus, "defaultStatus must be set");
-			issue.getFields().setStatus(defaultStatus);
+			fields.setStatus(defaultStatus);
 		}
 
-		if (issue.getFields().getResolution() != null) {
-			validateResolution(context, issue.getFields().getResolution());
+		if (fields.getResolution() != null) {
+			validateResolution(context, fields.getResolution());
 		}
-		validateVersions(context, issue.getFields().getVersions());
-		validateVersions(context, issue.getFields().getFixVersions());
+		validateVersions(context, fields.getVersions());
+		validateVersions(context, fields.getFixVersions());
 
-		if (issue.getFields().getPriority() != null) {
-			validatePriority(context, issue.getFields().getPriority());
+		if (fields.getPriority() != null) {
+			validatePriority(context, fields.getPriority());
 		}
 
 		refreshUpdatedTimestamp(issue);
 
 		Object old = getIssueMap(context).put(issue.getKey(), issue);
 		Assert.isNull(old);
-		return issue;
+		return new ResponseEntity<>(issue, HttpStatus.OK);
 	}
 
 	@RequestMapping(path = "/api/2/issue/{issueKey}", method = RequestMethod.PUT)
