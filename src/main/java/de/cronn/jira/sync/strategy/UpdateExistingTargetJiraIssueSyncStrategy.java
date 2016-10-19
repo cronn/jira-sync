@@ -2,6 +2,7 @@ package de.cronn.jira.sync.strategy;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -167,7 +168,9 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		if (comments == null) {
 			return Collections.emptyList();
 		}
-		return comments;
+		return comments.stream()
+			.sorted(Comparator.comparing(JiraComment::getCreated))
+			.collect(Collectors.toList());
 	}
 
 	private boolean isCommentInTargetIssue(JiraComment commentInSource, List<JiraComment> commentsInTarget) {
