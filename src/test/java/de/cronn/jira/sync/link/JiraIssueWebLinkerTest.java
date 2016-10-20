@@ -57,7 +57,7 @@ public class JiraIssueWebLinkerTest {
 		List<JiraRemoteLink> remoteLinks = new ArrayList<>();
 		when(jiraSource.getRemoteLinks(jiraIssue.getKey(), UPDATED)).thenReturn(remoteLinks);
 
-		JiraIssue resolvedIssue = resolver.resolve(jiraIssue, jiraSource, jiraTarget);
+		JiraIssue resolvedIssue = resolver.resolveIssue(jiraIssue, jiraSource, jiraTarget);
 		assertThat(resolvedIssue).isNull();
 	}
 
@@ -79,7 +79,7 @@ public class JiraIssueWebLinkerTest {
 		remoteLinks.add(new JiraRemoteLink("http://other.thing"));
 		when(jiraSource.getRemoteLinks(jiraIssue.getKey(), UPDATED)).thenReturn(remoteLinks);
 
-		JiraIssue resolvedIssue = resolver.resolve(jiraIssue, jiraSource, jiraTarget);
+		JiraIssue resolvedIssue = resolver.resolveIssue(jiraIssue, jiraSource, jiraTarget);
 		assertThat(resolvedIssue).isNull();
 	}
 
@@ -97,7 +97,7 @@ public class JiraIssueWebLinkerTest {
 		remoteLinks.add(new JiraRemoteLink(JIRA_TARGET_URL + "/browse/" + targetIssue.getKey()));
 		when(jiraSource.getRemoteLinks(sourceIssue.getKey(), UPDATED)).thenReturn(remoteLinks);
 
-		JiraIssue resolvedIssue = resolver.resolve(sourceIssue, jiraSource, jiraTarget);
+		JiraIssue resolvedIssue = resolver.resolveIssue(sourceIssue, jiraSource, jiraTarget);
 		assertThat(resolvedIssue).isSameAs(targetIssue);
 
 		verify(jiraTarget).getIssueByKey(targetIssue.getKey());
@@ -115,7 +115,7 @@ public class JiraIssueWebLinkerTest {
 		List<JiraRemoteLink> remoteLinks = Collections.singletonList(new JiraRemoteLink("https://jira.target//browse/" + targetIssue.getKey()));
 		when(jiraSource.getRemoteLinks(sourceIssue.getKey(), UPDATED)).thenReturn(remoteLinks);
 
-		JiraIssue resolvedIssue = resolver.resolve(sourceIssue, jiraSource, jiraTarget);
+		JiraIssue resolvedIssue = resolver.resolveIssue(sourceIssue, jiraSource, jiraTarget);
 		assertThat(resolvedIssue).isSameAs(targetIssue);
 
 		verify(jiraTarget).getIssueByKey(targetIssue.getKey());
@@ -135,10 +135,10 @@ public class JiraIssueWebLinkerTest {
 		when(jiraSource.getRemoteLinks(sourceIssue.getKey(), UPDATED)).thenReturn(remoteLinks);
 
 		try {
-			resolver.resolve(sourceIssue, jiraSource, jiraTarget);
+			resolver.resolveIssue(sourceIssue, jiraSource, jiraTarget);
 			fail("JiraSyncException expected");
 		} catch (JiraSyncException e) {
-			assertThat(e).hasMessage("Failed to link TARGET-123 in target");
+			assertThat(e).hasMessage("Failed to resolve 'TARGET-123' in jiraTarget");
 		}
 
 		verify(jiraTarget).getIssueByKey(targetIssue.getKey());
@@ -161,10 +161,10 @@ public class JiraIssueWebLinkerTest {
 		when(jiraSource.getRemoteLinks(sourceIssue.getKey(), UPDATED)).thenReturn(remoteLinks);
 
 		try {
-			resolver.resolve(sourceIssue, jiraSource, jiraTarget);
+			resolver.resolveIssue(sourceIssue, jiraSource, jiraTarget);
 			fail("JiraSyncException expected");
 		} catch (JiraSyncException e) {
-			assertThat(e).hasMessage("Illegal number of linked jira issues for JiraIssue[id=1,key=SOURCE-123]: [JiraIssue[id=1,key=TARGET-123], JiraIssue[id=2,key=TARGET-456]]");
+			assertThat(e).hasMessage("Illegal number of linked issues for JiraIssue[id=1,key=SOURCE-123]: [TARGET-123, TARGET-456]");
 		}
 	}
 

@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -49,6 +50,7 @@ import de.cronn.jira.sync.service.JiraService;
 public class JiraSyncApplicationTests {
 
 	private static final JiraProject SOURCE_PROJECT = new JiraProject("1", "PROJECT_ONE");
+	private static final JiraProject SOURCE_PROJECT_OTHER = new JiraProject("2", "PROJECT_OTHER");
 	private static final JiraProject TARGET_PROJECT = new JiraProject("100", "PRJ_ONE");
 
 	private static final JiraIssueStatus SOURCE_STATUS_OPEN = new JiraIssueStatus("1", "Open");
@@ -129,6 +131,7 @@ public class JiraSyncApplicationTests {
 		jiraDummyService.setBaseUrl(TARGET, targetBaseUrl);
 
 		jiraDummyService.addProject(SOURCE, SOURCE_PROJECT);
+		jiraDummyService.addProject(SOURCE, SOURCE_PROJECT_OTHER);
 		jiraDummyService.addProject(TARGET, TARGET_PROJECT);
 
 		jiraDummyService.associateFilterIdToProject(SOURCE, "12345", SOURCE_PROJECT);
@@ -241,8 +244,7 @@ public class JiraSyncApplicationTests {
 		syncTask.sync();
 
 		// then
-		assertThat(jiraDummyService.getAllIssues(TARGET)).hasSize(1);
-		JiraIssue targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
+		JiraIssue targetIssue = getSingleIssue(TARGET);
 		JiraIssueFields targetIssueFields = targetIssue.getFields();
 		assertThat(targetIssueFields.getSummary()).isEqualTo("PROJECT_ONE-1: My first bug");
 		assertThat(targetIssueFields.getIssuetype().getName()).isEqualTo(TARGET_TYPE_BUG.getName());
@@ -252,8 +254,7 @@ public class JiraSyncApplicationTests {
 		assertThat(getNames(targetIssueFields.getFixVersions())).containsExactly("11");
 		assertThat(targetIssueFields.getUpdated().toInstant()).isEqualTo(Instant.now(clock));
 
-		assertThat(jiraDummyService.getAllIssues(SOURCE)).hasSize(1);
-		JiraIssue updatedSourceIssue = jiraDummyService.getAllIssues(SOURCE).get(0);
+		JiraIssue updatedSourceIssue = getSingleIssue(SOURCE);
 		assertThat(updatedSourceIssue.getFields().getUpdated().toInstant()).isEqualTo(Instant.now(clock));
 
 		List<JiraRemoteLink> remoteLinksInTarget = jiraDummyService.getRemoteLinks(TARGET, targetIssue);
@@ -261,11 +262,11 @@ public class JiraSyncApplicationTests {
 		assertThat(remoteLinksInTarget).hasSize(1);
 		assertThat(remoteLinksInSource).hasSize(1);
 
-		JiraRemoteLinkObject firstRemoteLinkInSource = remoteLinksInSource.get(0).getObject();
+		JiraRemoteLinkObject firstRemoteLinkInSource = remoteLinksInSource.iterator().next().getObject();
 		assertThat(firstRemoteLinkInSource.getUrl()).isEqualTo(new URL(targetBaseUrl + "/browse/PRJ_ONE-1"));
 		assertThat(firstRemoteLinkInSource.getIcon().getUrl16x16()).isEqualTo(new URL("https://jira-source/favicon.ico"));
 
-		JiraRemoteLinkObject firstRemoteLinkInTarget = remoteLinksInTarget.get(0).getObject();
+		JiraRemoteLinkObject firstRemoteLinkInTarget = remoteLinksInTarget.iterator().next().getObject();
 		assertThat(firstRemoteLinkInTarget.getUrl()).isEqualTo(new URL(sourceBaseUrl + "/browse/PROJECT_ONE-1"));
 		assertThat(firstRemoteLinkInTarget.getIcon().getUrl16x16()).isEqualTo(new URL("https://jira-target/favicon.ico"));
 	}
@@ -284,11 +285,16 @@ public class JiraSyncApplicationTests {
 		syncTask.sync();
 
 		// then
-		assertThat(jiraDummyService.getAllIssues(TARGET)).hasSize(1);
-		JiraIssue targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
+		JiraIssue targetIssue = getSingleIssue(TARGET);
 		assertThat(targetIssue.getFields().getIssuetype().getName()).isEqualTo(TARGET_TYPE_BUG.getName());
 		assertThat(targetIssue.getFields().getPriority()).isNull();
 		assertThat(targetIssue.getFields().getVersions()).isEmpty();
+	}
+
+	private JiraIssue getSingleIssue(Context context) {
+		Set<JiraIssue> issues = jiraDummyService.getAllIssues(context);
+		assertThat(issues).hasSize(1);
+		return issues.iterator().next();
 	}
 
 	private static List<String> getNames(Set<JiraVersion> versions) {
@@ -319,8 +325,7 @@ public class JiraSyncApplicationTests {
 		syncTask.sync();
 
 		// then
-		assertThat(jiraDummyService.getAllIssues(TARGET)).hasSize(1);
-		JiraIssue targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
+		JiraIssue targetIssue = getSingleIssue(TARGET);
 		assertThat(targetIssue.getFields().getIssuetype().getName()).isEqualTo(TARGET_TYPE_TASK.getName());
 	}
 
@@ -331,8 +336,7 @@ public class JiraSyncApplicationTests {
 
 		syncTask.sync();
 
-		assertThat(jiraDummyService.getAllIssues(TARGET)).hasSize(1);
-		JiraIssue targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
+		JiraIssue targetIssue = getSingleIssue(TARGET);
 		assertThat(targetIssue.getFields().getDescription()).isEqualTo("");
 
 		// when
@@ -346,13 +350,11 @@ public class JiraSyncApplicationTests {
 		syncTask.sync();
 
 		// then
-		assertThat(jiraDummyService.getAllIssues(TARGET)).hasSize(1);
-		targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
+		targetIssue = getSingleIssue(TARGET);
 		assertThat(targetIssue.getFields().getDescription()).isEqualTo("{panel:title=Original description|titleBGColor=#DDD|bgColor=#EEE}\nchanged description\n{panel}");
 		assertThat(targetIssue.getFields().getUpdated().toInstant()).isEqualTo(Instant.now(clock));
 
-		assertThat(jiraDummyService.getAllIssues(SOURCE)).hasSize(1);
-		JiraIssue sourceIssue = jiraDummyService.getAllIssues(SOURCE).get(0);
+		JiraIssue sourceIssue = getSingleIssue(SOURCE);
 		assertThat(sourceIssue.getFields().getUpdated().toInstant()).isEqualTo(beforeSecondUpdate);
 	}
 
@@ -363,8 +365,7 @@ public class JiraSyncApplicationTests {
 
 		syncTask.sync();
 
-		assertThat(jiraDummyService.getAllIssues(TARGET)).hasSize(1);
-		JiraIssue targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
+		JiraIssue targetIssue = getSingleIssue(TARGET);
 
 		// when
 		JiraTransition transition = findTransition(TARGET, targetIssue.getKey(), TARGET_STATUS_CLOSED);
@@ -378,10 +379,73 @@ public class JiraSyncApplicationTests {
 		syncTask.sync();
 
 		// then
-		JiraIssue updatedSourceIssue = jiraSource.getIssueByKey(createdSourceIssue.getKey());
+		JiraIssue updatedSourceIssue = getSingleIssue(SOURCE);
 		assertThat(updatedSourceIssue.getFields().getStatus().getName()).isEqualTo(SOURCE_STATUS_RESOLVED.getName());
 		assertThat(updatedSourceIssue.getFields().getResolution().getName()).isEqualTo(SOURCE_RESOLUTION_FIXED.getName());
 		assertThat(getNames(updatedSourceIssue.getFields().getFixVersions())).containsExactly(SOURCE_VERSION_10.getName());
+	}
+
+	@Test
+	public void testDoNotTriggerTransitionAfterTicketWasMovedBetweenProjects() throws Exception {
+		// given
+		JiraIssue createdSourceIssue = createIssueInSource("My first bug");
+
+		syncTask.sync();
+
+		moveTicketForwardAndBack(createdSourceIssue.getKey());
+
+		JiraIssue targetIssue = getSingleIssue(TARGET);
+		JiraTransition transition = findTransition(TARGET, targetIssue.getKey(), TARGET_STATUS_CLOSED);
+
+		JiraIssueUpdate update = new JiraIssueUpdate();
+		update.setTransition(transition);
+		update.getOrCreateFields().setResolution(TARGET_RESOLUTION_DONE);
+		update.getOrCreateFields().setFixVersions(Collections.singleton(TARGET_VERSION_10));
+		jiraDummyService.transitionIssue(TARGET, targetIssue.getKey(), update);
+
+		// when
+		syncTask.sync();
+
+		// then
+		JiraIssue updatedSourceIssue = getSingleIssue(SOURCE);
+		assertThat(updatedSourceIssue.getFields().getStatus().getName()).isEqualTo(SOURCE_STATUS_OPEN.getName());
+	}
+
+	private void moveTicketForwardAndBack(String issueKey) {
+		jiraDummyService.moveIssue(SOURCE, issueKey, SOURCE_PROJECT_OTHER.getKey());
+		jiraDummyService.moveIssue(SOURCE, issueKey, SOURCE_PROJECT.getKey());
+
+		JiraIssue sourceIssueMovedBack = getSingleIssue(SOURCE);
+		assertThat(sourceIssueMovedBack.getKey()).isNotEqualTo(issueKey);
+	}
+
+	@Test
+	@DirtiesContext
+	public void testTriggerTransitionAfterTicketWasMovedBetweenProjects() throws Exception {
+		// given
+		JiraIssue createdSourceIssue = createIssueInSource("My first bug");
+
+		syncTask.sync();
+
+		moveTicketForwardAndBack(createdSourceIssue.getKey());
+
+		JiraIssue targetIssue = getSingleIssue(TARGET);
+		JiraTransition transition = findTransition(TARGET, targetIssue.getKey(), TARGET_STATUS_CLOSED);
+
+		JiraIssueUpdate update = new JiraIssueUpdate();
+		update.setTransition(transition);
+		update.getOrCreateFields().setResolution(TARGET_RESOLUTION_DONE);
+		update.getOrCreateFields().setFixVersions(Collections.singleton(TARGET_VERSION_10));
+		jiraDummyService.transitionIssue(TARGET, targetIssue.getKey(), update);
+
+		syncConfig.getProjects().get("PRJ_ONE").getTransition("ResolveWhenClosed").setTriggerIfIssueWasMovedBetweenProjects(true);
+
+		// when
+		syncTask.sync();
+
+		// then
+		JiraIssue updatedSourceIssue = getSingleIssue(SOURCE);
+		assertThat(updatedSourceIssue.getFields().getStatus().getName()).isEqualTo(SOURCE_STATUS_RESOLVED.getName());
 	}
 
 	private JiraIssue createIssueInSource(String summary) {
@@ -403,7 +467,7 @@ public class JiraSyncApplicationTests {
 			.filter(transition -> transition.getTo().getName().equals(statusToTransitionTo.getName()))
 			.collect(Collectors.toList());
 		assertThat(filteredTransitions).hasSize(1);
-		return filteredTransitions.get(0);
+		return filteredTransitions.iterator().next();
 	}
 
 	@Test
@@ -414,15 +478,13 @@ public class JiraSyncApplicationTests {
 		syncTask.sync();
 		syncTask.sync();
 
-		assertThat(jiraDummyService.getAllIssues(TARGET)).hasSize(1);
-		JiraIssue currentSourceIssue = jiraDummyService.getAllIssues(TARGET).get(0);
+		JiraIssue currentSourceIssue = getSingleIssue(TARGET);
 
 		assertThat(currentSourceIssue.getFields().getStatus().getName()).isEqualTo(SOURCE_STATUS_OPEN.getName());
 
 		// when
 
-		assertThat(jiraDummyService.getAllIssues(TARGET)).hasSize(1);
-		JiraIssue targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
+		JiraIssue targetIssue = getSingleIssue(TARGET);
 		targetIssue.getFields().setAssignee(new JiraUser("some", "body"));
 
 		syncTask.sync();
@@ -446,13 +508,12 @@ public class JiraSyncApplicationTests {
 		syncTask.sync();
 
 		// then
-		assertThat(jiraDummyService.getAllIssues(TARGET)).hasSize(1);
-		JiraIssue targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
+		JiraIssue targetIssue = getSingleIssue(TARGET);
 		assertThat(targetIssue.getFields().getIssuetype().getName()).isEqualTo(TARGET_TYPE_TASK.getName());
 		List<JiraComment> comments = targetIssue.getFields().getComment().getComments();
 		assertThat(comments).hasSize(2);
 
-		assertThat(comments.get(0).getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:00 CEST|titleBGColor=#DDD|bgColor=#EEE}\n" +
+		assertThat(comments.iterator().next().getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:00 CEST|titleBGColor=#DDD|bgColor=#EEE}\n" +
 			"some comment\n" +
 			"~??[comment 1.1|https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-1?focusedCommentId=1.1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1.1]??~\n" +
 			"{panel}");
@@ -470,8 +531,7 @@ public class JiraSyncApplicationTests {
 
 		syncTask.sync();
 
-		assertThat(jiraDummyService.getAllIssues(TARGET)).hasSize(1);
-		JiraIssue targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
+		JiraIssue targetIssue = getSingleIssue(TARGET);
 		assertThat(targetIssue.getFields().getComment()).isNull();
 
 		// when
@@ -484,11 +544,10 @@ public class JiraSyncApplicationTests {
 		syncTask.sync();
 
 		// then
-		assertThat(jiraDummyService.getAllIssues(TARGET)).hasSize(1);
-		targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
+		targetIssue = getSingleIssue(TARGET);
 		List<JiraComment> comments = targetIssue.getFields().getComment().getComments();
 		assertThat(comments).hasSize(1);
-		assertThat(comments.get(0).getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:30 CEST|titleBGColor=#DDD|bgColor=#EEE}\n" +
+		assertThat(comments.iterator().next().getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:30 CEST|titleBGColor=#DDD|bgColor=#EEE}\n" +
 			"some comment\n" +
 			"~??[comment 1.1|https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-1?focusedCommentId=1.1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1.1]??~\n" +
 			"{panel}");
@@ -502,15 +561,13 @@ public class JiraSyncApplicationTests {
 
 		syncTask.sync();
 
-		assertThat(jiraDummyService.getAllIssues(TARGET)).hasSize(1);
-		JiraIssue targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
+		JiraIssue targetIssue = getSingleIssue(TARGET);
 		assertThat(targetIssue.getFields().getComment().getComments()).hasSize(1);
 
 		syncTask.sync();
 
 		// then
-		assertThat(jiraDummyService.getAllIssues(TARGET)).hasSize(1);
-		targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
+		targetIssue = getSingleIssue(TARGET);
 		List<JiraComment> comments = targetIssue.getFields().getComment().getComments();
 		assertThat(comments).hasSize(1);
 	}
@@ -525,8 +582,7 @@ public class JiraSyncApplicationTests {
 
 		syncTask.sync();
 
-		assertThat(jiraDummyService.getAllIssues(TARGET)).hasSize(1);
-		JiraIssue targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
+		JiraIssue targetIssue = getSingleIssue(TARGET);
 		assertThat(targetIssue.getFields().getComment().getComments()).hasSize(1);
 
 		clock.windForwardSeconds(30);
@@ -548,11 +604,10 @@ public class JiraSyncApplicationTests {
 		syncTask.sync();
 
 		// then
-		assertThat(jiraDummyService.getAllIssues(TARGET)).hasSize(1);
-		targetIssue = jiraDummyService.getAllIssues(TARGET).get(0);
+		targetIssue = getSingleIssue(TARGET);
 		List<JiraComment> comments = targetIssue.getFields().getComment().getComments();
 		assertThat(comments).hasSize(4);
-		assertThat(comments.get(0).getBody()).contains("first comment in source").contains("2016-05-23 20:00:00 CEST|titleBGColor=#DDD|bgColor=#EEE");
+		assertThat(comments.iterator().next().getBody()).contains("first comment in source").contains("2016-05-23 20:00:00 CEST|titleBGColor=#DDD|bgColor=#EEE");
 		assertThat(comments.get(1).getBody()).contains("some comment in target");
 
 		assertThat(comments.get(2).getBody())

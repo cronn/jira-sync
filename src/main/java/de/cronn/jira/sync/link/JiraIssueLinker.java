@@ -1,13 +1,16 @@
 package de.cronn.jira.sync.link;
 
-import de.cronn.jira.sync.config.JiraProjectSync;
+import java.net.URL;
+
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.service.JiraService;
 
 public interface JiraIssueLinker {
 
-	JiraIssue resolve(JiraIssue sourceIssue, JiraService jiraSource, JiraService jiraTarget);
+	JiraIssue resolveIssue(JiraIssue fromIssue, JiraService fromJiraService, JiraService toJiraService);
 
-	void linkIssues(JiraIssue sourceIssue, JiraIssue targetIssue, JiraService jiraSource, JiraService jiraTarget, JiraProjectSync projectSync);
+	String resolveKey(JiraIssue fromIssue, JiraService fromJiraService, JiraService toJiraService);
+
+	void linkIssue(JiraIssue fromIssue, JiraIssue toIssue, JiraService fromJiraService, JiraService toJiraService, URL iconUrl);
 
 }

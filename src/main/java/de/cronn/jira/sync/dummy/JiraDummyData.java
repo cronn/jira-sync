@@ -32,7 +32,7 @@ public class JiraDummyData {
 	private final List<JiraVersion> versions = new ArrayList<>();
 	private String baseUrl;
 	private BasicAuthCredentials basicAuthCredentials;
-	private Map<JiraProject, AtomicLong> keyCounters = new LinkedHashMap<>();
+	private Map<String, AtomicLong> keyCounters = new LinkedHashMap<>();
 	private AtomicLong idCounter = new AtomicLong();
 
 	public JiraLoginRequest getCredentials() {
@@ -100,8 +100,8 @@ public class JiraDummyData {
 		return basicAuthCredentials;
 	}
 
-	public AtomicLong getOrCreateKeyCounter(JiraProject jiraProject) {
-		return keyCounters.computeIfAbsent(jiraProject, k -> new AtomicLong());
+	public AtomicLong getOrCreateKeyCounter(String projectKey) {
+		return keyCounters.computeIfAbsent(projectKey, k -> new AtomicLong());
 	}
 
 	public AtomicLong getIdCounter() {

@@ -60,7 +60,7 @@ public class CreateMissingTargetJiraIssueSyncStrategyTest extends AbstractIssueS
 
 	@InjectMocks
 	@Spy
-	private JiraIssueLinker issueResolver = new JiraIssueWebLinker();
+	private JiraIssueLinker issueLinker = new JiraIssueWebLinker();
 
 	@Test
 	public void testCreateMissingTicket() throws Exception {

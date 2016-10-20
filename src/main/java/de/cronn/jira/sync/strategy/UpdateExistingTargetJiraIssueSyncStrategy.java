@@ -35,6 +35,7 @@ import de.cronn.jira.sync.domain.JiraResolution;
 import de.cronn.jira.sync.domain.JiraTransition;
 import de.cronn.jira.sync.domain.JiraUser;
 import de.cronn.jira.sync.domain.JiraVersion;
+import de.cronn.jira.sync.link.JiraIssueLinker;
 import de.cronn.jira.sync.mapping.CommentMapper;
 import de.cronn.jira.sync.mapping.DescriptionMapper;
 import de.cronn.jira.sync.mapping.LabelMapper;
@@ -54,6 +55,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 	private ResolutionMapper resolutionMapper;
 	private VersionMapper versionMapper;
 	private CommentMapper commentMapper;
+	private JiraIssueLinker issueLinker;
 
 	@Autowired
 	public void setDescriptionMapper(DescriptionMapper descriptionMapper) {
@@ -85,6 +87,11 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		this.commentMapper = commentMapper;
 	}
 
+	@Autowired
+	public void setIssueLinker(JiraIssueLinker issueLinker) {
+		this.issueLinker = issueLinker;
+	}
+
 	@Override
 	public SyncResult sync(JiraService jiraSource, JiraService jiraTarget, JiraIssue sourceIssue, JiraIssue targetIssue, JiraProjectSync projectSync) {
 		log.info("synchronizing '{}' with '{}'", sourceIssue.getKey(), targetIssue.getKey());
@@ -95,7 +102,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		JiraIssueUpdate targetIssueUpdate = new JiraIssueUpdate();
 		JiraIssueUpdate sourceIssueUpdate = new JiraIssueUpdate();
 
-		processTransition(jiraSource, sourceIssue, targetIssue, projectSync, sourceIssueUpdate);
+		processTransition(jiraSource, sourceIssue, targetIssue, projectSync, sourceIssueUpdate, jiraTarget);
 		processDescription(sourceIssue, targetIssue, targetIssueUpdate);
 		processLabels(sourceIssue, targetIssue, targetIssueUpdate, projectSync);
 		processPriority(jiraTarget, sourceIssue, targetIssue, targetIssueUpdate);
@@ -194,14 +201,14 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		return false;
 	}
 
-	private void processTransition(JiraService jiraSource, JiraIssue sourceIssue, JiraIssue targetIssue, JiraProjectSync projectSync, JiraIssueUpdate sourceIssueUpdate) {
+	private void processTransition(JiraService jiraSource, JiraIssue sourceIssue, JiraIssue targetIssue, JiraProjectSync projectSync, JiraIssueUpdate sourceIssueUpdate, JiraService jiraTarget) {
 		Map<String, TransitionConfig> transitions = projectSync.getTransitions();
 		if (transitions.isEmpty()) {
 			log.trace("No transitions configured");
 			return;
 		}
 
-		TransitionConfig transition = findTransition(sourceIssue, targetIssue, transitions.values());
+		TransitionConfig transition = findTransition(sourceIssue, targetIssue, transitions.values(), jiraTarget, jiraSource);
 		if (transition != null) {
 			log.info("triggering transition from status '{}' to '{}'", sourceIssue.getFields().getStatus().getName(), transition.getSourceStatusToSet());
 			if (transition.isAssignToMyselfInSource()) {
@@ -249,7 +256,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		return Objects.equals(jiraUser.getKey(), assignee.getKey());
 	}
 
-	private TransitionConfig findTransition(JiraIssue sourceIssue, JiraIssue targetIssue, Collection<TransitionConfig> transitions) {
+	private TransitionConfig findTransition(JiraIssue sourceIssue, JiraIssue targetIssue, Collection<TransitionConfig> transitions, JiraService jiraTarget, JiraService jiraSource) {
 		String sourceIssueStatus = getStatusName(sourceIssue);
 		String targetIssueStatus = getStatusName(targetIssue);
 
@@ -257,6 +264,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 			.filter(transitionConfig -> transitionConfig.getSourceStatusIn().contains(sourceIssueStatus))
 			.filter(transitionConfig -> transitionConfig.getTargetStatusIn().contains(targetIssueStatus))
 			.filter(transitionConfig -> filterOnlyIfAssignedInTarget(transitionConfig, targetIssue))
+			.filter(transitionConfig -> filterIssueWasMovedBetweenProjects(transitionConfig, sourceIssue, targetIssue, jiraTarget, jiraSource))
 			.collect(Collectors.toList());
 
 		if (transitionConfigs.isEmpty()) {
@@ -274,6 +282,15 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 	private boolean filterOnlyIfAssignedInTarget(TransitionConfig transitionConfig, JiraIssue targetIssue) {
 		if (transitionConfig.isOnlyIfAssignedInTarget()) {
 			return targetIssue.getFields().getAssignee() != null;
+		} else {
+			return true;
+		}
+	}
+
+	private boolean filterIssueWasMovedBetweenProjects(TransitionConfig transitionConfig, JiraIssue sourceIssue, JiraIssue targetIssue, JiraService jiraTarget, JiraService jiraSource) {
+		if (!transitionConfig.isTriggerIfIssueWasMovedBetweenProjects()) {
+			String key = issueLinker.resolveKey(targetIssue, jiraTarget, jiraSource);
+			return Objects.equals(key, sourceIssue.getKey());
 		} else {
 			return true;
 		}

@@ -37,7 +37,7 @@ public class CreateMissingTargetJiraIssueSyncStrategy implements MissingTargetJi
 	private PriorityMapper priorityMapper;
 	private VersionMapper versionMapper;
 	private CommentMapper commentMapper;
-	private JiraIssueLinker issueResolver;
+	private JiraIssueLinker issueLinker;
 
 	@Autowired
 	public void setJiraSyncConfig(JiraSyncConfig jiraSyncConfig) {
@@ -80,8 +80,8 @@ public class CreateMissingTargetJiraIssueSyncStrategy implements MissingTargetJi
 	}
 
 	@Autowired
-	public void setIssueResolver(JiraIssueLinker issueResolver) {
-		this.issueResolver = issueResolver;
+	public void setIssueLinker(JiraIssueLinker issueLinker) {
+		this.issueLinker = issueLinker;
 	}
 
 	@Override
@@ -100,13 +100,18 @@ public class CreateMissingTargetJiraIssueSyncStrategy implements MissingTargetJi
 		copyFixVersions(sourceIssue, issueToCreate, jiraTarget, projectSync);
 
 		JiraIssue newIssue = jiraTarget.createIssue(issueToCreate);
-		issueResolver.linkIssues(sourceIssue, newIssue, jiraSource, jiraTarget, projectSync);
+		linkIssues(jiraSource, jiraTarget, sourceIssue, projectSync, newIssue);
 
 		if (projectSync.isCopyCommentsToTarget()) {
 			copyComments(sourceIssue, jiraSource, newIssue, jiraTarget);
 		}
 
 		return SyncResult.CREATED;
+	}
+
+	private void linkIssues(JiraService jiraSource, JiraService jiraTarget, JiraIssue sourceIssue, JiraProjectSync projectSync, JiraIssue newIssue) {
+		issueLinker.linkIssue(sourceIssue, newIssue, jiraSource, jiraTarget, projectSync.getRemoteLinkIconInSource());
+		issueLinker.linkIssue(newIssue, sourceIssue, jiraTarget, jiraSource, projectSync.getRemoteLinkIconInTarget());
 	}
 
 	private void copyIssueType(JiraIssue sourceIssue, JiraProjectSync projectSync, JiraProject targetProject, JiraIssue issueToCreate) {

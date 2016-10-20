@@ -16,6 +16,7 @@ public class TransitionConfig {
 	private boolean copyFixVersionsToSource = false;
 	private boolean onlyIfAssignedInTarget = false;
 	private boolean assignToMyselfInSource = false;
+	private boolean triggerIfIssueWasMovedBetweenProjects = false;
 
 	public TransitionConfig() {
 	}
@@ -80,6 +81,14 @@ public class TransitionConfig {
 
 	public Set<String> getTargetStatusIn() {
 		return targetStatusIn;
+	}
+
+	public boolean isTriggerIfIssueWasMovedBetweenProjects() {
+		return triggerIfIssueWasMovedBetweenProjects;
+	}
+
+	public void setTriggerIfIssueWasMovedBetweenProjects(boolean triggerIfIssueWasMovedBetweenProjects) {
+		this.triggerIfIssueWasMovedBetweenProjects = triggerIfIssueWasMovedBetweenProjects;
 	}
 
 	@Override

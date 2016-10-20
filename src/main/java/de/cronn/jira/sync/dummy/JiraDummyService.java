@@ -2,9 +2,9 @@ package de.cronn.jira.sync.dummy;
 
 import java.time.Clock;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -229,9 +229,9 @@ public class JiraDummyService {
 		return getData(context).getResolutions();
 	}
 
-	public List<JiraIssue> getAllIssues(Context context) {
+	public Set<JiraIssue> getAllIssues(Context context) {
 		Map<String, JiraIssue> issuesPerKey = getIssueMap(context);
-		return Collections.unmodifiableList(new ArrayList<>(issuesPerKey.values()));
+		return Collections.unmodifiableSet(new LinkedHashSet<>(issuesPerKey.values()));
 	}
 
 	private Map<String, JiraIssue> getIssueMap(Context context) {
@@ -254,8 +254,9 @@ public class JiraDummyService {
 
 	private List<JiraRemoteLink> getRemoteLinks(Context context, String issueKey) {
 		Assert.notNull(issueKey, "issueKey must be set");
-		Map<String, JiraRemoteLinks> remoteLinksPerIssueKey = getData(context).getRemoteLinks();
-		JiraRemoteLinks jiraRemoteLinks = remoteLinksPerIssueKey.get(issueKey);
+		JiraIssue issue = getIssueByKey(context, issueKey);
+		Map<String, JiraRemoteLinks> remoteLinksPerIssueId = getData(context).getRemoteLinks();
+		JiraRemoteLinks jiraRemoteLinks = remoteLinksPerIssueId.get(issue.getId());
 		if (jiraRemoteLinks == null) {
 			return Collections.emptyList();
 		}
@@ -274,9 +275,9 @@ public class JiraDummyService {
 
 	@RequestMapping(path = "/api/2/issue/{issueKey}/remotelink", method = RequestMethod.POST)
 	public void addRemoteLink(@PathVariable(CONTEXT) Context context, @PathVariable("issueKey") String issueKey, @RequestBody JiraRemoteLink newRemoteLink) {
-		JiraRemoteLinks remoteLinks = getData(context).getRemoteLinks().computeIfAbsent(issueKey, k -> new JiraRemoteLinks());
-		remoteLinks.add(newRemoteLink);
 		JiraIssue issue = getIssueByKey(context, issueKey);
+		JiraRemoteLinks remoteLinks = getData(context).getRemoteLinks().computeIfAbsent(issue.getId(), k -> new JiraRemoteLinks());
+		remoteLinks.add(newRemoteLink);
 		refreshUpdatedTimestamp(issue);
 	}
 
@@ -341,9 +342,15 @@ public class JiraDummyService {
 
 		refreshUpdatedTimestamp(issue);
 
-		Object old = getIssueMap(context).put(issue.getKey(), issue);
-		Assert.isNull(old);
+		registerIssue(context, issue);
 		return new ResponseEntity<>(issue, HttpStatus.OK);
+	}
+
+	private void registerIssue(Context context, JiraIssue issue) {
+		String issueKey = issue.getKey();
+		Assert.hasText(issueKey);
+		Object old = getIssueMap(context).put(issueKey, issue);
+		Assert.isNull(old, "an issue with key '" + issueKey + "' is already registered: " + old);
 	}
 
 	private String generateId(@PathVariable(CONTEXT) Context context) {
@@ -352,10 +359,10 @@ public class JiraDummyService {
 	}
 
 	private String generateKey(@PathVariable(CONTEXT) Context context, JiraProject project) {
-		AtomicLong keyCounter = getData(context).getOrCreateKeyCounter(project);
-		long id = keyCounter.incrementAndGet();
 		String projectKey = project.getKey();
 		Assert.notNull(projectKey);
+		AtomicLong keyCounter = getData(context).getOrCreateKeyCounter(projectKey);
+		long id = keyCounter.incrementAndGet();
 		return projectKey + "-" + id;
 	}
 
@@ -462,4 +469,15 @@ public class JiraDummyService {
 
 		updateFields(context, jiraIssueUpdate, issueInSystem);
 	}
+
+	public void moveIssue(Context context, String issueKey, String projectKey) {
+		JiraIssue issue = getIssueByKey(context, issueKey);
+		JiraProject project = getProjectByKey(context, projectKey);
+		issue.getFields().setProject(project);
+		issue.setKey(generateKey(context, project));
+
+		registerIssue(context, issue);
+		refreshUpdatedTimestamp(issue);
+	}
+
 }

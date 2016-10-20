@@ -127,13 +127,13 @@ public abstract class AbstractIssueSyncStrategyTest {
 		issueTypeMapping.put(SOURCE_ISSUE_TYPE_NEW_FEATURE, TARGET_ISSUE_TYPE_IMPROVEMENT);
 		jiraSyncConfig.setIssueTypeMapping(issueTypeMapping);
 
-		projectSync.addTransition(TRANSITION_RESOLVE,
-			new TransitionConfig(
-				Collections.singletonList(SOURCE_STATUS_OPEN.getName()),
-				Collections.singletonList(TARGET_STATUS_CLOSED.getName()),
-				SOURCE_STATUS_RESOLVED.getName()
-			)
+		TransitionConfig transition = new TransitionConfig(
+			Collections.singletonList(SOURCE_STATUS_OPEN.getName()),
+			Collections.singletonList(TARGET_STATUS_CLOSED.getName()),
+			SOURCE_STATUS_RESOLVED.getName()
 		);
+		transition.setTriggerIfIssueWasMovedBetweenProjects(true);
+		projectSync.addTransition(TRANSITION_RESOLVE, transition);
 	}
 
 }

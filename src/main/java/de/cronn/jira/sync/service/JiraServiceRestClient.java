@@ -142,12 +142,6 @@ public class JiraServiceRestClient implements JiraService {
 		restTemplate.postForObject(restUrl("/rest/auth/1/session"), loginRequest, JiraLoginResponse.class);
 	}
 
-	private void validate(JiraConnectionProperties jiraConnectionProperties) {
-		Assert.notNull(jiraConnectionProperties.getUrl(), "url is missing");
-		Assert.notNull(jiraConnectionProperties.getUsername(), "username is missing");
-		Assert.notNull(jiraConnectionProperties.getPassword(), "password is missing");
-	}
-
 	@Override
 	public void logout() {
 		if (restTemplate != null) {
@@ -184,15 +178,15 @@ public class JiraServiceRestClient implements JiraService {
 	}
 
 	@Override
-	public JiraIssue getIssueByKey(String key) {
-		Assert.notNull(key, "key must not be null");
-		return getForObject("/rest/api/2/issue/{key}", JiraIssue.class, key);
+	public JiraIssue getIssueByKey(String issueKey) {
+		validateIssueKey(issueKey);
+		return getForObject("/rest/api/2/issue/{key}", JiraIssue.class, issueKey);
 	}
 
 	@Override
 	@Cacheable(value = CACHE_NAME_PROJECTS, key = "{ #root.target.url, #projectKey }")
 	public JiraProject getProjectByKey(String projectKey) {
-		Assert.notNull(projectKey, "projectKey must not be null");
+		validateProjectKey(projectKey);
 		log.debug("[{}], fetching project {}", getUrl(), projectKey);
 		return getForObject("/rest/api/2/project/{key}", JiraProject.class, projectKey);
 	}
@@ -200,7 +194,7 @@ public class JiraServiceRestClient implements JiraService {
 	@Override
 	@Cacheable(value = CACHE_NAME_VERSIONS, key = "{ #root.target.url, #projectKey }")
 	public List<JiraVersion> getVersions(String projectKey) {
-		Assert.notNull(projectKey, "projectKey must not be null");
+		validateProjectKey(projectKey);
 		log.debug("[{}] fetching versions for project {}", getUrl(), projectKey);
 		return getForObject("/rest/api/2/project/{key}/versions", JiraVersionsList.class, projectKey);
 	}
@@ -240,13 +234,13 @@ public class JiraServiceRestClient implements JiraService {
 	@Override
 	@Cacheable(value = CACHE_NAME_REMOTE_LINKS, key = "{ #root.target.url, #issueKey, #issueUpdated }")
 	public List<JiraRemoteLink> getRemoteLinks(String issueKey, Instant issueUpdated) {
-		Assert.hasText(issueKey);
+		validateIssueKey(issueKey);
 		return getForObject("/rest/api/2/issue/{issueId}/remotelink", JiraRemoteLinks.class, issueKey);
 	}
 
 	@Override
 	public List<JiraTransition> getTransitions(String issueKey) {
-		Assert.hasText(issueKey);
+		validateIssueKey(issueKey);
 		JiraTransitions transitions = getForObject("/rest/api/2/issue/{issueId}/transitions", JiraTransitions.class, issueKey);
 		return transitions.getTransitions();
 	}
@@ -261,8 +255,8 @@ public class JiraServiceRestClient implements JiraService {
 	@Override
 	@CacheEvict(cacheNames = CACHE_NAME_REMOTE_LINKS, allEntries = true)
 	public void addRemoteLink(JiraIssue fromIssue, JiraIssue toIssue, JiraService toJiraService, URL remoteLinkIcon) {
-		Assert.hasText(fromIssue.getKey());
-		Assert.hasText(toIssue.getKey());
+		validateIssueKey(fromIssue.getKey());
+		validateIssueKey(toIssue.getKey());
 		log.debug("adding remote from {} to {}", fromIssue.getKey(), toIssue.getKey());
 		JiraServerInfo remoteServerInfo = toJiraService.getServerInfo();
 		String remoteUrl = remoteServerInfo.getBaseUrl() + "/browse/" + toIssue.getKey();
@@ -276,21 +270,21 @@ public class JiraServiceRestClient implements JiraService {
 
 	@Override
 	public void addComment(String issueKey, String commentText) {
-		Assert.hasText(issueKey);
-		Assert.hasText(commentText);
+		validateIssueKey(issueKey);
+		validateIssueKey(commentText);
 		JiraComment comment = new JiraComment(commentText);
 		restTemplate.postForObject(restUrl("/rest/api/2/issue/{issueId}/comment"), comment, Map.class, issueKey);
 	}
 
 	@Override
 	public void updateIssue(String issueKey, JiraIssueUpdate issueUpdate) {
-		Assert.hasText(issueKey);
+		validateIssueKey(issueKey);
 		restTemplate.put(restUrl("/rest/api/2/issue/{issueId}"), issueUpdate, issueKey);
 	}
 
 	@Override
 	public void transitionIssue(String issueKey, JiraIssueUpdate issueUpdate) {
-		Assert.hasText(issueKey);
+		validateIssueKey(issueKey);
 		restTemplate.postForObject(restUrl("/rest/api/2/issue/{issueId}/transitions"), issueUpdate, Void.class, issueKey);
 	}
 
@@ -301,6 +295,20 @@ public class JiraServiceRestClient implements JiraService {
 	@Override
 	public URL getUrl() {
 		return url;
+	}
+
+	private void validate(JiraConnectionProperties jiraConnectionProperties) {
+		Assert.notNull(jiraConnectionProperties.getUrl(), "url is missing");
+		Assert.notNull(jiraConnectionProperties.getUsername(), "username is missing");
+		Assert.notNull(jiraConnectionProperties.getPassword(), "password is missing");
+	}
+
+	private void validateIssueKey(String issueKey) {
+		Assert.hasText(issueKey, "issueKey must not be empty");
+	}
+
+	private void validateProjectKey(String projectKey) {
+		Assert.hasText(projectKey, "projectKey must not be empty");
 	}
 
 	@Override
