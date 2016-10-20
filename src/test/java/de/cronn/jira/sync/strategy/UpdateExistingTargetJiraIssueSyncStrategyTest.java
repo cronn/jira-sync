@@ -14,9 +14,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
+import de.cronn.jira.sync.JiraSyncException;
 import de.cronn.jira.sync.TestClock;
+import de.cronn.jira.sync.config.TransitionConfig;
 import de.cronn.jira.sync.domain.JiraIssue;
+import de.cronn.jira.sync.domain.JiraIssueStatus;
 import de.cronn.jira.sync.domain.JiraIssueUpdate;
+import de.cronn.jira.sync.domain.JiraPriority;
 import de.cronn.jira.sync.link.JiraIssueLinker;
 import de.cronn.jira.sync.mapping.CommentMapper;
 import de.cronn.jira.sync.mapping.DefaultCommentMapper;
@@ -31,6 +35,7 @@ import de.cronn.jira.sync.mapping.LabelMapper;
 import de.cronn.jira.sync.mapping.PriorityMapper;
 import de.cronn.jira.sync.mapping.ResolutionMapper;
 import de.cronn.jira.sync.mapping.VersionMapper;
+import de.cronn.jira.sync.service.JiraService;
 
 public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssueSyncStrategyTest {
 
@@ -74,11 +79,8 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 	@Test
 	public void testSync_NoChanges() throws Exception {
 		// given
-		JiraIssue sourceIssue = new JiraIssue("100", "SOURCE-123", "Some Summary", SOURCE_STATUS_OPEN);
-		JiraIssue targetIssue = new JiraIssue("400", "TARGET-123", "Some Summary", TARGET_STATUS_IN_PROGRESS);
-
-		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
-		targetIssue.getFields().setPriority(TARGET_PRIORITY_MAJOR);
+		JiraIssue sourceIssue = newSourceIssue(SOURCE_STATUS_OPEN, SOURCE_PRIORITY_HIGH);
+		JiraIssue targetIssue = newTargetIssue(TARGET_STATUS_IN_PROGRESS, TARGET_PRIORITY_MAJOR);
 
 		sourceIssue.getFields().setVersions(Collections.singleton(SOURCE_VERSION_1));
 		targetIssue.getFields().setVersions(Collections.singleton(TARGET_VERSION_1));
@@ -102,11 +104,8 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 	@Test
 	public void testSync_StatusTransition() throws Exception {
 		// given
-		JiraIssue sourceIssue = new JiraIssue("100", "SOURCE-123", "Some Summary", SOURCE_STATUS_OPEN);
-		JiraIssue targetIssue = new JiraIssue("400", "TARGET-123", "Some Summary", TARGET_STATUS_CLOSED);
-
-		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
-		targetIssue.getFields().setPriority(TARGET_PRIORITY_MAJOR);
+		JiraIssue sourceIssue = newSourceIssue(SOURCE_STATUS_OPEN, SOURCE_PRIORITY_HIGH);
+		JiraIssue targetIssue = newTargetIssue(TARGET_STATUS_CLOSED, TARGET_PRIORITY_MAJOR);
 
 		sourceIssue.getFields().setDescription("some description");
 		targetIssue.getFields().setDescription(descriptionMapper.mapSourceDescription("some description"));
@@ -133,11 +132,8 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 	@Test
 	public void testSync_StatusTransitionAndFieldChange() throws Exception {
 		// given
-		JiraIssue sourceIssue = new JiraIssue("100", "SOURCE-123", "Some Summary", SOURCE_STATUS_OPEN);
-		JiraIssue targetIssue = new JiraIssue("400", "TARGET-123", "Some Summary", TARGET_STATUS_CLOSED);
-
-		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
-		targetIssue.getFields().setPriority(TARGET_PRIORITY_MAJOR);
+		JiraIssue sourceIssue = newSourceIssue(SOURCE_STATUS_OPEN, SOURCE_PRIORITY_HIGH);
+		JiraIssue targetIssue = newTargetIssue(TARGET_STATUS_CLOSED, TARGET_PRIORITY_MAJOR);
 
 		sourceIssue.getFields().setDescription("some description");
 
@@ -169,11 +165,8 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 	@Test
 	public void testSync_StatusTransitionAndFieldChange_DoNotCopyFixedVersions() throws Exception {
 		// given
-		JiraIssue sourceIssue = new JiraIssue("100", "SOURCE-123", "Some Summary", SOURCE_STATUS_OPEN);
-		JiraIssue targetIssue = new JiraIssue("400", "TARGET-123", "Some Summary", TARGET_STATUS_CLOSED);
-
-		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
-		targetIssue.getFields().setPriority(TARGET_PRIORITY_MAJOR);
+		JiraIssue sourceIssue = newSourceIssue(SOURCE_STATUS_OPEN, SOURCE_PRIORITY_HIGH);
+		JiraIssue targetIssue = newTargetIssue(TARGET_STATUS_CLOSED, TARGET_PRIORITY_MAJOR);
 		targetIssue.getFields().setFixVersions(Collections.singleton(TARGET_VERSION_2));
 
 		when(jiraSource.getTransitions(sourceIssue.getKey())).thenReturn(Collections.singletonList(SOURCE_TRANSITION_RESOLVE));
@@ -201,10 +194,133 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 	}
 
 	@Test
+	public void testSync_StatusTransition_AssignToMyself() throws Exception {
+		// given
+		JiraIssue sourceIssue = newSourceIssue(SOURCE_STATUS_OPEN, SOURCE_PRIORITY_HIGH);
+		JiraIssue targetIssue = newTargetIssue(TARGET_STATUS_CLOSED, TARGET_PRIORITY_MAJOR);
+
+		when(jiraSource.getTransitions(sourceIssue.getKey())).thenReturn(Collections.singletonList(SOURCE_TRANSITION_RESOLVE));
+
+		when(jiraIssueLinker.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
+
+		projectSync.getTransition(TRANSITION_RESOLVE).setAssignToMyselfInSource(true);
+
+		// when
+		SyncResult result = strategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
+
+		// then
+		assertThat(result).isEqualTo(SyncResult.CHANGED_TRANSITION);
+
+		JiraIssueUpdate sourceIssueUpdate = expectUpdateInSource(sourceIssue);
+		assertThat(sourceIssueUpdate.getFields().getAssignee()).isEqualTo(SOURCE_USER_MYSELF);
+		assertThat(sourceIssueUpdate.getTransition()).isNull();
+
+		JiraIssueUpdate sourceIssueTransition = expectTransitionInSource(sourceIssue);
+		assertThat(sourceIssueTransition.getFields()).isNull();
+		assertThat(sourceIssueTransition.getTransition()).isEqualTo(SOURCE_TRANSITION_RESOLVE);
+
+		verify(jiraSource).getMyself();
+		verify(jiraTarget).getPriorities();
+		verify(jiraSource).getTransitions(sourceIssue.getKey());
+		verifyNoMoreInteractions(jiraSource, jiraTarget);
+	}
+
+	@Test
+	public void testSync_StatusTransition_AssignToMyself_AlreadyAssignedToMyself() throws Exception {
+		// given
+		JiraIssue sourceIssue = newSourceIssue(SOURCE_STATUS_OPEN, SOURCE_PRIORITY_HIGH);
+		sourceIssue.getOrCreateFields().setAssignee(SOURCE_USER_MYSELF);
+
+		JiraIssue targetIssue = newTargetIssue(TARGET_STATUS_CLOSED, TARGET_PRIORITY_MAJOR);
+
+		when(jiraSource.getTransitions(sourceIssue.getKey())).thenReturn(Collections.singletonList(SOURCE_TRANSITION_RESOLVE));
+
+		when(jiraIssueLinker.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
+
+		projectSync.getTransition(TRANSITION_RESOLVE).setAssignToMyselfInSource(true);
+
+		// when
+		SyncResult result = strategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
+
+		// then
+		assertThat(result).isEqualTo(SyncResult.CHANGED_TRANSITION);
+
+		JiraIssueUpdate sourceIssueTransition = expectTransitionInSource(sourceIssue);
+		assertThat(sourceIssueTransition.getFields()).isNull();
+		assertThat(sourceIssueTransition.getTransition()).isEqualTo(SOURCE_TRANSITION_RESOLVE);
+
+		verify(jiraSource).getMyself();
+		verify(jiraTarget).getPriorities();
+		verify(jiraSource).getTransitions(sourceIssue.getKey());
+		verifyNoMoreInteractions(jiraSource, jiraTarget);
+	}
+
+	@Test
+	public void testSync_IllegalNumberOfTransitions() throws Exception {
+		JiraIssue sourceIssue = newSourceIssue(SOURCE_STATUS_OPEN, SOURCE_PRIORITY_HIGH);
+		JiraIssue targetIssue = newTargetIssue(TARGET_STATUS_CLOSED, TARGET_PRIORITY_MAJOR);
+
+		when(jiraSource.getTransitions(sourceIssue.getKey())).thenReturn(Arrays.asList(SOURCE_TRANSITION_RESOLVE, SOURCE_TRANSITION_CLOSE));
+
+		when(jiraIssueLinker.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
+
+		projectSync.addTransition("closeTransition",
+			new TransitionConfig(
+				Collections.singletonList(SOURCE_STATUS_OPEN.getName()),
+				Collections.singletonList(TARGET_STATUS_CLOSED.getName()),
+				SOURCE_STATUS_CLOSED.getName()
+			)
+		);
+
+		try {
+			strategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
+			fail("JiraSyncException expected");
+		} catch (JiraSyncException e) {
+			assertThat(e).hasMessage("Illegal number of matching transitions: " +
+				"[TransitionConfig[sourceStatusIn=[Open],targetStatusIn=[Closed],sourceStatusToSet=Resolved], " +
+				"TransitionConfig[sourceStatusIn=[Open],targetStatusIn=[Closed],sourceStatusToSet=Closed]]");
+		}
+	}
+
+	@Test
+	public void testSync_NoTransitionToRequiredStatus() throws Exception {
+		JiraIssue sourceIssue = newSourceIssue(SOURCE_STATUS_OPEN, SOURCE_PRIORITY_HIGH);
+		JiraIssue targetIssue = newTargetIssue(TARGET_STATUS_CLOSED, TARGET_PRIORITY_MAJOR);
+
+		when(jiraSource.getTransitions(sourceIssue.getKey())).thenReturn(Collections.emptyList());
+
+		when(jiraIssueLinker.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
+
+		try {
+			strategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
+			fail("JiraSyncException expected");
+		} catch (JiraSyncException e) {
+			assertThat(e).hasMessage("Found no transition to status 'Resolved'");
+		}
+	}
+
+	@Test
+	public void testSync_MultipleTransitionsToRequiredStatus() throws Exception {
+		JiraIssue sourceIssue = newSourceIssue(SOURCE_STATUS_OPEN, SOURCE_PRIORITY_HIGH);
+		JiraIssue targetIssue = newTargetIssue(TARGET_STATUS_CLOSED, TARGET_PRIORITY_MAJOR);
+
+		when(jiraSource.getTransitions(sourceIssue.getKey())).thenReturn(Arrays.asList(SOURCE_TRANSITION_RESOLVE, SOURCE_TRANSITION_RESOLVE));
+
+		when(jiraIssueLinker.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
+
+		try {
+			strategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
+			fail("JiraSyncException expected");
+		} catch (JiraSyncException e) {
+			assertThat(e).hasMessageStartingWith("Found multiple transitions to status 'Resolved'");
+		}
+	}
+
+	@Test
 	public void testSync_StatusTransitionAndFieldChange_DoCopyFixedVersions() throws Exception {
 		// given
 		assertThat(projectSync.getTransitions().keySet()).hasSize(1);
-		projectSync.getTransition(TRANSITION).setCopyFixVersionsToSource(true);
+		projectSync.getTransition(TRANSITION_RESOLVE).setCopyFixVersionsToSource(true);
 
 		JiraIssue sourceIssue = new JiraIssue("100", "SOURCE-123", "Some Summary", SOURCE_STATUS_OPEN);
 		JiraIssue targetIssue = new JiraIssue("400", "TARGET-123", "Some Summary", TARGET_STATUS_CLOSED);
@@ -237,11 +353,8 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 	@Test
 	public void testSync_ChangedDescription() throws Exception {
 		// given
-		JiraIssue sourceIssue = new JiraIssue("100", "SOURCE-123", "Some Summary", SOURCE_STATUS_OPEN);
-		JiraIssue targetIssue = new JiraIssue("400", "TARGET-123", "Some Summary", TARGET_STATUS_OPEN);
-
-		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
-		targetIssue.getFields().setPriority(TARGET_PRIORITY_MAJOR);
+		JiraIssue sourceIssue = newSourceIssue(SOURCE_STATUS_OPEN, SOURCE_PRIORITY_HIGH);
+		JiraIssue targetIssue = newTargetIssue(TARGET_STATUS_OPEN, TARGET_PRIORITY_MAJOR);
 
 		sourceIssue.getFields().setDescription("updated description");
 		targetIssue.getFields().setDescription("some description");
@@ -264,10 +377,9 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 	@Test
 	public void testSync_SummaryChanged() throws Exception {
 		// given
-		JiraIssue sourceIssue = new JiraIssue("100", "SOURCE-123", "Some Summary", SOURCE_STATUS_OPEN);
-		JiraIssue targetIssue = new JiraIssue("400", "TARGET-123", "Other Summary", TARGET_STATUS_OPEN);
+		JiraIssue sourceIssue = newSourceIssue(SOURCE_STATUS_OPEN, SOURCE_PRIORITY_HIGH);
 
-		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
+		JiraIssue targetIssue = new JiraIssue("400", "TARGET-123", "Other Summary", TARGET_STATUS_OPEN);
 		targetIssue.getFields().setPriority(TARGET_PRIORITY_MAJOR);
 
 		when(jiraIssueLinker.resolve(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
@@ -285,11 +397,8 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 	@Test
 	public void testSync_VersionsChanged() throws Exception {
 		// given
-		JiraIssue sourceIssue = new JiraIssue("100", "SOURCE-123", "Some Summary", SOURCE_STATUS_OPEN);
-		JiraIssue targetIssue = new JiraIssue("400", "TARGET-123", "Some Summary", TARGET_STATUS_OPEN);
-
-		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
-		targetIssue.getFields().setPriority(TARGET_PRIORITY_MAJOR);
+		JiraIssue sourceIssue = newSourceIssue(SOURCE_STATUS_OPEN, SOURCE_PRIORITY_HIGH);
+		JiraIssue targetIssue = newTargetIssue(TARGET_STATUS_OPEN, TARGET_PRIORITY_MAJOR);
 
 		sourceIssue.getFields().setVersions(Collections.singleton(SOURCE_VERSION_1));
 		targetIssue.getFields().setVersions(Collections.singleton(TARGET_VERSION_2));
@@ -313,11 +422,8 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 	@Test
 	public void testSync_FixVersionsChanged() throws Exception {
 		// given
-		JiraIssue sourceIssue = new JiraIssue("100", "SOURCE-123", "Some Summary", SOURCE_STATUS_OPEN);
-		JiraIssue targetIssue = new JiraIssue("400", "TARGET-123", "Some Summary", TARGET_STATUS_OPEN);
-
-		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
-		targetIssue.getFields().setPriority(TARGET_PRIORITY_MAJOR);
+		JiraIssue sourceIssue = newSourceIssue(SOURCE_STATUS_OPEN, SOURCE_PRIORITY_HIGH);
+		JiraIssue targetIssue = newTargetIssue(TARGET_STATUS_OPEN, TARGET_PRIORITY_MAJOR);
 
 		sourceIssue.getFields().setFixVersions(new LinkedHashSet<>(Arrays.asList(SOURCE_VERSION_1, SOURCE_VERSION_2)));
 		targetIssue.getFields().setFixVersions(Collections.singleton(TARGET_VERSION_2));
@@ -341,11 +447,8 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 	@Test
 	public void testSync_LabelsAndPriorityChanged() throws Exception {
 		// given
-		JiraIssue sourceIssue = new JiraIssue("100", "SOURCE-123", "Some Summary", SOURCE_STATUS_OPEN);
-		JiraIssue targetIssue = new JiraIssue("400", "TARGET-123", "Some Summary", TARGET_STATUS_OPEN);
-
-		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_LOW);
-		targetIssue.getFields().setPriority(TARGET_PRIORITY_MAJOR);
+		JiraIssue sourceIssue = newSourceIssue(SOURCE_STATUS_OPEN, SOURCE_PRIORITY_LOW);
+		JiraIssue targetIssue = newTargetIssue(TARGET_STATUS_OPEN, TARGET_PRIORITY_MAJOR);
 
 		sourceIssue.getFields().setLabels(Collections.singleton("some-label"));
 
@@ -368,11 +471,8 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 	@Test
 	public void testSync_LabelsChanged_KeepCertainLabelsInTarget() throws Exception {
 		// given
-		JiraIssue sourceIssue = new JiraIssue("100", "SOURCE-123", "Some Summary", SOURCE_STATUS_OPEN);
-		JiraIssue targetIssue = new JiraIssue("400", "TARGET-123", "Some Summary", TARGET_STATUS_OPEN);
-
-		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
-		targetIssue.getFields().setPriority(TARGET_PRIORITY_MAJOR);
+		JiraIssue sourceIssue = newSourceIssue(SOURCE_STATUS_OPEN, SOURCE_PRIORITY_HIGH);
+		JiraIssue targetIssue = newTargetIssue(TARGET_STATUS_OPEN, TARGET_PRIORITY_MAJOR);
 
 		sourceIssue.getFields().setLabels(Collections.singleton("some-label"));
 		targetIssue.getFields().setLabels(new LinkedHashSet<>(Arrays.asList("internal-label", "other-label")));
@@ -394,9 +494,29 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		verifyNoMoreInteractions(jiraSource, jiraTarget);
 	}
 
+	private JiraIssue newTargetIssue(JiraIssueStatus status, JiraPriority priority) {
+		JiraIssue targetIssue = new JiraIssue("400", "TARGET-123", "Some Summary", status);
+		targetIssue.getFields().setPriority(priority);
+		return targetIssue;
+	}
+
+	private JiraIssue newSourceIssue(JiraIssueStatus status, JiraPriority priority) {
+		JiraIssue sourceIssue = new JiraIssue("100", "SOURCE-123", "Some Summary", status);
+		sourceIssue.getFields().setPriority(priority);
+		return sourceIssue;
+	}
+
 	private JiraIssueUpdate expectUpdateInTarget(JiraIssue targetIssue) {
+		return expectUpdate(jiraTarget, targetIssue);
+	}
+
+	private JiraIssueUpdate expectUpdateInSource(JiraIssue sourceIssue) {
+		return expectUpdate(jiraSource, sourceIssue);
+	}
+
+	private JiraIssueUpdate expectUpdate(JiraService jiraService, JiraIssue issue) {
 		ArgumentCaptor<JiraIssueUpdate> jiraIssueUpdateCaptor = ArgumentCaptor.forClass(JiraIssueUpdate.class);
-		verify(jiraTarget).updateIssue(eq(targetIssue.getKey()), jiraIssueUpdateCaptor.capture());
+		verify(jiraService).updateIssue(eq(issue.getKey()), jiraIssueUpdateCaptor.capture());
 		return jiraIssueUpdateCaptor.getValue();
 	}
 

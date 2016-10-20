@@ -289,7 +289,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		if (filteredTransitions.isEmpty()) {
 			throw new JiraSyncException("Found no transition to status '" + sourceStatusToSet + "'");
 		} else if (filteredTransitions.size() > 1) {
-			throw new JiraSyncException("Found multiple transitions to status " + sourceStatusToSet + ": " + filteredTransitions);
+			throw new JiraSyncException("Found multiple transitions to status '" + sourceStatusToSet + "': " + filteredTransitions);
 		} else {
 			return filteredTransitions.get(0);
 		}

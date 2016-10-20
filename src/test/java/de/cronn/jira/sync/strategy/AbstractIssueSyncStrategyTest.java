@@ -22,6 +22,7 @@ import de.cronn.jira.sync.domain.JiraIssueType;
 import de.cronn.jira.sync.domain.JiraPriority;
 import de.cronn.jira.sync.domain.JiraProject;
 import de.cronn.jira.sync.domain.JiraTransition;
+import de.cronn.jira.sync.domain.JiraUser;
 import de.cronn.jira.sync.domain.JiraVersion;
 import de.cronn.jira.sync.service.JiraService;
 
@@ -37,12 +38,14 @@ public abstract class AbstractIssueSyncStrategyTest {
 
 	protected static final JiraIssueStatus SOURCE_STATUS_OPEN = new JiraIssueStatus("10", "Open");
 	protected static final JiraIssueStatus SOURCE_STATUS_RESOLVED = new JiraIssueStatus("20", "Resolved");
+	protected static final JiraIssueStatus SOURCE_STATUS_CLOSED = new JiraIssueStatus("30", "Closed");
 
 	protected static final JiraIssueStatus TARGET_STATUS_OPEN = new JiraIssueStatus("300", "Open");
 	protected static final JiraIssueStatus TARGET_STATUS_IN_PROGRESS = new JiraIssueStatus("301", "In Progress");
 	protected static final JiraIssueStatus TARGET_STATUS_CLOSED = new JiraIssueStatus("303", "Closed");
 
-	protected static final JiraTransition SOURCE_TRANSITION_RESOLVE = new JiraTransition("1", "link it", SOURCE_STATUS_RESOLVED);
+	protected static final JiraTransition SOURCE_TRANSITION_RESOLVE = new JiraTransition("1", "resolve it", SOURCE_STATUS_RESOLVED);
+	protected static final JiraTransition SOURCE_TRANSITION_CLOSE = new JiraTransition("2", "close it", SOURCE_STATUS_CLOSED);
 
 	protected static final JiraPriority SOURCE_PRIORITY_HIGH = new JiraPriority("10000", "High");
 	protected static final JiraPriority SOURCE_PRIORITY_LOW = new JiraPriority("20000", "Low");
@@ -56,7 +59,9 @@ public abstract class AbstractIssueSyncStrategyTest {
 	protected static final JiraVersion TARGET_VERSION_1 = new JiraVersion("100", "TARGET 1");
 	protected static final JiraVersion TARGET_VERSION_2 = new JiraVersion("200", "TARGET 2");
 
-	protected static final String TRANSITION = "transition";
+	protected static final JiraUser SOURCE_USER_MYSELF = new JiraUser("me", "myself", "My Self");
+
+	protected static final String TRANSITION_RESOLVE = "transition";
 
 	@Mock
 	protected JiraService jiraSource;
@@ -95,6 +100,11 @@ public abstract class AbstractIssueSyncStrategyTest {
 	}
 
 	@Before
+	public void setUpMyself() {
+		when(jiraSource.getMyself()).thenReturn(SOURCE_USER_MYSELF);
+	}
+
+	@Before
 	public void setUpProjectSyncConfiguration() throws Exception {
 		projectSync.setSourceProject(SOURCE_PROJECT_KEY);
 		projectSync.setTargetProject(TARGET_PROJECT_KEY);
@@ -117,7 +127,7 @@ public abstract class AbstractIssueSyncStrategyTest {
 		issueTypeMapping.put(SOURCE_ISSUE_TYPE_NEW_FEATURE, TARGET_ISSUE_TYPE_IMPROVEMENT);
 		jiraSyncConfig.setIssueTypeMapping(issueTypeMapping);
 
-		projectSync.addTransition(TRANSITION,
+		projectSync.addTransition(TRANSITION_RESOLVE,
 			new TransitionConfig(
 				Collections.singletonList(SOURCE_STATUS_OPEN.getName()),
 				Collections.singletonList(TARGET_STATUS_CLOSED.getName()),

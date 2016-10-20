@@ -4,6 +4,9 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+
 public class TransitionConfig {
 
 	private Set<String> sourceStatusIn = new LinkedHashSet<>();
@@ -77,5 +80,14 @@ public class TransitionConfig {
 
 	public Set<String> getTargetStatusIn() {
 		return targetStatusIn;
+	}
+
+	@Override
+	public String toString() {
+		return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
+			.append("sourceStatusIn", sourceStatusIn)
+			.append("targetStatusIn", targetStatusIn)
+			.append("sourceStatusToSet", sourceStatusToSet)
+			.toString();
 	}
 }
