@@ -8,6 +8,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -320,13 +321,8 @@ public class JiraDummyService {
 
 		Assert.isNull(issue.getKey());
 		Assert.isNull(issue.getId());
-		if (issue.getKey() == null) {
-			long id = getIssueMap(context).size() + 1;
-			String projectKey = project.getKey();
-			Assert.notNull(projectKey);
-			issue.setKey(projectKey + "-" + id);
-			issue.setId(String.valueOf(id));
-		}
+		issue.setKey(generateKey(context, project));
+		issue.setId(generateId(context));
 		if (fields.getStatus() == null) {
 			JiraIssueStatus defaultStatus = getData(context).getDefaultStatus();
 			Assert.notNull(defaultStatus, "defaultStatus must be set");
@@ -348,6 +344,19 @@ public class JiraDummyService {
 		Object old = getIssueMap(context).put(issue.getKey(), issue);
 		Assert.isNull(old);
 		return new ResponseEntity<>(issue, HttpStatus.OK);
+	}
+
+	private String generateId(@PathVariable(CONTEXT) Context context) {
+		AtomicLong idCounter = getData(context).getIdCounter();
+		return String.valueOf(idCounter.incrementAndGet());
+	}
+
+	private String generateKey(@PathVariable(CONTEXT) Context context, JiraProject project) {
+		AtomicLong keyCounter = getData(context).getOrCreateKeyCounter(project);
+		long id = keyCounter.incrementAndGet();
+		String projectKey = project.getKey();
+		Assert.notNull(projectKey);
+		return projectKey + "-" + id;
 	}
 
 	@RequestMapping(path = "/api/2/issue/{issueKey}", method = RequestMethod.PUT)

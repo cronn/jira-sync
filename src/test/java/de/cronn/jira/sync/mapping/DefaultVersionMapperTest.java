@@ -112,7 +112,7 @@ public class DefaultVersionMapperTest {
 		// then
 		assertThat(targetVersions).containsExactly(TARGET_VERSION_2, TARGET_VERSION_1);
 
-		verify(jiraService).getVersions(TARGET_PROJECT);
+		verify(jiraService, atLeast(1)).getVersions(TARGET_PROJECT);
 		verifyNoMoreInteractions(jiraService);
 	}
 

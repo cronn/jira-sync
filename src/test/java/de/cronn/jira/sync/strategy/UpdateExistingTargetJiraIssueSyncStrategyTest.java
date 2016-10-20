@@ -334,7 +334,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		assertThat(update.getFields().getFixVersions()).containsExactly(TARGET_VERSION_1, TARGET_VERSION_2);
 
 		verify(jiraTarget).getPriorities();
-		verify(jiraTarget).getVersions(TARGET_PROJECT_KEY);
+		verify(jiraTarget, atLeast(1)).getVersions(TARGET_PROJECT_KEY);
 		verifyNoMoreInteractions(jiraSource, jiraTarget);
 	}
 

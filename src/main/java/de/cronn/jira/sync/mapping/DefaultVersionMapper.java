@@ -15,7 +15,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
-import de.cronn.jira.sync.JiraSyncException;
 import de.cronn.jira.sync.config.JiraProjectSync;
 import de.cronn.jira.sync.domain.JiraVersion;
 import de.cronn.jira.sync.service.JiraService;
@@ -59,41 +58,44 @@ public class DefaultVersionMapper implements VersionMapper {
 			return Collections.emptySet();
 		}
 
-		List<JiraVersion> projectVersions = jiraService.getVersions(projectKey);
-
 		Set<JiraVersion> mappedVersions = new LinkedHashSet<>();
 		for (JiraVersion versionToMap : versionsToMap) {
-			String versionName = versionToMap.getName();
-			if (versionName == null) {
-				throw new JiraSyncException("versionName not set: " + versionToMap);
+			JiraVersion mappedVersion = mapVersion(jiraService, versionToMap, versionMapping, versionsToIgnore, projectKey);
+			if (mappedVersion != null) {
+				log.trace("version: {}  -->  {}", versionToMap, mappedVersion);
+				mappedVersions.add(mappedVersion);
 			}
-
-			if (versionsToIgnore.contains(versionName)) {
-				log.debug("ignoring version '{}'", versionName);
-				continue;
-			}
-
-			String mappedVersionName = versionMapping.get(versionName);
-			if (mappedVersionName == null) {
-				log.warn("no mapping defined for '{}'", versionToMap);
-				continue;
-			}
-
-			JiraVersion mappedVersion = projectVersions.stream()
-				.filter(version -> Objects.equals(version.getName(), mappedVersionName))
-				.findFirst()
-				.orElse(null);
-
-			if (mappedVersion == null) {
-				log.warn("version '{}' not found in {}", mappedVersionName, jiraService);
-				continue;
-			}
-
-			Assert.notNull(mappedVersion);
-			log.trace("version: {}  -->  {}", versionToMap, mappedVersion);
-			mappedVersions.add(mappedVersion);
 		}
 
 		return mappedVersions;
 	}
+
+	private JiraVersion mapVersion(JiraService jiraService, JiraVersion versionToMap, Map<String, String> versionMapping, Set<String> versionsToIgnore, String projectKey) {
+		String versionName = versionToMap.getName();
+		Assert.notNull(versionName, "versionName not set: " + versionToMap);
+
+		if (versionsToIgnore.contains(versionName)) {
+			log.debug("ignoring version '{}'", versionName);
+			return null;
+		}
+
+		String mappedVersionName = versionMapping.get(versionName);
+		if (mappedVersionName == null) {
+			log.warn("no mapping defined for '{}'", versionToMap);
+			return null;
+		}
+
+		List<JiraVersion> projectVersions = jiraService.getVersions(projectKey);
+		JiraVersion mappedVersion = projectVersions.stream()
+			.filter(version -> Objects.equals(version.getName(), mappedVersionName))
+			.findFirst()
+			.orElse(null);
+
+		if (mappedVersion == null) {
+			log.warn("version '{}' not found in {}", mappedVersionName, jiraService);
+			return null;
+		}
+		return mappedVersion;
+	}
+
 }

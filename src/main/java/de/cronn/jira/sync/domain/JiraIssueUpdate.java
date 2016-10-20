@@ -38,10 +38,9 @@ public class JiraIssueUpdate implements Serializable {
 
 	@JsonIgnore
 	public JiraFieldsUpdate getOrCreateFields() {
-		JiraFieldsUpdate fields = getFields();
-		if (fields == null) {
-			setFields(new JiraFieldsUpdate());
+		if (this.fields == null) {
+			this.fields = new JiraFieldsUpdate();
 		}
-		return getFields();
+		return this.fields;
 	}
 }

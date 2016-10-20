@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.springframework.util.Assert;
 
@@ -31,6 +32,8 @@ public class JiraDummyData {
 	private final List<JiraVersion> versions = new ArrayList<>();
 	private String baseUrl;
 	private BasicAuthCredentials basicAuthCredentials;
+	private Map<JiraProject, AtomicLong> keyCounters = new LinkedHashMap<>();
+	private AtomicLong idCounter = new AtomicLong();
 
 	public JiraLoginRequest getCredentials() {
 		return credentials;
@@ -95,5 +98,13 @@ public class JiraDummyData {
 
 	public BasicAuthCredentials getBasicAuthCredentials() {
 		return basicAuthCredentials;
+	}
+
+	public AtomicLong getOrCreateKeyCounter(JiraProject jiraProject) {
+		return keyCounters.computeIfAbsent(jiraProject, k -> new AtomicLong());
+	}
+
+	public AtomicLong getIdCounter() {
+		return idCounter;
 	}
 }

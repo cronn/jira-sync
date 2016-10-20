@@ -1,5 +1,6 @@
 package de.cronn.jira.sync.strategy;
 
+import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -141,7 +142,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 			.filter(commentInTarget -> !isCommentInSourceIssue(commentInTarget, commentsInSource))
 			.collect(Collectors.toList());
 
-		boolean behindTime = isCommentBehindTime(commentsInTarget, newCommentsInSource, commentsOnlyInTarget);
+		boolean behindTime = isCommentBehindTime(newCommentsInSource, commentsOnlyInTarget);
 
 		for (JiraComment commentInSource : newCommentsInSource) {
 			String commentText = commentMapper.map(sourceIssue, commentInSource, jiraSource, behindTime);
@@ -150,14 +151,15 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		}
 	}
 
-	private boolean isCommentBehindTime(List<JiraComment> commentsInTarget, List<JiraComment> newCommentsInSource, List<JiraComment> commentsOnlyInTarget) {
-		if (!commentsOnlyInTarget.isEmpty() && !newCommentsInSource.isEmpty()) {
-			JiraComment latestCommentInTarget = commentsInTarget.get(commentsInTarget.size() - 1);
-			JiraComment firstCommentInSource = newCommentsInSource.get(0);
-			return (latestCommentInTarget.getUpdated().isAfter(firstCommentInSource.getCreated()));
-		} else {
+	private boolean isCommentBehindTime(List<JiraComment> newCommentsInSource, List<JiraComment> commentsOnlyInTarget) {
+		if (commentsOnlyInTarget.isEmpty() || newCommentsInSource.isEmpty()) {
 			return false;
 		}
+		JiraComment latestCommentInTarget = commentsOnlyInTarget.get(commentsOnlyInTarget.size() - 1);
+		JiraComment firstCommentInSource = newCommentsInSource.get(0);
+		ZonedDateTime updatedInTarget = latestCommentInTarget.getUpdated();
+		ZonedDateTime createdInSource = firstCommentInSource.getCreated();
+		return updatedInTarget.isAfter(createdInSource);
 	}
 
 	private List<JiraComment> getComments(JiraIssue issue) {
@@ -295,9 +297,9 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 
 	private String getStatusName(JiraIssue issue) {
 		JiraIssueStatus status = issue.getFields().getStatus();
-		Assert.notNull(status, "status of " + issue + " must not be null");
+		assertFieldNotNull(issue, status, "status");
 		String statusName = status.getName();
-		Assert.notNull(statusName, "statusName of " + issue + " must not be null");
+		assertFieldNotNull(issue, statusName, "statusName");
 		return statusName;
 	}
 
@@ -329,7 +331,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 
 	private void processPriority(JiraService jiraTarget, JiraIssue sourceIssue, JiraIssue targetIssue, JiraIssueUpdate issueUpdate) {
 		JiraPriority sourcePriority = priorityMapper.mapPriority(jiraTarget, sourceIssue);
-		Assert.notNull(sourcePriority, "Priority of " + sourceIssue + " must not be null");
+		assertFieldNotNull(sourceIssue, sourcePriority, "priority");
 		JiraPriority targetPriority = targetIssue.getFields().getPriority();
 		if (!isIdEqual(sourcePriority, targetPriority)) {
 			issueUpdate.getOrCreateFields().setPriority(sourcePriority);
@@ -373,9 +375,13 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 	}
 
 	private void assertRequiredFieldsArePresent(JiraIssue issue) {
-		Assert.notNull(issue.getKey(), "key must be set for " + issue);
-		Assert.notNull(issue.getFields().getSummary(), "summary must be set for " + issue);
-		Assert.notNull(issue.getFields().getPriority(), "priority must be set for " + issue);
-		Assert.notNull(issue.getFields().getStatus(), "status must be set for " + issue);
+		assertFieldNotNull(issue, issue.getKey(), "key");
+		assertFieldNotNull(issue, issue.getFields().getSummary(), "summary");
+		assertFieldNotNull(issue, issue.getFields().getPriority(), "priority");
+		assertFieldNotNull(issue, issue.getFields().getStatus(), "status");
+	}
+
+	private void assertFieldNotNull(JiraIssue issue, Object fieldValue, String fieldName) {
+		Assert.notNull(fieldValue, fieldName + " of " + issue + " must not be null");
 	}
 }
