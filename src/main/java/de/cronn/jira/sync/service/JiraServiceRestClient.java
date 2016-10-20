@@ -124,6 +124,7 @@ public class JiraServiceRestClient implements JiraService {
 		CACHE_NAME_PRIORITIES,
 		CACHE_NAME_SERVER_INFO,
 		CACHE_NAME_MYSELF,
+		CACHE_NAME_USERS,
 		CACHE_NAME_PROJECTS,
 		CACHE_NAME_VERSIONS,
 		CACHE_NAME_RESOLUTIONS,
@@ -175,6 +176,17 @@ public class JiraServiceRestClient implements JiraService {
 	public JiraUser getMyself() {
 		log.debug("[{}], fetching myself", getUrl());
 		return getForObject("/rest/api/2/myself", JiraUser.class);
+	}
+
+	@Override
+	@Cacheable(value = CACHE_NAME_USERS, key = "{ #root.target.url, #username }")
+	public JiraUser getUserByName(String username) {
+		try {
+			return getForObject("/rest/api/2/user/?username={username}", JiraUser.class, username);
+		} catch (JiraResourceNotFoundException e) {
+			log.debug("user '{}' not found: {}", e.getMessage());
+			return null;
+		}
 	}
 
 	@Override
@@ -264,8 +276,7 @@ public class JiraServiceRestClient implements JiraService {
 		JiraRemoteLinkObject remoteLinkObject = jiraRemoteLink.getObject();
 		remoteLinkObject.setTitle(remoteServerInfo.getServerTitle() + ": " + toIssue.getKey());
 		remoteLinkObject.setIcon(new JiraLinkIcon(remoteLinkIcon));
-		Map response = restTemplate.postForObject(restUrl("/rest/api/2/issue/{issueId}/remotelink"), jiraRemoteLink, Map.class, fromIssue.getKey());
-		log.debug("response: {}", response);
+		restTemplate.postForObject(restUrl("/rest/api/2/issue/{issueId}/remotelink"), jiraRemoteLink, Map.class, fromIssue.getKey());
 	}
 
 	@Override

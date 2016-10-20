@@ -82,6 +82,9 @@ public class JiraSyncApplicationTests {
 	private static final JiraVersion TARGET_VERSION_10 = new JiraVersion("100", "10");
 	private static final JiraVersion TARGET_VERSION_11 = new JiraVersion("101", "11");
 
+	private static final JiraUser SOURCE_USER_SOME = new JiraUser("some.user", "some.user", "Some User");
+	private static final JiraUser SOURCE_USER_ANOTHER = new JiraUser("anotheruser", "anotheruser", "Another User");
+
 	@Autowired
 	private TestClock clock;
 
@@ -155,6 +158,9 @@ public class JiraSyncApplicationTests {
 
 		jiraDummyService.addVersion(TARGET, TARGET_VERSION_10);
 		jiraDummyService.addVersion(TARGET, TARGET_VERSION_11);
+
+		jiraDummyService.addUser(SOURCE, SOURCE_USER_SOME);
+		jiraDummyService.addUser(SOURCE, SOURCE_USER_ANOTHER);
 
 		jiraDummyService.setDefaultStatus(TARGET, TARGET_STATUS_OPEN);
 
@@ -361,7 +367,7 @@ public class JiraSyncApplicationTests {
 	@Test
 	public void testSetTicketToResolvedInSourceWhenTargetTicketIsClosed() throws Exception {
 		// given
-		JiraIssue createdSourceIssue = createIssueInSource("My first bug");
+		createIssueInSource("My first bug");
 
 		syncTask.sync();
 
@@ -525,6 +531,41 @@ public class JiraSyncApplicationTests {
 	}
 
 	@Test
+	public void testCreateTicket_UsernameReferences() throws Exception {
+		// given
+		JiraIssue sourceIssue = new JiraIssue(null, null, "some issue", SOURCE_STATUS_OPEN);
+		sourceIssue.getFields().setDescription("mentioning [~" + SOURCE_USER_SOME.getName() + "] in description");
+		sourceIssue.getFields().setProject(SOURCE_PROJECT);
+		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_UNKNOWN);
+		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
+		JiraIssue createdIssue = jiraSource.createIssue(sourceIssue);
+
+		jiraSource.addComment(createdIssue.getKey(), "[~" + SOURCE_USER_ANOTHER.getName() + "]: some comment");
+		jiraSource.addComment(createdIssue.getKey(), "[~yetanotheruser]: some comment");
+
+		// when
+		syncTask.sync();
+
+		// then
+		JiraIssue targetIssue = getSingleIssue(TARGET);
+		assertThat(targetIssue.getFields().getDescription()).isEqualTo("{panel:title=Original description|titleBGColor=#DDD|bgColor=#EEE}\n" +
+			"mentioning [Some User|https://localhost:" + port + "/SOURCE/secure/ViewProfile.jspa?name=some.user] in description\n" +
+			"{panel}\n\n");
+		List<JiraComment> comments = targetIssue.getFields().getComment().getComments();
+		assertThat(comments).hasSize(2);
+
+		assertThat(comments.get(0).getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:00 CEST|titleBGColor=#DDD|bgColor=#EEE}\n" +
+			"[Another User|https://localhost:" + port + "/SOURCE/secure/ViewProfile.jspa?name=anotheruser]: some comment\n" +
+			"~??[comment 1.1|https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-1?focusedCommentId=1.1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1.1]??~\n" +
+			"{panel}");
+
+		assertThat(comments.get(1).getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:00 CEST|titleBGColor=#DDD|bgColor=#EEE}\n" +
+			"[~yetanotheruser]: some comment\n" +
+			"~??[comment 1.2|https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-1?focusedCommentId=1.2&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1.2]??~\n" +
+			"{panel}");
+	}
+
+	@Test
 	public void testUpdateTicketInTarget_addComment() throws Exception {
 		// given
 		JiraIssue createdSourceIssue = createIssueInSource("My first bug");
@@ -547,7 +588,7 @@ public class JiraSyncApplicationTests {
 		targetIssue = getSingleIssue(TARGET);
 		List<JiraComment> comments = targetIssue.getFields().getComment().getComments();
 		assertThat(comments).hasSize(1);
-		assertThat(comments.iterator().next().getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:30 CEST|titleBGColor=#DDD|bgColor=#EEE}\n" +
+		assertThat(comments.get(0).getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:30 CEST|titleBGColor=#DDD|bgColor=#EEE}\n" +
 			"some comment\n" +
 			"~??[comment 1.1|https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-1?focusedCommentId=1.1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1.1]??~\n" +
 			"{panel}");
@@ -607,7 +648,7 @@ public class JiraSyncApplicationTests {
 		targetIssue = getSingleIssue(TARGET);
 		List<JiraComment> comments = targetIssue.getFields().getComment().getComments();
 		assertThat(comments).hasSize(4);
-		assertThat(comments.iterator().next().getBody()).contains("first comment in source").contains("2016-05-23 20:00:00 CEST|titleBGColor=#DDD|bgColor=#EEE");
+		assertThat(comments.get(0).getBody()).contains("first comment in source").contains("2016-05-23 20:00:00 CEST|titleBGColor=#DDD|bgColor=#EEE");
 		assertThat(comments.get(1).getBody()).contains("some comment in target");
 
 		assertThat(comments.get(2).getBody())

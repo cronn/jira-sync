@@ -16,6 +16,7 @@ import de.cronn.jira.sync.domain.JiraProject;
 import de.cronn.jira.sync.domain.JiraRemoteLinks;
 import de.cronn.jira.sync.domain.JiraResolution;
 import de.cronn.jira.sync.domain.JiraTransition;
+import de.cronn.jira.sync.domain.JiraUser;
 import de.cronn.jira.sync.domain.JiraVersion;
 
 public class JiraDummyData {
@@ -32,8 +33,9 @@ public class JiraDummyData {
 	private final List<JiraVersion> versions = new ArrayList<>();
 	private String baseUrl;
 	private BasicAuthCredentials basicAuthCredentials;
-	private Map<String, AtomicLong> keyCounters = new LinkedHashMap<>();
-	private AtomicLong idCounter = new AtomicLong();
+	private final Map<String, AtomicLong> keyCounters = new LinkedHashMap<>();
+	private final AtomicLong idCounter = new AtomicLong();
+	private final Map<String, JiraUser> users = new LinkedHashMap<>();
 
 	public JiraLoginRequest getCredentials() {
 		return credentials;
@@ -106,5 +108,14 @@ public class JiraDummyData {
 
 	public AtomicLong getIdCounter() {
 		return idCounter;
+	}
+
+	public void addUser(JiraUser user) {
+		Object old = users.put(user.getName(), user);
+		Assert.isNull(old);
+	}
+
+	public JiraUser getUser(String username) {
+		return users.get(username);
 	}
 }

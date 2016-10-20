@@ -29,11 +29,13 @@ import de.cronn.jira.sync.mapping.DefaultIssueTypeMapper;
 import de.cronn.jira.sync.mapping.DefaultLabelMapper;
 import de.cronn.jira.sync.mapping.DefaultPriorityMapper;
 import de.cronn.jira.sync.mapping.DefaultResolutionMapper;
+import de.cronn.jira.sync.mapping.DefaultUsernameReplacer;
 import de.cronn.jira.sync.mapping.DefaultVersionMapper;
 import de.cronn.jira.sync.mapping.IssueTypeMapper;
 import de.cronn.jira.sync.mapping.LabelMapper;
 import de.cronn.jira.sync.mapping.PriorityMapper;
 import de.cronn.jira.sync.mapping.ResolutionMapper;
+import de.cronn.jira.sync.mapping.UsernameReplacer;
 import de.cronn.jira.sync.mapping.VersionMapper;
 import de.cronn.jira.sync.service.JiraService;
 
@@ -76,6 +78,10 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 	@Spy
 	private CommentMapper commentMapper = new DefaultCommentMapper();
 
+	@InjectMocks
+	@Spy
+	private UsernameReplacer usernameReplacer = new DefaultUsernameReplacer();
+
 	@Test
 	public void testSync_NoChanges() throws Exception {
 		// given
@@ -86,7 +92,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		targetIssue.getFields().setVersions(Collections.singleton(TARGET_VERSION_1));
 
 		sourceIssue.getFields().setDescription("some description");
-		targetIssue.getFields().setDescription(descriptionMapper.mapSourceDescription("some description"));
+		targetIssue.getFields().setDescription(descriptionMapper.mapSourceDescription("some description", jiraSource));
 
 		when(jiraIssueLinker.resolveIssue(targetIssue, jiraTarget, jiraSource)).thenReturn(sourceIssue);
 
@@ -108,7 +114,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		JiraIssue targetIssue = newTargetIssue(TARGET_STATUS_CLOSED, TARGET_PRIORITY_MAJOR);
 
 		sourceIssue.getFields().setDescription("some description");
-		targetIssue.getFields().setDescription(descriptionMapper.mapSourceDescription("some description"));
+		targetIssue.getFields().setDescription(descriptionMapper.mapSourceDescription("some description", jiraSource));
 
 		when(jiraSource.getTransitions(sourceIssue.getKey())).thenReturn(Collections.singletonList(SOURCE_TRANSITION_RESOLVE));
 
@@ -153,7 +159,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 
 		JiraIssueUpdate targetIssueUpdate = expectUpdateInTarget(targetIssue);
 
-		assertThat(targetIssueUpdate.getFields().getDescription()).isEqualTo(descriptionMapper.mapTargetDescription("some description", null));
+		assertThat(targetIssueUpdate.getFields().getDescription()).isEqualTo(descriptionMapper.mapTargetDescription("some description", null, jiraSource));
 
 		assertThat(targetIssueUpdate.getTransition()).isNull();
 
@@ -368,7 +374,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 		assertThat(result).isEqualTo(SyncResult.CHANGED);
 
 		JiraIssueUpdate update = expectUpdateInTarget(targetIssue);
-		assertThat(update.getFields().getDescription()).isEqualTo(descriptionMapper.mapTargetDescription("updated description", "some description"));
+		assertThat(update.getFields().getDescription()).isEqualTo(descriptionMapper.mapTargetDescription("updated description", "some description", jiraSource));
 
 		verify(jiraTarget).getPriorities();
 		verifyNoMoreInteractions(jiraSource, jiraTarget);

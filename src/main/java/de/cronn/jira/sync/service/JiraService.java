@@ -33,6 +33,8 @@ public interface JiraService extends AutoCloseable {
 
 	JiraUser getMyself();
 
+	JiraUser getUserByName(String username);
+
 	JiraIssue getIssueByKey(String key);
 
 	JiraProject getProjectByKey(String projectKey);

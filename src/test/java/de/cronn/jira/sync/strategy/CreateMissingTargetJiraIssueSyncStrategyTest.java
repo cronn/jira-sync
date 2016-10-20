@@ -22,11 +22,13 @@ import de.cronn.jira.sync.mapping.DefaultIssueTypeMapper;
 import de.cronn.jira.sync.mapping.DefaultLabelMapper;
 import de.cronn.jira.sync.mapping.DefaultPriorityMapper;
 import de.cronn.jira.sync.mapping.DefaultSummaryMapper;
+import de.cronn.jira.sync.mapping.DefaultUsernameReplacer;
 import de.cronn.jira.sync.mapping.DefaultVersionMapper;
 import de.cronn.jira.sync.mapping.IssueTypeMapper;
 import de.cronn.jira.sync.mapping.LabelMapper;
 import de.cronn.jira.sync.mapping.PriorityMapper;
 import de.cronn.jira.sync.mapping.SummaryMapper;
+import de.cronn.jira.sync.mapping.UsernameReplacer;
 import de.cronn.jira.sync.mapping.VersionMapper;
 
 public class CreateMissingTargetJiraIssueSyncStrategyTest extends AbstractIssueSyncStrategyTest {
@@ -62,6 +64,10 @@ public class CreateMissingTargetJiraIssueSyncStrategyTest extends AbstractIssueS
 	@Spy
 	private JiraIssueLinker issueLinker = new JiraIssueWebLinker();
 
+	@InjectMocks
+	@Spy
+	private UsernameReplacer usernameReplacer = new DefaultUsernameReplacer();
+
 	@Test
 	public void testCreateMissingTicket() throws Exception {
 		// given
@@ -89,7 +95,7 @@ public class CreateMissingTargetJiraIssueSyncStrategyTest extends AbstractIssueS
 		assertThat(createdIssue.getFields().getIssuetype().getName()).isEqualTo(TARGET_ISSUE_TYPE_IMPROVEMENT);
 		assertThat(createdIssue.getFields().getProject()).isEqualTo(targetProject);
 		assertThat(createdIssue.getFields().getSummary()).isEqualTo("SOURCE-123: some summary");
-		assertThat(createdIssue.getFields().getDescription()).isEqualTo(descriptionMapper.mapSourceDescription("the description"));
+		assertThat(createdIssue.getFields().getDescription()).isEqualTo(descriptionMapper.mapSourceDescription("the description", jiraSource));
 		assertThat(createdIssue.getFields().getLabels()).containsExactly("label1", "label2");
 		assertThat(createdIssue.getFields().getPriority().getName()).isEqualTo(TARGET_PRIORITY_MAJOR.getName());
 		assertThat(createdIssue.getFields().getVersions()).containsExactly(TARGET_VERSION_2);

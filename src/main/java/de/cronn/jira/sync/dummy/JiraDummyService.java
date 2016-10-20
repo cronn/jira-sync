@@ -111,6 +111,10 @@ public class JiraDummyService {
 		getData(context).getPriorities().add(priority);
 	}
 
+	public void addUser(Context context, JiraUser user) {
+		getData(context).addUser(user);
+	}
+
 	public void addResolution(Context context, JiraResolution resolution) {
 		getData(context).getResolutions().add(resolution);
 	}
@@ -203,6 +207,17 @@ public class JiraDummyService {
 	@RequestMapping(path = "/api/2/myself", method = RequestMethod.GET)
 	public JiraUser getMyself(@PathVariable(CONTEXT) Context context) {
 		return new JiraUser("me", "myself", "my self");
+	}
+
+	@RequestMapping(path = "/api/2/user", method = RequestMethod.GET)
+	public ResponseEntity<Object> getUser(@PathVariable(CONTEXT) Context context, @RequestParam("username") String username) {
+		Assert.hasText(username);
+		JiraUser user = getData(context).getUser(username);
+		if (user == null) {
+			return new ResponseEntity<>("user not found", HttpStatus.NOT_FOUND);
+		} else {
+			return new ResponseEntity<>(user, HttpStatus.OK);
+		}
 	}
 
 	@RequestMapping(path = "/api/2/issue/{issueKey}", method = RequestMethod.GET)

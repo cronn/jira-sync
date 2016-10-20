@@ -93,7 +93,7 @@ public class CreateMissingTargetJiraIssueSyncStrategy implements MissingTargetJi
 
 		copyIssueType(sourceIssue, projectSync, targetProject, issueToCreate);
 		copySummary(sourceIssue, issueToCreate);
-		copyDescription(sourceIssue, issueToCreate);
+		copyDescription(sourceIssue, issueToCreate, jiraSource);
 		copyPriority(jiraTarget, sourceIssue, issueToCreate);
 		copyLabels(sourceIssue, issueToCreate);
 		copyVersions(sourceIssue, issueToCreate, jiraTarget, projectSync);
@@ -140,8 +140,8 @@ public class CreateMissingTargetJiraIssueSyncStrategy implements MissingTargetJi
 		issueToCreate.getOrCreateFields().setSummary(summaryMapper.mapSummary(sourceIssue));
 	}
 
-	private void copyDescription(JiraIssue sourceIssue, JiraIssue issueToCreate) {
-		issueToCreate.getOrCreateFields().setDescription(descriptionMapper.mapSourceDescription(sourceIssue));
+	private void copyDescription(JiraIssue sourceIssue, JiraIssue issueToCreate, JiraService jiraSource) {
+		issueToCreate.getOrCreateFields().setDescription(descriptionMapper.mapSourceDescription(sourceIssue, jiraSource));
 	}
 
 	private void copyComments(JiraIssue sourceIssue, JiraService jiraSource, JiraIssue newIssue, JiraService jiraTarget) {

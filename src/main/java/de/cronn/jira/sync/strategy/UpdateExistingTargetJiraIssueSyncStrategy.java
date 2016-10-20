@@ -103,7 +103,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		JiraIssueUpdate sourceIssueUpdate = new JiraIssueUpdate();
 
 		processTransition(jiraSource, sourceIssue, targetIssue, projectSync, sourceIssueUpdate, jiraTarget);
-		processDescription(sourceIssue, targetIssue, targetIssueUpdate);
+		processDescription(sourceIssue, targetIssue, targetIssueUpdate, jiraSource);
 		processLabels(sourceIssue, targetIssue, targetIssueUpdate, projectSync);
 		processPriority(jiraTarget, sourceIssue, targetIssue, targetIssueUpdate);
 		processVersions(jiraTarget, sourceIssue, targetIssue, JiraIssueFields::getVersions, versions -> targetIssueUpdate.getOrCreateFields().setVersions(versions), projectSync);
@@ -321,9 +321,9 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		return statusName;
 	}
 
-	private void processDescription(JiraIssue sourceIssue, JiraIssue targetIssue, JiraIssueUpdate issueUpdate) {
+	private void processDescription(JiraIssue sourceIssue, JiraIssue targetIssue, JiraIssueUpdate issueUpdate, JiraService jiraSource) {
 		String existingDescription = descriptionMapper.getDescription(targetIssue);
-		String newDescription = descriptionMapper.mapTargetDescription(sourceIssue, targetIssue);
+		String newDescription = descriptionMapper.mapTargetDescription(sourceIssue, targetIssue, jiraSource);
 		if (!Objects.equals(existingDescription, newDescription)) {
 			issueUpdate.getOrCreateFields().setDescription(newDescription);
 		}

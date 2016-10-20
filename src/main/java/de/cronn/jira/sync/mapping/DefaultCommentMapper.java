@@ -22,9 +22,16 @@ public class DefaultCommentMapper implements CommentMapper {
 
 	private Clock clock;
 
+	private UsernameReplacer usernameReplacer;
+
 	@Autowired
 	public void setClock(Clock clock) {
 		this.clock = clock;
+	}
+
+	@Autowired
+	public void setUsernameReplacer(UsernameReplacer usernameReplacer) {
+		this.usernameReplacer = usernameReplacer;
 	}
 
 	@Override
@@ -33,8 +40,9 @@ public class DefaultCommentMapper implements CommentMapper {
 		String author = getAuthorDisplayName(comment);
 		String originalDateString = getOriginalDateString(comment);
 		String sourceKey = getIssueKey(sourceIssue);
+		String commentText = usernameReplacer.replaceUsernames(comment.getBody(), jiraSource);
 		return "{panel:title=" + author + " - " + originalDateString + "|" + getPanelColors(behindTime) + "}\n" +
-			comment.getBody() + "\n" +
+			commentText + "\n" +
 			"~??[comment " + originalCommentId + "|" + buildCommentLink(jiraSource, originalCommentId, sourceKey) + "]??~\n" +
 			(behindTime ? "~(!) This comment was added behind time. The order of comments might not represent the real order.~\n" : "") +
 			"{panel}";

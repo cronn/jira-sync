@@ -28,6 +28,10 @@ public class DefaultCommentMapperTest {
 	private JiraService jiraSource;
 
 	@InjectMocks
+	@Spy
+	private UsernameReplacer usernameReplacer = new DefaultUsernameReplacer();
+
+	@InjectMocks
 	private DefaultCommentMapper commentMapper;
 
 	@Spy

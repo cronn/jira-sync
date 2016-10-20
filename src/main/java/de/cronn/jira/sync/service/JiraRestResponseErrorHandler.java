@@ -2,6 +2,7 @@ package de.cronn.jira.sync.service;
 
 import java.io.IOException;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.HttpClientErrorException;
@@ -18,7 +19,11 @@ public class JiraRestResponseErrorHandler extends DefaultResponseErrorHandler {
 		} catch (HttpClientErrorException | HttpServerErrorException e) {
 			String responseBodyAsString = e.getResponseBodyAsString();
 			String message = e.getStatusCode().getReasonPhrase() + ": " + responseBodyAsString;
-			throw new JiraSyncException(message);
+			if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
+				throw new JiraResourceNotFoundException(message);
+			} else {
+				throw new JiraSyncException(message);
+			}
 		}
 	}
 }
