@@ -127,6 +127,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 
 		if (!targetIssueUpdate.isEmpty()) {
 			Assert.isNull(targetIssueUpdate.getTransition());
+			log.info("updating issue");
 			jiraTarget.updateIssue(targetIssue.getKey(), targetIssueUpdate);
 		}
 
