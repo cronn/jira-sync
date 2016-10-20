@@ -145,6 +145,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 
 		for (JiraComment commentInSource : newCommentsInSource) {
 			String commentText = commentMapper.map(sourceIssue, commentInSource, jiraSource, behindTime);
+			log.info("adding comment {}", commentInSource.getId());
 			jiraTarget.addComment(targetIssue.getKey(), commentText);
 		}
 	}
