@@ -1,6 +1,6 @@
 package de.cronn.jira.sync.domain;
 
-public enum JiraField {
+public enum WellKnownJiraField {
 
 	SUMMARY("summary"),
 	STATUS("status"),
@@ -19,7 +19,7 @@ public enum JiraField {
 
 	private final String name;
 
-	JiraField(String name) {
+	WellKnownJiraField(String name) {
 		this.name = name;
 	}
 

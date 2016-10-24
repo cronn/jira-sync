@@ -39,7 +39,6 @@ import de.cronn.jira.sync.JiraSyncException;
 import de.cronn.jira.sync.config.BasicAuthentication;
 import de.cronn.jira.sync.config.JiraConnectionProperties;
 import de.cronn.jira.sync.domain.JiraComment;
-import de.cronn.jira.sync.domain.JiraField;
 import de.cronn.jira.sync.domain.JiraFilterResult;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueUpdate;
@@ -61,6 +60,7 @@ import de.cronn.jira.sync.domain.JiraTransitions;
 import de.cronn.jira.sync.domain.JiraUser;
 import de.cronn.jira.sync.domain.JiraVersion;
 import de.cronn.jira.sync.domain.JiraVersionsList;
+import de.cronn.jira.sync.domain.WellKnownJiraField;
 import de.cronn.proxy.ssh.SshProxy;
 
 @Component
@@ -230,7 +230,7 @@ public class JiraServiceRestClient implements JiraService {
 		log.debug("fetching filter {}", filterId);
 		JiraFilterResult filter = getForObject("/rest/api/2/filter/{id}", JiraFilterResult.class, filterId);
 		log.debug("fetching issues by JQL '{}'", filter.getJql());
-		String fieldsToFetch = Stream.of(JiraField.values()).map(JiraField::getName).collect(Collectors.joining(","));
+		String fieldsToFetch = Stream.of(WellKnownJiraField.values()).map(WellKnownJiraField::getName).collect(Collectors.joining(","));
 		JiraSearchResult searchResult = getForObject("/rest/api/2/search?jql={jql}&maxResults=100&fields=" + fieldsToFetch, JiraSearchResult.class, filter.getJql());
 		log.info("got {} issues", searchResult.getTotal());
 		if (searchResult.getTotal() > searchResult.getMaxResults()) {
