@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.time.Instant;
 import java.time.ZonedDateTime;
+import java.util.Arrays;
+import java.util.Collections;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -23,10 +25,12 @@ public class JiraIssueTest {
 	public void testSerialize() throws Exception {
 		JiraIssue issue = new JiraIssue("1", "ISSUE-1");
 		issue.getOrCreateFields().setUpdated(ZonedDateTime.parse("2016-10-13T07:21:13+02:00"));
+		issue.getOrCreateFields().setOther("customfield_123", Arrays.asList("some", 123, "values"));
 
 		String expectedJson = "{ \"id\" : \"1\", \"key\" : \"ISSUE-1\", " +
 			"\"fields\" : {" +
-				"\"updated\" : \"2016-10-13T07:21:13.000+0200\"" +
+				"\"updated\" : \"2016-10-13T07:21:13.000+0200\", " +
+				" \"customfield_123\" : [ \"some\", 123, \"values\" ]" +
 			"} }";
 		assertThat(json.write(issue)).isStrictlyEqualToJson(expectedJson);
 	}
@@ -36,13 +40,15 @@ public class JiraIssueTest {
 		String json = "{ \"id\" : \"1\"," +
 			"\"key\" : \"ISSUE-1\"," +
 			"\"fields\" : {" +
-			" \"updated\" : \"2016-10-13T09:21:13.000+0200\"" +
+				" \"updated\" : \"2016-10-13T09:21:13.000+0200\", " +
+				" \"customfield_123\" : [ \"some\", 123, \"values\" ]" +
 			"}," +
 			"\"other\" : \"is ignored\" }";
 		JiraIssue jiraIssue = this.json.parseObject(json);
 		assertThat(jiraIssue.getId()).isEqualTo("1");
 		assertThat(jiraIssue.getKey()).isEqualTo("ISSUE-1");
 		assertThat(jiraIssue.getFields().getUpdated().toInstant()).isEqualTo(Instant.parse("2016-10-13T07:21:13Z"));
+		assertThat(jiraIssue.getFields().getOther()).isEqualTo(Collections.singletonMap("customfield_123", Arrays.asList("some", 123, "values")));
 	}
 
 	@Test

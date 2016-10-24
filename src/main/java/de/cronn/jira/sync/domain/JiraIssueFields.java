@@ -1,8 +1,12 @@
 package de.cronn.jira.sync.domain;
 
 import java.time.ZonedDateTime;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -36,6 +40,8 @@ public class JiraIssueFields extends JiraResource {
 	private ZonedDateTime updated;
 
 	private JiraComments comment;
+
+	protected Map<String, Object> other = new LinkedHashMap<>();
 
 	public JiraIssueFields() {
 	}
@@ -146,6 +152,16 @@ public class JiraIssueFields extends JiraResource {
 
 	public JiraComments getComment() {
 		return comment;
+	}
+
+	@JsonAnyGetter
+	public Map<String, Object> getOther() {
+		return other;
+	}
+
+	@JsonAnySetter
+	public void setOther(String key, Object value) {
+		this.other.put(key, value);
 	}
 
 	@JsonIgnore
