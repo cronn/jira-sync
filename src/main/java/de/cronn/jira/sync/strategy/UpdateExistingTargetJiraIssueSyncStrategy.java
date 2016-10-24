@@ -226,15 +226,6 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 			.collect(Collectors.toList());
 	}
 
-	private boolean isCommentInTargetIssue(JiraComment commentInSource, List<JiraComment> commentsInTarget) {
-		for (JiraComment commentInTarget : commentsInTarget) {
-			if (commentMapper.isMapped(commentInSource, commentInTarget.getBody())) {
-				return true;
-			}
-		}
-		return false;
-	}
-
 	private JiraComment findMatchingCommentInSourceIssue(JiraComment commentInTarget, List<JiraComment> commentsInSource) {
 		for (JiraComment commentInSource : commentsInSource) {
 			if (commentMapper.isMapped(commentInSource, commentInTarget.getBody())) {
