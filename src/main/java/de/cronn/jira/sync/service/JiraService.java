@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.List;
 
 import de.cronn.jira.sync.config.JiraConnectionProperties;
+import de.cronn.jira.sync.domain.JiraComment;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueUpdate;
 import de.cronn.jira.sync.domain.JiraPriority;
@@ -53,7 +54,9 @@ public interface JiraService extends AutoCloseable {
 
 	void addRemoteLink(JiraIssue fromIssue, JiraIssue toIssue, JiraService toJiraService, URL remoteLinkIcon);
 
-	void addComment(String issueKey, String commentText);
+	JiraComment addComment(String issueKey, String commentText);
+
+	void updateComment(String issueKey, String commentId, String commentText);
 
 	JiraIssue createIssue(JiraIssue issue);
 

@@ -4,9 +4,11 @@ import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -142,15 +144,17 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		List<JiraComment> commentsInSource = getComments(sourceIssue);
 		List<JiraComment> commentsInTarget = getComments(targetIssue);
 
+		Map<JiraComment, JiraComment> targetToSourceAssociations = associateComments(commentsInSource, commentsInTarget);
+
 		List<JiraComment> newCommentsInSource = commentsInSource.stream()
-			.filter(commentInSource -> !isCommentInTargetIssue(commentInSource, commentsInTarget))
+			.filter(commentInSource -> !targetToSourceAssociations.containsValue(commentInSource))
 			.collect(Collectors.toList());
 
-		List<JiraComment> commentsOnlyInTarget = commentsInTarget.stream()
-			.filter(commentInTarget -> !isCommentInSourceIssue(commentInTarget, commentsInSource))
-			.collect(Collectors.toList());
+		JiraComment latestCommentOnlyInTarget = findLatestCommentOnlyInTarget(targetToSourceAssociations);
 
-		boolean behindTime = isCommentBehindTime(newCommentsInSource, commentsOnlyInTarget);
+		updateExistingComments(sourceIssue, targetIssue, jiraSource, jiraTarget, targetToSourceAssociations);
+
+		boolean behindTime = isCommentBehindTime(newCommentsInSource, latestCommentOnlyInTarget);
 
 		for (JiraComment commentInSource : newCommentsInSource) {
 			String commentText = commentMapper.map(sourceIssue, commentInSource, jiraSource, behindTime);
@@ -159,13 +163,51 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		}
 	}
 
-	private boolean isCommentBehindTime(List<JiraComment> newCommentsInSource, List<JiraComment> commentsOnlyInTarget) {
-		if (commentsOnlyInTarget.isEmpty() || newCommentsInSource.isEmpty()) {
+	private void updateExistingComments(JiraIssue sourceIssue, JiraIssue targetIssue, JiraService jiraSource, JiraService jiraTarget, Map<JiraComment, JiraComment> targetToSourceAssociations) {
+		for (Entry<JiraComment, JiraComment> entry : targetToSourceAssociations.entrySet()) {
+			JiraComment sourceComment = entry.getValue();
+			if (sourceComment != null) {
+				JiraComment targetComment = entry.getKey();
+				updateComment(sourceIssue, targetIssue, sourceComment, targetComment, jiraSource, jiraTarget);
+			}
+		}
+	}
+
+	private void updateComment(JiraIssue sourceIssue, JiraIssue targetIssue, JiraComment sourceComment, JiraComment targetComment, JiraService jiraSource, JiraService jiraTarget) {
+		boolean behindTime = commentMapper.wasAddedBehindTime(targetComment);
+		String commentText = commentMapper.map(sourceIssue, sourceComment, jiraSource, behindTime);
+		if (!Objects.equals(commentText, targetComment.getBody())) {
+			log.info("updating comment {}", targetComment.getId());
+			jiraTarget.updateComment(targetIssue.getKey(), targetComment.getId(), commentText);
+		}
+	}
+
+	private JiraComment findLatestCommentOnlyInTarget(Map<JiraComment, JiraComment> targetToSourceAssociations) {
+		JiraComment latestComment = null;
+		for (Entry<JiraComment, JiraComment> entry : targetToSourceAssociations.entrySet()) {
+			if (entry.getValue() == null) {
+				latestComment = entry.getKey();
+			}
+		}
+		return latestComment;
+	}
+
+	private Map<JiraComment, JiraComment> associateComments(List<JiraComment> commentsInSource, List<JiraComment> commentsInTarget) {
+		Map<JiraComment, JiraComment> targetCommentToSourceComments = new LinkedHashMap<>();
+
+		for (JiraComment commentInTarget : commentsInTarget) {
+			JiraComment commentInSource = findMatchingCommentInSourceIssue(commentInTarget, commentsInSource);
+			targetCommentToSourceComments.put(commentInTarget, commentInSource);
+		}
+		return targetCommentToSourceComments;
+	}
+
+	private boolean isCommentBehindTime(List<JiraComment> newCommentsInSource, JiraComment latestCommentOnlyInTarget) {
+		if (latestCommentOnlyInTarget == null || newCommentsInSource.isEmpty()) {
 			return false;
 		}
-		JiraComment latestCommentInTarget = commentsOnlyInTarget.get(commentsOnlyInTarget.size() - 1);
 		JiraComment firstCommentInSource = newCommentsInSource.get(0);
-		ZonedDateTime updatedInTarget = latestCommentInTarget.getUpdated();
+		ZonedDateTime updatedInTarget = latestCommentOnlyInTarget.getUpdated();
 		ZonedDateTime createdInSource = firstCommentInSource.getCreated();
 		return updatedInTarget.isAfter(createdInSource);
 	}
@@ -193,13 +235,13 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		return false;
 	}
 
-	private boolean isCommentInSourceIssue(JiraComment commentInTarget, List<JiraComment> commentsInSource) {
+	private JiraComment findMatchingCommentInSourceIssue(JiraComment commentInTarget, List<JiraComment> commentsInSource) {
 		for (JiraComment commentInSource : commentsInSource) {
 			if (commentMapper.isMapped(commentInSource, commentInTarget.getBody())) {
-				return true;
+				return commentInSource;
 			}
 		}
-		return false;
+		return null;
 	}
 
 	private void processTransition(JiraService jiraSource, JiraIssue sourceIssue, JiraIssue targetIssue, JiraProjectSync projectSync, JiraIssueUpdate sourceIssueUpdate, JiraService jiraTarget) {

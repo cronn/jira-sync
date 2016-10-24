@@ -47,6 +47,7 @@ public class DefaultCommentMapperTest {
 		comment.setId(commentId);
 		comment.setAuthor(new JiraUser("user", "user", "Some User"));
 		comment.setCreated(ZonedDateTime.parse("2014-05-09T13:48:52.120Z"));
+		comment.setUpdated(comment.getCreated());
 		return comment;
 	}
 
@@ -61,6 +62,23 @@ public class DefaultCommentMapperTest {
 
 		// then
 		assertThat(body).isEqualTo("{panel:title=Some User - 2014-05-09 15:48:52 CEST|titleBGColor=#DDD|bgColor=#EEE}\n" +
+			"some text\n" +
+			"~??[comment 12345|https://jira.source/browse/KEY-1?focusedCommentId=12345&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-12345]??~\n" +
+			"{panel}");
+	}
+
+	@Test
+	public void testMap_Updated() throws Exception {
+		// given
+		JiraIssue sourceIssue = new JiraIssue("1", "KEY-1");
+		JiraComment comment = createSomeComment("12345");
+		comment.setUpdated(ZonedDateTime.parse("2014-05-10T13:41:32.088Z"));
+
+		// when
+		String body = commentMapper.map(sourceIssue, comment, jiraSource, false);
+
+		// then
+		assertThat(body).isEqualTo("{panel:title=Some User - 2014-05-09 15:48:52 CEST (Updated: 2014-05-10 15:41:32 CEST)|titleBGColor=#DDD|bgColor=#EEE}\n" +
 			"some text\n" +
 			"~??[comment 12345|https://jira.source/browse/KEY-1?focusedCommentId=12345&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-12345]??~\n" +
 			"{panel}");
@@ -119,6 +137,13 @@ public class DefaultCommentMapperTest {
 
 		assertThat(commentMapper.isMapped(comment1, "")).isFalse();
 		assertThat(commentMapper.isMapped(comment1, "foobar")).isFalse();
+	}
+
+	@Test
+	public void testWasAddedBehindTime() throws Exception {
+		assertThat(commentMapper.wasAddedBehindTime(new JiraComment(""))).isFalse();
+		assertThat(commentMapper.wasAddedBehindTime(new JiraComment("some text behind time"))).isFalse();
+		assertThat(commentMapper.wasAddedBehindTime(new JiraComment("This comment was added behind time"))).isTrue();
 	}
 
 }

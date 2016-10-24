@@ -10,4 +10,6 @@ public interface CommentMapper {
 
 	boolean isMapped(JiraComment commentInSource, String commentInTargetBody);
 
+	boolean wasAddedBehindTime(JiraComment comment);
+
 }

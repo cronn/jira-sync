@@ -310,10 +310,43 @@ public class JiraDummyService {
 		ZonedDateTime now = ZonedDateTime.now(clock);
 		comment.setCreated(now);
 		comment.setUpdated(now);
-		comment.setId(issue.getId() + "." + (comments.getComments().size() + 1));
+		comment.setId(generateCommentId(issue, comments));
 		comment.setAuthor(getMyself(context));
 
 		comments.addComment(comment);
+
+		return new ResponseEntity<>(comment, HttpStatus.OK);
+	}
+
+	private static String generateCommentId(JiraIssue issue, JiraComments comments) {
+		return issue.getId() + "_" + (comments.getComments().size() + 1);
+	}
+
+	@RequestMapping(path = "/api/2/issue/{issueKey}/comment/{commentId}", method = RequestMethod.PUT)
+	public ResponseEntity<Object> updateComment(@PathVariable(CONTEXT) Context context, @PathVariable("issueKey") String issueKey, @PathVariable("commentId") String commentId, @RequestBody JiraComment comment) {
+		String body = comment.getBody();
+		if (body == null) {
+			return new ResponseEntity<>("body must not be empty", HttpStatus.BAD_REQUEST);
+		}
+
+		JiraIssue issue = getIssueByKey(context, issueKey);
+		JiraIssueFields fields = issue.getOrCreateFields();
+		JiraComments comments = fields.getOrCreateComment();
+
+		JiraComment commentToUpdate = comments.getComments().stream()
+			.filter(c -> c.getId().equals(commentId))
+			.findFirst()
+			.orElse(null);
+
+		if (commentToUpdate == null) {
+			return new ResponseEntity<>("comment " + commentId + " not found", HttpStatus.NOT_FOUND);
+		}
+
+		ZonedDateTime now = ZonedDateTime.now(clock);
+		commentToUpdate.setUpdated(now);
+		commentToUpdate.setBody(comment.getBody());
+
+		refreshUpdatedTimestamp(issue);
 
 		return new ResponseEntity<>(HttpStatus.OK);
 	}

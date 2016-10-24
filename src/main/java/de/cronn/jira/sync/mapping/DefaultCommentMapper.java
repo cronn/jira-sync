@@ -19,6 +19,7 @@ public class DefaultCommentMapper implements CommentMapper {
 	private static final String TAB_PANEL_PAGE_ID = "com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel";
 
 	private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss z", Locale.ENGLISH);
+	private static final String THIS_COMMENT_WAS_ADDED_BEHIND_TIME = "This comment was added behind time";
 
 	private Clock clock;
 
@@ -38,14 +39,19 @@ public class DefaultCommentMapper implements CommentMapper {
 	public String map(JiraIssue sourceIssue, JiraComment comment, JiraService jiraSource, boolean behindTime) {
 		String originalCommentId = getOriginalCommentId(comment);
 		String author = getAuthorDisplayName(comment);
-		String originalDateString = getOriginalDateString(comment);
+		String dateString = getDateString(comment);
 		String sourceKey = getIssueKey(sourceIssue);
 		String commentText = usernameReplacer.replaceUsernames(comment.getBody(), jiraSource);
-		return "{panel:title=" + author + " - " + originalDateString + "|" + getPanelColors(behindTime) + "}\n" +
+		return "{panel:title=" + author + " - " + dateString + "|" + getPanelColors(behindTime) + "}\n" +
 			commentText + "\n" +
 			"~??[comment " + originalCommentId + "|" + buildCommentLink(jiraSource, originalCommentId, sourceKey) + "]??~\n" +
-			(behindTime ? "~(!) This comment was added behind time. The order of comments might not represent the real order.~\n" : "") +
+			(behindTime ? "~(!) " + THIS_COMMENT_WAS_ADDED_BEHIND_TIME + ". The order of comments might not represent the real order.~\n" : "") +
 			"{panel}";
+	}
+
+	@Override
+	public boolean wasAddedBehindTime(JiraComment comment) {
+		return comment.getBody().contains(THIS_COMMENT_WAS_ADDED_BEHIND_TIME);
 	}
 
 	private String getPanelColors(boolean outOfOrder) {
@@ -79,10 +85,19 @@ public class DefaultCommentMapper implements CommentMapper {
 		return key;
 	}
 
-	private String getOriginalDateString(JiraComment comment) {
+	private String getDateString(JiraComment comment) {
 		ZonedDateTime created = comment.getCreated();
-		Assert.notNull(created);
-		return DATE_TIME_FORMATTER.format(created.withZoneSameInstant(clock.getZone()));
+		String createdDate = formatDate(created);
+		if (comment.getUpdated().isAfter(created)) {
+			return createdDate + " (Updated: " + formatDate(comment.getUpdated()) + ")";
+		} else {
+			return createdDate;
+		}
+	}
+
+	private String formatDate(ZonedDateTime zonedDateTime) {
+		Assert.notNull(zonedDateTime);
+		return DATE_TIME_FORMATTER.format(zonedDateTime.withZoneSameInstant(clock.getZone()));
 	}
 
 	private String getOriginalCommentId(JiraComment comment) {

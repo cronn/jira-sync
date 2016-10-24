@@ -280,11 +280,19 @@ public class JiraServiceRestClient implements JiraService {
 	}
 
 	@Override
-	public void addComment(String issueKey, String commentText) {
+	public JiraComment addComment(String issueKey, String commentText) {
 		validateIssueKey(issueKey);
-		validateIssueKey(commentText);
+		Assert.hasText(commentText);
 		JiraComment comment = new JiraComment(commentText);
-		restTemplate.postForObject(restUrl("/rest/api/2/issue/{issueId}/comment"), comment, Map.class, issueKey);
+		return restTemplate.postForObject(restUrl("/rest/api/2/issue/{issueId}/comment"), comment, JiraComment.class, issueKey);
+	}
+
+	@Override
+	public void updateComment(String issueKey, String commentId, String commentText) {
+		validateIssueKey(issueKey);
+		Assert.hasText(commentText);
+		JiraComment comment = new JiraComment(commentText);
+		restTemplate.put(restUrl("/rest/api/2/issue/{issueId}/comment/{commentId}"), comment, issueKey, commentId);
 	}
 
 	@Override
