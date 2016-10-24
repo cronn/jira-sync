@@ -17,6 +17,7 @@ public class JiraSyncConfig {
 	private Map<String, String> priorityMapping = new LinkedHashMap<>();
 	private Map<String, String> issueTypeMapping = new LinkedHashMap<>();
 	private Map<String, String> resolutionMapping = new LinkedHashMap<>();
+	private Map<String, String> fieldMapping = new LinkedHashMap<>();
 
 	public JiraConnectionProperties getSource() {
 		return source;
@@ -81,4 +82,13 @@ public class JiraSyncConfig {
 	public boolean isPersistentCaching() {
 		return persistentCaching;
 	}
+
+	public void setFieldMapping(Map<String, String> fieldMapping) {
+		this.fieldMapping = fieldMapping;
+	}
+
+	public Map<String, String> getFieldMapping() {
+		return fieldMapping;
+	}
+
 }

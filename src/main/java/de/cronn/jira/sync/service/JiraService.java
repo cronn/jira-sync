@@ -2,10 +2,12 @@ package de.cronn.jira.sync.service;
 
 import java.net.URL;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 
 import de.cronn.jira.sync.config.JiraConnectionProperties;
 import de.cronn.jira.sync.domain.JiraComment;
+import de.cronn.jira.sync.domain.JiraField;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueUpdate;
 import de.cronn.jira.sync.domain.JiraPriority;
@@ -44,9 +46,11 @@ public interface JiraService extends AutoCloseable {
 
 	List<JiraResolution> getResolutions();
 
+	List<JiraField> getFields();
+
 	List<JiraVersion> getVersions(String projectKey);
 
-	List<JiraIssue> getIssuesByFilterId(String filterId);
+	List<JiraIssue> getIssuesByFilterId(String filterId, Collection<String> customFields);
 
 	List<JiraRemoteLink> getRemoteLinks(String issueKey, Instant ifModifiedSince);
 

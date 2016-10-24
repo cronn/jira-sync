@@ -28,6 +28,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import de.cronn.jira.sync.config.JiraSyncConfig;
 import de.cronn.jira.sync.domain.JiraComment;
+import de.cronn.jira.sync.domain.JiraField;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueFields;
 import de.cronn.jira.sync.domain.JiraIssueStatus;
@@ -85,6 +86,9 @@ public class JiraSyncApplicationTests {
 
 	private static final JiraUser SOURCE_USER_SOME = new JiraUser("some.user", "some.user", "Some User");
 	private static final JiraUser SOURCE_USER_ANOTHER = new JiraUser("anotheruser", "anotheruser", "Another User");
+
+	private static final JiraField SOURCE_CUSTOM_FIELD_FOUND_IN_VERSION = new JiraField("1", "Found in version");
+	private static final JiraField TARGET_CUSTOM_FIELD_FOUND_IN_VERSION = new JiraField("100", "Found in software version");
 
 	@Autowired
 	private TestClock clock;
@@ -162,6 +166,9 @@ public class JiraSyncApplicationTests {
 
 		jiraDummyService.addUser(SOURCE, SOURCE_USER_SOME);
 		jiraDummyService.addUser(SOURCE, SOURCE_USER_ANOTHER);
+
+		jiraDummyService.addField(SOURCE, SOURCE_CUSTOM_FIELD_FOUND_IN_VERSION);
+		jiraDummyService.addField(TARGET, TARGET_CUSTOM_FIELD_FOUND_IN_VERSION);
 
 		jiraDummyService.setDefaultStatus(TARGET, TARGET_STATUS_OPEN);
 
@@ -334,6 +341,26 @@ public class JiraSyncApplicationTests {
 		// then
 		JiraIssue targetIssue = getSingleIssue(TARGET);
 		assertThat(targetIssue.getFields().getIssuetype().getName()).isEqualTo(TARGET_TYPE_TASK.getName());
+	}
+
+	@Test
+	public void testCreateTicketInTarget_WithCustomField() throws Exception {
+		// given
+		JiraIssue sourceIssue = new JiraIssue(null, null, "some issue", SOURCE_STATUS_OPEN);
+		sourceIssue.getFields().setProject(SOURCE_PROJECT);
+		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_UNKNOWN);
+		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
+		sourceIssue.getFields().setOther(SOURCE_CUSTOM_FIELD_FOUND_IN_VERSION.getId(), Arrays.asList("1.0", "1.1"));
+
+		jiraSource.createIssue(sourceIssue);
+
+		// when
+		syncTask.sync();
+
+		// then
+		JiraIssue targetIssue = getSingleIssue(TARGET);
+		assertThat(targetIssue.getFields().getIssuetype().getName()).isEqualTo(TARGET_TYPE_TASK.getName());
+		assertThat(targetIssue.getFields().getOther()).isEqualTo(Collections.singletonMap(TARGET_CUSTOM_FIELD_FOUND_IN_VERSION.getId(), Arrays.asList("1.0", "1.1")));
 	}
 
 	@Test
@@ -593,6 +620,38 @@ public class JiraSyncApplicationTests {
 			"some comment\n" +
 			"~??[comment 1_1|https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-1?focusedCommentId=1_1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_1]??~\n" +
 			"{panel}");
+	}
+
+	@Test
+	public void testUpdateTicketInTarget_updateCustomField() throws Exception {
+		// given
+		JiraIssue sourceIssue = new JiraIssue(null, null, "My first bug", SOURCE_STATUS_OPEN);
+		sourceIssue.getFields().setProject(SOURCE_PROJECT);
+		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_BUG);
+		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
+		sourceIssue.getFields().setOther(SOURCE_CUSTOM_FIELD_FOUND_IN_VERSION.getId(), Collections.singletonList("1.0"));
+
+		JiraIssue createdSourceIssue = jiraSource.createIssue(sourceIssue);
+
+		syncTask.sync();
+
+		JiraIssue targetIssue = getSingleIssue(TARGET);
+		assertThat(targetIssue.getFields().getComment()).isNull();
+
+		// when
+		clock.windForwardSeconds(30);
+
+		JiraIssueUpdate update = new JiraIssueUpdate();
+		update.getOrCreateFields().setOther(SOURCE_CUSTOM_FIELD_FOUND_IN_VERSION.getId(), Arrays.asList("1.0", "1.1"));
+		jiraSource.updateIssue(createdSourceIssue.getKey(), update);
+
+		clock.windForwardSeconds(30);
+
+		syncTask.sync();
+
+		// then
+		targetIssue = getSingleIssue(TARGET);
+		assertThat(targetIssue.getFields().getOther()).isEqualTo(Collections.singletonMap(TARGET_CUSTOM_FIELD_FOUND_IN_VERSION.getId(), Arrays.asList("1.0", "1.1")));
 	}
 
 	@Test

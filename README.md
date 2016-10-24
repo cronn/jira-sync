@@ -106,6 +106,9 @@ de.cronn.jira.sync.projects[EX].transitions[TakeInProgress].assignToMyselfInSour
 
 de.cronn.jira.sync.projects[EX].targetIssueTypeFallback=Task
 
+# cf. https://jira-source/rest/api/2/field and https://jira.target/rest/api/2/field
+de.cronn.jira.sync.fieldMapping[Found\ in\ version]=Found in software version
+
 # cf. https://jira-source/rest/api/2/project/EXAMPLE/versions and https://jira.target/rest/api/2/project/EX/versions
 de.cronn.jira.sync.projects[EX].versionMapping[10.0]=10
 de.cronn.jira.sync.projects[EX].versionMapping[11.0]=11

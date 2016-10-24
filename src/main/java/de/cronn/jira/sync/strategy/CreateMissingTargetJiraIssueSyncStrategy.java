@@ -1,5 +1,8 @@
 package de.cronn.jira.sync.strategy;
 
+import java.util.Map;
+import java.util.Map.Entry;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +19,7 @@ import de.cronn.jira.sync.domain.JiraPriority;
 import de.cronn.jira.sync.domain.JiraProject;
 import de.cronn.jira.sync.link.JiraIssueLinker;
 import de.cronn.jira.sync.mapping.CommentMapper;
+import de.cronn.jira.sync.mapping.CustomFieldMapper;
 import de.cronn.jira.sync.mapping.DescriptionMapper;
 import de.cronn.jira.sync.mapping.IssueTypeMapper;
 import de.cronn.jira.sync.mapping.LabelMapper;
@@ -38,6 +42,7 @@ public class CreateMissingTargetJiraIssueSyncStrategy implements MissingTargetJi
 	private VersionMapper versionMapper;
 	private CommentMapper commentMapper;
 	private JiraIssueLinker issueLinker;
+	private CustomFieldMapper customFieldMapper;
 
 	@Autowired
 	public void setJiraSyncConfig(JiraSyncConfig jiraSyncConfig) {
@@ -84,6 +89,11 @@ public class CreateMissingTargetJiraIssueSyncStrategy implements MissingTargetJi
 		this.issueLinker = issueLinker;
 	}
 
+	@Autowired
+	public void setCustomFieldMapper(CustomFieldMapper customFieldMapper) {
+		this.customFieldMapper = customFieldMapper;
+	}
+
 	@Override
 	public SyncResult sync(JiraService jiraSource, JiraService jiraTarget, JiraIssue sourceIssue, JiraProjectSync projectSync) {
 		JiraProject targetProject = jiraTarget.getProjectByKey(projectSync.getTargetProject());
@@ -98,6 +108,7 @@ public class CreateMissingTargetJiraIssueSyncStrategy implements MissingTargetJi
 		copyLabels(sourceIssue, issueToCreate);
 		copyVersions(sourceIssue, issueToCreate, jiraTarget, projectSync);
 		copyFixVersions(sourceIssue, issueToCreate, jiraTarget, projectSync);
+		copyCustomFields(jiraSource, jiraTarget, sourceIssue, issueToCreate);
 
 		JiraIssue newIssue = jiraTarget.createIssue(issueToCreate);
 		linkIssues(jiraSource, jiraTarget, sourceIssue, projectSync, newIssue);
@@ -107,6 +118,13 @@ public class CreateMissingTargetJiraIssueSyncStrategy implements MissingTargetJi
 		}
 
 		return SyncResult.CREATED;
+	}
+
+	private void copyCustomFields(JiraService jiraSource, JiraService jiraTarget, JiraIssue sourceIssue, JiraIssue issueToCreate) {
+		Map<String, Object> mappedFields = customFieldMapper.map(sourceIssue, jiraSource, jiraTarget);
+		for (Entry<String, Object> entry : mappedFields.entrySet()) {
+			issueToCreate.getFields().setOther(entry.getKey(), entry.getValue());
+		}
 	}
 
 	private void linkIssues(JiraService jiraSource, JiraService jiraTarget, JiraIssue sourceIssue, JiraProjectSync projectSync, JiraIssue newIssue) {

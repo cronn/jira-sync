@@ -1,7 +1,12 @@
 package de.cronn.jira.sync.domain;
 
 import java.io.Serializable;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
+
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 
 public class JiraFieldsUpdate implements Serializable {
 
@@ -14,6 +19,7 @@ public class JiraFieldsUpdate implements Serializable {
 	private Set<JiraVersion> versions;
 	private Set<JiraVersion> fixVersions;
 	private JiraUser assignee;
+	private Map<String, Object> other = new LinkedHashMap<>();
 
 	public String getDescription() {
 		return description;
@@ -71,4 +77,13 @@ public class JiraFieldsUpdate implements Serializable {
 		this.assignee = assignee;
 	}
 
+	@JsonAnyGetter
+	public Map<String, Object> getOther() {
+		return other;
+	}
+
+	@JsonAnySetter
+	public void setOther(String key, Object value) {
+		other.put(key, value);
+	}
 }

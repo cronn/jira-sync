@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.springframework.util.Assert;
 
+import de.cronn.jira.sync.domain.JiraField;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueStatus;
 import de.cronn.jira.sync.domain.JiraLoginRequest;
@@ -31,11 +32,12 @@ public class JiraDummyData {
 	private final List<JiraResolution> resolutions = new ArrayList<>();
 	private final List<JiraTransition> transitions = new ArrayList<>();
 	private final List<JiraVersion> versions = new ArrayList<>();
-	private String baseUrl;
-	private BasicAuthCredentials basicAuthCredentials;
+	private final List<JiraField> customFields = new ArrayList<>();
 	private final Map<String, AtomicLong> keyCounters = new LinkedHashMap<>();
 	private final AtomicLong idCounter = new AtomicLong();
 	private final Map<String, JiraUser> users = new LinkedHashMap<>();
+	private String baseUrl;
+	private BasicAuthCredentials basicAuthCredentials;
 
 	public JiraLoginRequest getCredentials() {
 		return credentials;
@@ -52,6 +54,10 @@ public class JiraDummyData {
 
 	public List<JiraVersion> getVersions() {
 		return versions;
+	}
+
+	public List<JiraField> getCustomFields() {
+		return customFields;
 	}
 
 	public List<JiraResolution> getResolutions() {
@@ -108,6 +114,10 @@ public class JiraDummyData {
 
 	public AtomicLong getIdCounter() {
 		return idCounter;
+	}
+
+	public void addField(JiraField field) {
+		customFields.add(field);
 	}
 
 	public void addUser(JiraUser user) {

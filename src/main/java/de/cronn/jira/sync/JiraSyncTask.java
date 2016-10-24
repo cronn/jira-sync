@@ -89,7 +89,7 @@ public class JiraSyncTask implements CommandLineRunner {
 		log.info("syncing project '{}' to '{}'", projectSync.getSourceProject(), projectSync.getTargetProject());
 		String sourceFilterId = projectSync.getSourceFilterId();
 		Assert.notNull(sourceFilterId, "sourceFilterId must be configured");
-		List<JiraIssue> issues = jiraSource.getIssuesByFilterId(sourceFilterId);
+		List<JiraIssue> issues = jiraSource.getIssuesByFilterId(sourceFilterId, jiraSyncConfig.getFieldMapping().keySet());
 
 		Map<SyncResult, Long> resultCounts = new EnumMap<>(SyncResult.class);
 		for (SyncResult syncResult : SyncResult.values()) {

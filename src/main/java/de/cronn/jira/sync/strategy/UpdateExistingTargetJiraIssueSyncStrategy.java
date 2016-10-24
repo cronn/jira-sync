@@ -39,6 +39,7 @@ import de.cronn.jira.sync.domain.JiraUser;
 import de.cronn.jira.sync.domain.JiraVersion;
 import de.cronn.jira.sync.link.JiraIssueLinker;
 import de.cronn.jira.sync.mapping.CommentMapper;
+import de.cronn.jira.sync.mapping.CustomFieldMapper;
 import de.cronn.jira.sync.mapping.DescriptionMapper;
 import de.cronn.jira.sync.mapping.LabelMapper;
 import de.cronn.jira.sync.mapping.PriorityMapper;
@@ -58,6 +59,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 	private VersionMapper versionMapper;
 	private CommentMapper commentMapper;
 	private JiraIssueLinker issueLinker;
+	private CustomFieldMapper customFieldMapper;
 
 	@Autowired
 	public void setDescriptionMapper(DescriptionMapper descriptionMapper) {
@@ -94,6 +96,11 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		this.issueLinker = issueLinker;
 	}
 
+	@Autowired
+	public void setCustomFieldMapper(CustomFieldMapper customFieldMapper) {
+		this.customFieldMapper = customFieldMapper;
+	}
+
 	@Override
 	public SyncResult sync(JiraService jiraSource, JiraService jiraTarget, JiraIssue sourceIssue, JiraIssue targetIssue, JiraProjectSync projectSync) {
 		log.info("synchronizing '{}' with '{}'", sourceIssue.getKey(), targetIssue.getKey());
@@ -110,6 +117,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		processPriority(jiraTarget, sourceIssue, targetIssue, targetIssueUpdate);
 		processVersions(jiraTarget, sourceIssue, targetIssue, JiraIssueFields::getVersions, versions -> targetIssueUpdate.getOrCreateFields().setVersions(versions), projectSync);
 		processVersions(jiraTarget, sourceIssue, targetIssue, JiraIssueFields::getFixVersions, versions -> targetIssueUpdate.getOrCreateFields().setFixVersions(versions), projectSync);
+		processCustomFields(jiraSource, jiraTarget, sourceIssue, targetIssueUpdate);
 
 		if (projectSync.isCopyCommentsToTarget()) {
 			processComments(sourceIssue, targetIssue, jiraSource, jiraTarget);
@@ -137,6 +145,13 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 			return SyncResult.CHANGED_TRANSITION;
 		} else {
 			return SyncResult.CHANGED;
+		}
+	}
+
+	private void processCustomFields(JiraService jiraSource, JiraService jiraTarget, JiraIssue sourceIssue, JiraIssueUpdate targetIssueUpdate) {
+		Map<String, Object> mappedFields = customFieldMapper.map(sourceIssue, jiraSource, jiraTarget);
+		for (Entry<String, Object> entry : mappedFields.entrySet()) {
+			targetIssueUpdate.getOrCreateFields().setOther(entry.getKey(), entry.getValue());
 		}
 	}
 

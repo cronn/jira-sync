@@ -6,10 +6,11 @@ import java.io.IOException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.PreDestroy;
 import javax.net.ssl.HostnameVerifier;
@@ -39,6 +40,8 @@ import de.cronn.jira.sync.JiraSyncException;
 import de.cronn.jira.sync.config.BasicAuthentication;
 import de.cronn.jira.sync.config.JiraConnectionProperties;
 import de.cronn.jira.sync.domain.JiraComment;
+import de.cronn.jira.sync.domain.JiraField;
+import de.cronn.jira.sync.domain.JiraFieldList;
 import de.cronn.jira.sync.domain.JiraFilterResult;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueUpdate;
@@ -128,6 +131,7 @@ public class JiraServiceRestClient implements JiraService {
 		CACHE_NAME_PROJECTS,
 		CACHE_NAME_VERSIONS,
 		CACHE_NAME_RESOLUTIONS,
+		CACHE_NAME_FIELDS,
 		CACHE_NAME_REMOTE_LINKS }, allEntries = true)
 	public void evictAllCaches() {
 		log.info("all caches evicted");
@@ -226,17 +230,45 @@ public class JiraServiceRestClient implements JiraService {
 	}
 
 	@Override
-	public List<JiraIssue> getIssuesByFilterId(String filterId) {
+	@Cacheable(value = CACHE_NAME_FIELDS, key = "#root.target.url")
+	public List<JiraField> getFields() {
+		log.debug("[{}] fetching fields", getUrl());
+		return getForObject("/rest/api/2/field", JiraFieldList.class);
+	}
+
+	@Override
+	public List<JiraIssue> getIssuesByFilterId(String filterId, Collection<String> customFields) {
 		log.debug("fetching filter {}", filterId);
 		JiraFilterResult filter = getForObject("/rest/api/2/filter/{id}", JiraFilterResult.class, filterId);
 		log.debug("fetching issues by JQL '{}'", filter.getJql());
-		String fieldsToFetch = Stream.of(WellKnownJiraField.values()).map(WellKnownJiraField::getName).collect(Collectors.joining(","));
+		String fieldsToFetch = getFieldsToFetch(customFields);
 		JiraSearchResult searchResult = getForObject("/rest/api/2/search?jql={jql}&maxResults=100&fields=" + fieldsToFetch, JiraSearchResult.class, filter.getJql());
 		log.info("got {} issues", searchResult.getTotal());
 		if (searchResult.getTotal() > searchResult.getMaxResults()) {
 			throw new IllegalStateException("Paging not yet implemented");
 		}
 		return searchResult.getIssues();
+	}
+
+	private String getFieldsToFetch(Collection<String> customFields) {
+		List<String> fieldsToFetch = new ArrayList<>();
+		for (WellKnownJiraField knownJiraField : WellKnownJiraField.values()) {
+			fieldsToFetch.add(knownJiraField.getName());
+		}
+		List<JiraField> fields = getFields();
+		for (String field : customFields) {
+			fieldsToFetch.add(findFieldId(fields, field));
+		}
+		return fieldsToFetch.stream().collect(Collectors.joining(","));
+	}
+
+	private String findFieldId(List<JiraField> fields, String fieldName) {
+		for (JiraField field : fields) {
+			if (field.getName().equals(fieldName)) {
+				return field.getId();
+			}
+		}
+		throw new JiraSyncException("Field " + fieldName + " not found in " + this);
 	}
 
 	private <T> T getForObject(String url, Class<T> responseType, Object... urlVariables) {

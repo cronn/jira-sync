@@ -23,7 +23,9 @@ import de.cronn.jira.sync.domain.JiraIssueUpdate;
 import de.cronn.jira.sync.domain.JiraPriority;
 import de.cronn.jira.sync.link.JiraIssueLinker;
 import de.cronn.jira.sync.mapping.CommentMapper;
+import de.cronn.jira.sync.mapping.CustomFieldMapper;
 import de.cronn.jira.sync.mapping.DefaultCommentMapper;
+import de.cronn.jira.sync.mapping.DefaultCustomFieldMapper;
 import de.cronn.jira.sync.mapping.DefaultDescriptionMapper;
 import de.cronn.jira.sync.mapping.DefaultIssueTypeMapper;
 import de.cronn.jira.sync.mapping.DefaultLabelMapper;
@@ -81,6 +83,10 @@ public class UpdateExistingTargetJiraIssueSyncStrategyTest extends AbstractIssue
 	@InjectMocks
 	@Spy
 	private UsernameReplacer usernameReplacer = new DefaultUsernameReplacer();
+
+	@InjectMocks
+	@Spy
+	private CustomFieldMapper customFieldMapper = new DefaultCustomFieldMapper();
 
 	@Test
 	public void testSync_NoChanges() throws Exception {

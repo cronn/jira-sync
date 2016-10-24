@@ -7,6 +7,7 @@ import java.util.EnumMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import de.cronn.jira.sync.domain.JiraComment;
 import de.cronn.jira.sync.domain.JiraComments;
+import de.cronn.jira.sync.domain.JiraField;
 import de.cronn.jira.sync.domain.JiraFieldsUpdate;
 import de.cronn.jira.sync.domain.JiraFilterResult;
 import de.cronn.jira.sync.domain.JiraIssue;
@@ -113,6 +115,10 @@ public class JiraDummyService {
 
 	public void addUser(Context context, JiraUser user) {
 		getData(context).addUser(user);
+	}
+
+	public void addField(Context context, JiraField field) {
+		getData(context).addField(field);
 	}
 
 	public void addResolution(Context context, JiraResolution resolution) {
@@ -237,6 +243,11 @@ public class JiraDummyService {
 	@RequestMapping(path = "/api/2/priority", method = RequestMethod.GET)
 	public List<JiraPriority> getPriorities(@PathVariable(CONTEXT) Context context) {
 		return getData(context).getPriorities();
+	}
+
+	@RequestMapping(path = "/api/2/field", method = RequestMethod.GET)
+	public List<JiraField> getFields(@PathVariable(CONTEXT) Context context) {
+		return getData(context).getCustomFields();
 	}
 
 	@RequestMapping(path = "/api/2/resolution", method = RequestMethod.GET)
@@ -493,6 +504,10 @@ public class JiraDummyService {
 
 		if (fieldToUpdate.getVersions() != null) {
 			issueInSystem.getFields().setVersions(fieldToUpdate.getVersions());
+		}
+
+		for (Entry<String, Object> entry : fieldToUpdate.getOther().entrySet()) {
+			issueInSystem.getFields().setOther(entry.getKey(), entry.getValue());
 		}
 
 		Assert.isNull(fieldToUpdate.getLabels());
