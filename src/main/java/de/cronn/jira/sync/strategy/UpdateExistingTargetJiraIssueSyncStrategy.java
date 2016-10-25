@@ -117,7 +117,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		processPriority(jiraTarget, sourceIssue, targetIssue, targetIssueUpdate);
 		processVersions(jiraTarget, sourceIssue, targetIssue, JiraIssueFields::getVersions, versions -> targetIssueUpdate.getOrCreateFields().setVersions(versions), projectSync);
 		processVersions(jiraTarget, sourceIssue, targetIssue, JiraIssueFields::getFixVersions, versions -> targetIssueUpdate.getOrCreateFields().setFixVersions(versions), projectSync);
-		processCustomFields(jiraSource, jiraTarget, sourceIssue, targetIssueUpdate);
+		processCustomFields(jiraSource, jiraTarget, sourceIssue, targetIssue, targetIssueUpdate);
 
 		if (projectSync.isCopyCommentsToTarget()) {
 			processComments(sourceIssue, targetIssue, jiraSource, jiraTarget);
@@ -148,10 +148,13 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		}
 	}
 
-	private void processCustomFields(JiraService jiraSource, JiraService jiraTarget, JiraIssue sourceIssue, JiraIssueUpdate targetIssueUpdate) {
+	private void processCustomFields(JiraService jiraSource, JiraService jiraTarget, JiraIssue sourceIssue, JiraIssue targetIssue, JiraIssueUpdate targetIssueUpdate) {
 		Map<String, Object> mappedFields = customFieldMapper.map(sourceIssue, jiraSource, jiraTarget);
 		for (Entry<String, Object> entry : mappedFields.entrySet()) {
-			targetIssueUpdate.getOrCreateFields().setOther(entry.getKey(), entry.getValue());
+			Object existingValue = targetIssue.getOrCreateFields().getOther().get(entry.getKey());
+			if (!Objects.equals(existingValue, entry.getValue())) {
+				targetIssueUpdate.getOrCreateFields().setOther(entry.getKey(), entry.getValue());
+			}
 		}
 	}
 
