@@ -19,10 +19,16 @@ public class DefaultDescriptionMapper implements DescriptionMapper {
 	private static final Pattern PANEL_START_PATTERN = Pattern.compile("\\{(panel[^\\\\}]*)\\}");
 
 	private UsernameReplacer usernameReplacer;
+	private TicketReferenceReplacer ticketReferenceReplacer;
 
 	@Autowired
 	public void setUsernameReplacer(UsernameReplacer usernameReplacer) {
 		this.usernameReplacer = usernameReplacer;
+	}
+
+	@Autowired
+	public void setTicketReferenceReplacer(TicketReferenceReplacer ticketReferenceReplacer) {
+		this.ticketReferenceReplacer = ticketReferenceReplacer;
 	}
 
 	@Override
@@ -56,8 +62,9 @@ public class DefaultDescriptionMapper implements DescriptionMapper {
 		if (StringUtils.isEmpty(sourceDescription)) {
 			return "";
 		} else {
-			String descriptionWithReplacedUsernames = usernameReplacer.replaceUsernames(sourceDescription, jiraSource);
-			String normalizedSourceDescription = normalizeDescription(descriptionWithReplacedUsernames);
+			String description = usernameReplacer.replaceUsernames(sourceDescription, jiraSource);
+			description = ticketReferenceReplacer.replaceTicketReferences(description, jiraSource);
+			String normalizedSourceDescription = normalizeDescription(description);
 			String escapedSourceDescription = PANEL_START_PATTERN.matcher(normalizedSourceDescription).replaceAll("\\\\{$1\\\\}");
 			return "{panel:title=Original description|titleBGColor=#DDD|bgColor=#EEE}\n" + escapedSourceDescription + "\n{panel}\n\n";
 		}

@@ -594,6 +594,36 @@ public class JiraSyncApplicationTests {
 	}
 
 	@Test
+	public void testCreateTicket_TicketReferences() throws Exception {
+		// given
+		JiraIssue sourceIssue = new JiraIssue(null, null, "some issue", SOURCE_STATUS_OPEN);
+		sourceIssue.getFields().setDescription("mentioning " + SOURCE_PROJECT.getKey() + "-123 in description");
+		sourceIssue.getFields().setProject(SOURCE_PROJECT);
+		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_UNKNOWN);
+		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
+		JiraIssue createdIssue = jiraSource.createIssue(sourceIssue);
+
+		jiraSource.addComment(createdIssue.getKey(), "see ticket " + SOURCE_PROJECT.getKey() + "-456");
+
+		// when
+		syncTask.sync();
+
+		// then
+		JiraIssue targetIssue = getSingleIssue(TARGET);
+		assertThat(targetIssue.getFields().getDescription()).isEqualTo("{panel:title=Original description|titleBGColor=#DDD|bgColor=#EEE}\n" +
+			"mentioning [PROJECT_ONE-123|https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-123] in description\n" +
+			"{panel}\n\n");
+
+		List<JiraComment> comments = targetIssue.getFields().getComment().getComments();
+		assertThat(comments).hasSize(1);
+
+		assertThat(comments.get(0).getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:00 CEST|titleBGColor=#DDD|bgColor=#EEE}\n" +
+			"see ticket [PROJECT_ONE-456|https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-456]\n" +
+			"~??[comment 1_1|https://localhost:" + this.port + "/SOURCE/browse/PROJECT_ONE-1?focusedCommentId=1_1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_1]??~\n" +
+			"{panel}");
+	}
+
+	@Test
 	public void testUpdateTicketInTarget_addComment() throws Exception {
 		// given
 		JiraIssue createdSourceIssue = createIssueInSource("My first bug");

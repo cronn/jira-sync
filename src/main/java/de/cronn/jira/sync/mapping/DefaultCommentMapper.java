@@ -25,6 +25,8 @@ public class DefaultCommentMapper implements CommentMapper {
 
 	private UsernameReplacer usernameReplacer;
 
+	private TicketReferenceReplacer ticketReferenceReplacer;
+
 	@Autowired
 	public void setClock(Clock clock) {
 		this.clock = clock;
@@ -35,6 +37,11 @@ public class DefaultCommentMapper implements CommentMapper {
 		this.usernameReplacer = usernameReplacer;
 	}
 
+	@Autowired
+	public void setTicketReferenceReplacer(TicketReferenceReplacer ticketReferenceReplacer) {
+		this.ticketReferenceReplacer = ticketReferenceReplacer;
+	}
+
 	@Override
 	public String map(JiraIssue sourceIssue, JiraComment comment, JiraService jiraSource, boolean behindTime) {
 		String originalCommentId = getOriginalCommentId(comment);
@@ -42,6 +49,7 @@ public class DefaultCommentMapper implements CommentMapper {
 		String dateString = getDateString(comment);
 		String sourceKey = getIssueKey(sourceIssue);
 		String commentText = usernameReplacer.replaceUsernames(comment.getBody(), jiraSource);
+		commentText = ticketReferenceReplacer.replaceTicketReferences(commentText, jiraSource);
 		return "{panel:title=" + author + " - " + dateString + "|" + getPanelColors(behindTime) + "}\n" +
 			commentText + "\n" +
 			"~??[comment " + originalCommentId + "|" + buildCommentLink(jiraSource, originalCommentId, sourceKey) + "]??~\n" +

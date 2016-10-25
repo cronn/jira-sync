@@ -24,6 +24,10 @@ public class DefaultDescriptionMapperTest {
 	@InjectMocks
 	private UsernameReplacer usernameReplacer = new DefaultUsernameReplacer();
 
+	@Spy
+	@InjectMocks
+	private TicketReferenceReplacer ticketReferenceReplacer = new DefaultTicketReferenceReplacer();
+
 	@InjectMocks
 	private DefaultDescriptionMapper descriptionMapper;
 

@@ -2,6 +2,7 @@ package de.cronn.jira.sync.dummy;
 
 import java.time.Clock;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.LinkedHashSet;
@@ -238,6 +239,11 @@ public class JiraDummyService {
 		JiraProject jiraProject = getProjects(context).get(projectKey);
 		Assert.notNull(jiraProject, "Project " + projectKey + " not found");
 		return jiraProject;
+	}
+
+	@RequestMapping(path = "/api/2/project", method = RequestMethod.GET)
+	public List<JiraProject> getAllProjects(@PathVariable(CONTEXT) Context context) {
+		return new ArrayList<>(getProjects(context).values());
 	}
 
 	@RequestMapping(path = "/api/2/priority", method = RequestMethod.GET)

@@ -51,6 +51,7 @@ import de.cronn.jira.sync.domain.JiraLoginResponse;
 import de.cronn.jira.sync.domain.JiraPriority;
 import de.cronn.jira.sync.domain.JiraPriorityList;
 import de.cronn.jira.sync.domain.JiraProject;
+import de.cronn.jira.sync.domain.JiraProjectsList;
 import de.cronn.jira.sync.domain.JiraRemoteLink;
 import de.cronn.jira.sync.domain.JiraRemoteLinkObject;
 import de.cronn.jira.sync.domain.JiraRemoteLinks;
@@ -205,6 +206,13 @@ public class JiraServiceRestClient implements JiraService {
 		validateProjectKey(projectKey);
 		log.debug("[{}], fetching project {}", getUrl(), projectKey);
 		return getForObject("/rest/api/2/project/{key}", JiraProject.class, projectKey);
+	}
+
+	@Override
+	@Cacheable(value = CACHE_NAME_PROJECTS, key = "{ #root.target.url }")
+	public List<JiraProject> getProjects() {
+		log.debug("[{}], fetching projects", getUrl());
+		return getForObject("/rest/api/2/project", JiraProjectsList.class);
 	}
 
 	@Override

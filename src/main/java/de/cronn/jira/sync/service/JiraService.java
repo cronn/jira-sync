@@ -42,6 +42,8 @@ public interface JiraService extends AutoCloseable {
 
 	JiraProject getProjectByKey(String projectKey);
 
+	List<JiraProject> getProjects();
+
 	List<JiraPriority> getPriorities();
 
 	List<JiraResolution> getResolutions();

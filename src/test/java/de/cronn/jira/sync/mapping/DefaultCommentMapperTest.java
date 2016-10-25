@@ -32,6 +32,10 @@ public class DefaultCommentMapperTest {
 	private UsernameReplacer usernameReplacer = new DefaultUsernameReplacer();
 
 	@InjectMocks
+	@Spy
+	private TicketReferenceReplacer ticketReferenceReplacer = new DefaultTicketReferenceReplacer();
+
+	@InjectMocks
 	private DefaultCommentMapper commentMapper;
 
 	@Spy
