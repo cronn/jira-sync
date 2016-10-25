@@ -18,7 +18,8 @@ public class DefaultTicketReferenceReplacer implements TicketReferenceReplacer {
 			return inputText;
 		}
 		StringBuffer sb = new StringBuffer();
-		Matcher matcher = Pattern.compile("(?<=(?:\\s|[:]|^))" + "(" + buildProjectsPattern(jiraService) + "-\\d+)" + "(?=(?:\\s|[:]|$))").matcher(inputText);
+		Pattern pattern = Pattern.compile("(?<=(?:\\s|[:]|^))" + "(" + buildProjectsPattern(jiraService) + "-\\d+)" + "(?=(?:\\s|[:]|$))");
+		Matcher matcher = pattern.matcher(inputText);
 		while (matcher.find()) {
 			String issueKey = matcher.group(1);
 			String issueLink = buildUserLink(jiraService, issueKey);
