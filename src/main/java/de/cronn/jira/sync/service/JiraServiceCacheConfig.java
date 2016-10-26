@@ -1,6 +1,8 @@
 package de.cronn.jira.sync.service;
 
-import java.util.Properties;
+import java.net.URI;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
 
 import javax.cache.CacheManager;
@@ -11,17 +13,19 @@ import org.ehcache.config.CacheConfiguration;
 import org.ehcache.config.builders.CacheConfigurationBuilder;
 import org.ehcache.config.builders.ResourcePoolsBuilder;
 import org.ehcache.config.units.MemoryUnit;
+import org.ehcache.core.config.DefaultConfiguration;
 import org.ehcache.expiry.Duration;
 import org.ehcache.expiry.Expirations;
+import org.ehcache.impl.config.persistence.DefaultPersistenceConfiguration;
 import org.ehcache.jsr107.Eh107Configuration;
+import org.ehcache.jsr107.EhcacheCachingProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.core.io.Resource;
 
+import de.cronn.jira.sync.config.CacheConfig;
 import de.cronn.jira.sync.config.JiraSyncConfig;
 
 @Configuration
@@ -44,21 +48,40 @@ public class JiraServiceCacheConfig {
 
 	@Bean
 	@Primary
-	public CacheManager ehCacheManager(ApplicationContext context, JiraSyncConfig jiraSyncConfig) throws Exception {
+	public CacheManager ehCacheManager(JiraSyncConfig jiraSyncConfig) throws Exception {
 		CachingProvider cachingProvider = Caching.getCachingProvider();
-		Resource configLocation = context.getResource("classpath:ehcache.xml");
-		CacheManager cacheManager = cachingProvider.getCacheManager(configLocation.getURI(),
-			cachingProvider.getDefaultClassLoader(), new Properties());
-		createCache(cacheManager, CACHE_NAME_PROJECTS, ONE_HOUR, jiraSyncConfig.isPersistentCaching());
-		createCache(cacheManager, CACHE_NAME_PRIORITIES, ONE_HOUR, jiraSyncConfig.isPersistentCaching());
-		createCache(cacheManager, CACHE_NAME_RESOLUTIONS, ONE_HOUR, jiraSyncConfig.isPersistentCaching());
-		createCache(cacheManager, CACHE_NAME_VERSIONS, ONE_HOUR, jiraSyncConfig.isPersistentCaching());
-		createCache(cacheManager, CACHE_NAME_FIELDS, ONE_HOUR, jiraSyncConfig.isPersistentCaching());
-		createCache(cacheManager, CACHE_NAME_REMOTE_LINKS, ONE_HOUR, jiraSyncConfig.isPersistentCaching());
-		createCache(cacheManager, CACHE_NAME_USERS, ONE_HOUR, jiraSyncConfig.isPersistentCaching());
+		EhcacheCachingProvider ehcacheCachingProvider = (EhcacheCachingProvider) cachingProvider;
+		CacheConfig cacheConfig = jiraSyncConfig.getCache();
+		CacheManager cacheManager = getCacheManager(ehcacheCachingProvider, cacheConfig);
+		boolean persistentCache = cacheConfig.isPersistent();
+		createCache(cacheManager, CACHE_NAME_PROJECTS, ONE_HOUR, persistentCache);
+		createCache(cacheManager, CACHE_NAME_PRIORITIES, ONE_HOUR, persistentCache);
+		createCache(cacheManager, CACHE_NAME_RESOLUTIONS, ONE_HOUR, persistentCache);
+		createCache(cacheManager, CACHE_NAME_VERSIONS, ONE_HOUR, persistentCache);
+		createCache(cacheManager, CACHE_NAME_FIELDS, ONE_HOUR, persistentCache);
+		createCache(cacheManager, CACHE_NAME_REMOTE_LINKS, ONE_HOUR, persistentCache);
+		createCache(cacheManager, CACHE_NAME_USERS, ONE_HOUR, persistentCache);
 		createCache(cacheManager, CACHE_NAME_MYSELF, ONE_HOUR, false);
 		createCache(cacheManager, CACHE_NAME_SERVER_INFO, THIRTY_SECONDS, false);
 		return cacheManager;
+	}
+
+	private CacheManager getCacheManager(EhcacheCachingProvider cachingProvider, CacheConfig cacheConfig) {
+		URI uri = cachingProvider.getDefaultURI();
+		DefaultConfiguration configuration = getConfiguration(cachingProvider, cacheConfig);
+		return cachingProvider.getCacheManager(uri, configuration);
+	}
+
+	private DefaultConfiguration getConfiguration(EhcacheCachingProvider cachingProvider, CacheConfig cacheConfig) {
+		if (cacheConfig.isPersistent()) {
+			Path cacheDirectory = Paths.get(cacheConfig.getDirectory());
+			log.info("setting up persistent cache in {}", cacheDirectory.toAbsolutePath());
+			DefaultPersistenceConfiguration persistenceConfiguration = new DefaultPersistenceConfiguration(cacheDirectory.toFile());
+			return new DefaultConfiguration(cachingProvider.getDefaultClassLoader(), persistenceConfiguration);
+		} else {
+			log.info("setting up in-memory cache");
+			return new DefaultConfiguration(cachingProvider.getDefaultClassLoader());
+		}
 	}
 
 	private void createCache(CacheManager cacheManager, String cacheName, Duration timeToLive, boolean persistentCache) {

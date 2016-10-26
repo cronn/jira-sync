@@ -58,6 +58,9 @@ de.cronn.jira.sync.target.password=pass
 # de.cronn.jira.sync.target.basicAuth.username=user
 # de.cronn.jira.sync.target.basicAuth.password=pass
 
+# Optional
+# de.cronn.jira.sync.cache.persistent=true
+# de.cronn.jira.sync.cache.directory=cache
 
 ### General Jira Mappings ###
 
