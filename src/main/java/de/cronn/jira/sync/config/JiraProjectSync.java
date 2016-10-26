@@ -84,22 +84,11 @@ public class JiraProjectSync {
 		this.transitions = transitions;
 	}
 
-	public void addTransition(String key, TransitionConfig transition) {
-		if (this.transitions == null) {
-			this.transitions = new LinkedHashMap<>();
-		}
-		Object old = this.transitions.put(key, transition);
-		Assert.isNull(old);
-	}
-
 	public Map<String, TransitionConfig> getTransitions() {
 		return transitions;
 	}
 
 	public TransitionConfig getTransition(String key) {
-		if (transitions == null) {
-			return null;
-		}
 		return transitions.get(key);
 	}
 
