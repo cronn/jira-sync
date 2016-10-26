@@ -68,11 +68,11 @@ public class JiraServiceCacheConfig {
 
 	private CacheManager getCacheManager(EhcacheCachingProvider cachingProvider, CacheConfig cacheConfig) {
 		URI uri = cachingProvider.getDefaultURI();
-		DefaultConfiguration configuration = getConfiguration(cachingProvider, cacheConfig);
+		DefaultConfiguration configuration = getCacheConfiguration(cachingProvider, cacheConfig);
 		return cachingProvider.getCacheManager(uri, configuration);
 	}
 
-	private DefaultConfiguration getConfiguration(EhcacheCachingProvider cachingProvider, CacheConfig cacheConfig) {
+	private DefaultConfiguration getCacheConfiguration(EhcacheCachingProvider cachingProvider, CacheConfig cacheConfig) {
 		if (cacheConfig.isPersistent()) {
 			Path cacheDirectory = Paths.get(cacheConfig.getDirectory());
 			log.info("setting up persistent cache in {}", cacheDirectory.toAbsolutePath());
