@@ -20,21 +20,6 @@ Asynchronous synchronisation of two Jira instances implemented with [Spring Boot
 
 - Access to [Jira REST API][jira-rest-api]
 
-### Building
-
-On Unix:
-
-```
-./gradlew build
-```
-
-On Windows:
-
-
-```
-gradlew.bat build
-```
-
 
 ### Example Configuration
 
@@ -122,6 +107,7 @@ de.cronn.jira.sync.projects[EX].versionMapping[12.0]=12
 de.cronn.jira.sync.projects[EX].versionsToIgnore=Undefined
 ```
 
+
 ### Running
 
 On Linux:
@@ -141,6 +127,22 @@ On Linux:
 Execute the ['fat' JAR][spring-fat-jar]:
 ```
 build/libs/jira-sync-1.0.jar --spring.config.location=file:/path/to/config/
+```
+
+
+### Building
+
+On Unix:
+
+```
+./gradlew build
+```
+
+On Windows:
+
+
+```
+gradlew.bat build
 ```
 
 
