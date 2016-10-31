@@ -119,7 +119,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		processVersions(jiraTarget, sourceIssue, targetIssue, JiraIssueFields::getFixVersions, versions -> targetIssueUpdate.getOrCreateFields().setFixVersions(versions), projectSync);
 		processCustomFields(jiraSource, jiraTarget, sourceIssue, targetIssue, targetIssueUpdate);
 
-		if (projectSync.isCopyCommentsToTarget()) {
+		if (projectSync.isCopyCommentsToTarget() && !shouldSkipUpdate(targetIssue, projectSync)) {
 			processComments(sourceIssue, targetIssue, jiraSource, jiraTarget);
 		}
 
@@ -137,8 +137,12 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 
 		if (!targetIssueUpdate.isEmpty()) {
 			Assert.isNull(targetIssueUpdate.getTransition());
-			log.info("updating issue");
-			jiraTarget.updateIssue(targetIssue.getKey(), targetIssueUpdate);
+			if (shouldSkipUpdate(targetIssue, projectSync)) {
+				log.debug("skipping update of {} in status {}", targetIssue, targetIssue.getFields().getStatus().getName());
+			} else {
+				log.info("updating issue");
+				jiraTarget.updateIssue(targetIssue.getKey(), targetIssueUpdate);
+			}
 		}
 
 		if (sourceIssueUpdate.getTransition() != null) {
@@ -146,6 +150,10 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		} else {
 			return SyncResult.CHANGED;
 		}
+	}
+
+	private boolean shouldSkipUpdate(JiraIssue targetIssue, JiraProjectSync projectSync) {
+		return projectSync.getSkipUpdateInTargetWhenStatusIn().contains(targetIssue.getFields().getStatus().getName());
 	}
 
 	private void processCustomFields(JiraService jiraSource, JiraService jiraTarget, JiraIssue sourceIssue, JiraIssue targetIssue, JiraIssueUpdate targetIssueUpdate) {

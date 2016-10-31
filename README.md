@@ -108,6 +108,8 @@ de.cronn.jira.sync.projects[EX].transitions[TakeInProgress].sourceStatusToSet=In
 de.cronn.jira.sync.projects[EX].transitions[TakeInProgress].onlyIfAssignedInTarget=true
 de.cronn.jira.sync.projects[EX].transitions[TakeInProgress].assignToMyselfInSource=true
 
+de.cronn.jira.sync.projects[EX].skipUpdateInTargetWhenStatusIn=Resolved,Closed
+
 de.cronn.jira.sync.projects[EX].targetIssueTypeFallback=Task
 
 # cf. https://jira-source/rest/api/2/field and https://jira.target/rest/api/2/field

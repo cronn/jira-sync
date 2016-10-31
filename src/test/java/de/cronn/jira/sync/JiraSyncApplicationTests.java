@@ -59,6 +59,7 @@ public class JiraSyncApplicationTests {
 	private static final JiraIssueStatus SOURCE_STATUS_IN_PROGRESS = new JiraIssueStatus("2", "In Progress");
 	private static final JiraIssueStatus SOURCE_STATUS_RESOLVED = new JiraIssueStatus("3", "Resolved");
 	private static final JiraIssueStatus TARGET_STATUS_OPEN = new JiraIssueStatus("100", "Open");
+	private static final JiraIssueStatus TARGET_STATUS_RESOLVED = new JiraIssueStatus("101", "Resolved");
 	private static final JiraIssueStatus TARGET_STATUS_CLOSED = new JiraIssueStatus("102", "Closed");
 
 	private static final JiraIssueType SOURCE_TYPE_BUG = new JiraIssueType("1", "Bug");
@@ -154,7 +155,8 @@ public class JiraSyncApplicationTests {
 		jiraDummyService.addTransition(SOURCE, new JiraTransition("1", "Set resolved", SOURCE_STATUS_RESOLVED));
 		jiraDummyService.addTransition(SOURCE, new JiraTransition("2", "Set in progress", SOURCE_STATUS_IN_PROGRESS));
 
-		jiraDummyService.addTransition(TARGET, new JiraTransition("100", "Close", TARGET_STATUS_CLOSED));
+		jiraDummyService.addTransition(TARGET, new JiraTransition("100", "Resolve", TARGET_STATUS_RESOLVED));
+		jiraDummyService.addTransition(TARGET, new JiraTransition("101", "Close", TARGET_STATUS_CLOSED));
 
 		jiraDummyService.addVersion(SOURCE, SOURCE_VERSION_10);
 		jiraDummyService.addVersion(SOURCE, SOURCE_VERSION_11);
@@ -739,7 +741,6 @@ public class JiraSyncApplicationTests {
 		assertThat(comments).hasSize(1);
 	}
 
-
 	@Test
 	public void testUpdateTicketInTarget_addCommentAfterCommentWasAddedInTarget() throws Exception {
 		// given
@@ -786,6 +787,45 @@ public class JiraSyncApplicationTests {
 			.contains("third comment in source")
 			.contains("2016-05-23 20:01:00 CEST|titleBGColor=#CCC|bgColor=#DDD")
 			.contains("This comment was added behind time. The order of comments might not represent the real order.");
+	}
+
+	@Test
+	public void testDoNotUpdateTicketInStatusResolvedOrClosed() throws Exception {
+		// given
+		JiraIssue createdSourceIssue = createIssueInSource("My first bug");
+
+		JiraComment comment = jiraSource.addComment(createdSourceIssue.getKey(), "first comment in source");
+
+		syncTask.sync();
+
+		JiraIssue targetIssue = getSingleIssue(TARGET);
+		assertThat(targetIssue.getFields().getComment().getComments()).hasSize(1);
+
+		clock.windForwardSeconds(30);
+
+		JiraTransition transition = findTransition(TARGET, targetIssue.getKey(), TARGET_STATUS_RESOLVED);
+
+		JiraIssueUpdate update = new JiraIssueUpdate();
+		update.setTransition(transition);
+		update.getOrCreateFields().setResolution(TARGET_RESOLUTION_DONE);
+		update.getOrCreateFields().setFixVersions(Collections.singleton(TARGET_VERSION_10));
+		jiraDummyService.transitionIssue(TARGET, targetIssue.getKey(), update);
+
+		jiraSource.updateComment(createdSourceIssue.getKey(), comment.getId(), "changed comment in source");
+
+		clock.windForwardSeconds(30);
+
+		// when
+		syncTask.sync();
+
+		// then
+		targetIssue = getSingleIssue(TARGET);
+
+		assertThat(targetIssue.getFields().getFixVersions()).containsExactly(TARGET_VERSION_10);
+
+		List<JiraComment> comments = targetIssue.getFields().getComment().getComments();
+		assertThat(comments).hasSize(1);
+		assertThat(comments.get(0).getBody()).contains("first comment in source");
 	}
 
 }

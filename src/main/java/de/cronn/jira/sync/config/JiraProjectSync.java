@@ -8,7 +8,6 @@ import java.util.Set;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import org.springframework.util.Assert;
 
 public class JiraProjectSync {
 
@@ -22,6 +21,7 @@ public class JiraProjectSync {
 	private Map<String, TransitionConfig> transitions = new LinkedHashMap<>();
 	private Map<String, String> versionMapping = new LinkedHashMap<>();
 	private Set<String> versionsToIgnore = new LinkedHashSet<>();
+	private Set<String> skipUpdateInTargetWhenStatusIn = new LinkedHashSet<>();
 	private boolean copyCommentsToTarget = false;
 
 	public String getSourceProject() {
@@ -106,6 +106,14 @@ public class JiraProjectSync {
 
 	public Set<String> getVersionsToIgnore() {
 		return versionsToIgnore;
+	}
+
+	public void setSkipUpdateInTargetWhenStatusIn(Set<String> skipUpdateInTargetWhenStatusIn) {
+		this.skipUpdateInTargetWhenStatusIn = skipUpdateInTargetWhenStatusIn;
+	}
+
+	public Set<String> getSkipUpdateInTargetWhenStatusIn() {
+		return skipUpdateInTargetWhenStatusIn;
 	}
 
 	public void setCopyCommentsToTarget(boolean copyCommentsToTarget) {
