@@ -12,13 +12,15 @@ import de.cronn.jira.sync.service.JiraService;
 @Component
 public class DefaultTicketReferenceReplacer implements TicketReferenceReplacer {
 
+	private static final String SEP = "\\s|[:?!…;\\.]";
+
 	@Override
 	public String replaceTicketReferences(String inputText, JiraService jiraService) {
 		if (StringUtils.isBlank(inputText)) {
 			return inputText;
 		}
 		StringBuffer sb = new StringBuffer();
-		Pattern pattern = Pattern.compile("(?<=(?:\\s|[:]|^))" + "(" + buildProjectsPattern(jiraService) + "-\\d+)" + "(?=(?:\\s|[:]|$))");
+		Pattern pattern = Pattern.compile("(?<=(?:" + SEP + "|^))" + "(" + buildProjectsPattern(jiraService) + "-\\d+)" + "(?=(?:" + SEP + "|$))");
 		Matcher matcher = pattern.matcher(inputText);
 		while (matcher.find()) {
 			String issueKey = matcher.group(1);

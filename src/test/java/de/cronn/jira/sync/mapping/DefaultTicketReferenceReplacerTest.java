@@ -74,6 +74,30 @@ public class DefaultTicketReferenceReplacerTest {
 	}
 
 	@Test
+	public void testTextWithTicketReferenceInSentence() throws Exception {
+		assertThat(replace("Isn’t it a duplicate of PROJECT-123?"))
+			.isEqualTo("Isn’t it a duplicate of [PROJECT-123|https://jira/browse/PROJECT-123]?");
+
+		assertThat(replace("This is a duplicate of PROJECT-123!"))
+			.isEqualTo("This is a duplicate of [PROJECT-123|https://jira/browse/PROJECT-123]!");
+
+		assertThat(replace("This is a duplicate of PROJECT-123;PROJECT-456;PROJECT-768"))
+			.isEqualTo("This is a duplicate of [PROJECT-123|https://jira/browse/PROJECT-123];" +
+				"[PROJECT-456|https://jira/browse/PROJECT-456];" +
+				"[PROJECT-768|https://jira/browse/PROJECT-768]");
+
+		assertThat(replace("This could be a duplicate of PROJECT-123…"))
+			.isEqualTo("This could be a duplicate of [PROJECT-123|https://jira/browse/PROJECT-123]…");
+
+		assertThat(replace("I think this is a duplicate of PROJECT-123."))
+			.isEqualTo("I think this is a duplicate of [PROJECT-123|https://jira/browse/PROJECT-123].");
+
+		verify(jiraService, atLeast(1)).getServerInfo();
+		verify(jiraService, atLeast(1)).getProjects();
+		verifyNoMoreInteractions(jiraService);
+	}
+
+	@Test
 	public void testTextWithTicketReferenceAtBeginning() throws Exception {
 		// given
 		String inputText = "PROJECT-123: some text with reference";
