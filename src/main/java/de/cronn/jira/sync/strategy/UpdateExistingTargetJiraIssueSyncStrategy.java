@@ -39,7 +39,7 @@ import de.cronn.jira.sync.domain.JiraUser;
 import de.cronn.jira.sync.domain.JiraVersion;
 import de.cronn.jira.sync.link.JiraIssueLinker;
 import de.cronn.jira.sync.mapping.CommentMapper;
-import de.cronn.jira.sync.mapping.CustomFieldMapper;
+import de.cronn.jira.sync.mapping.FieldMapper;
 import de.cronn.jira.sync.mapping.DescriptionMapper;
 import de.cronn.jira.sync.mapping.LabelMapper;
 import de.cronn.jira.sync.mapping.PriorityMapper;
@@ -59,7 +59,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 	private VersionMapper versionMapper;
 	private CommentMapper commentMapper;
 	private JiraIssueLinker issueLinker;
-	private CustomFieldMapper customFieldMapper;
+	private FieldMapper fieldMapper;
 
 	@Autowired
 	public void setDescriptionMapper(DescriptionMapper descriptionMapper) {
@@ -97,8 +97,8 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 	}
 
 	@Autowired
-	public void setCustomFieldMapper(CustomFieldMapper customFieldMapper) {
-		this.customFieldMapper = customFieldMapper;
+	public void setFieldMapper(FieldMapper fieldMapper) {
+		this.fieldMapper = fieldMapper;
 	}
 
 	@Override
@@ -157,7 +157,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 	}
 
 	private void processCustomFields(JiraService jiraSource, JiraService jiraTarget, JiraIssue sourceIssue, JiraIssue targetIssue, JiraIssueUpdate targetIssueUpdate) {
-		Map<String, Object> mappedFields = customFieldMapper.map(sourceIssue, jiraSource, jiraTarget);
+		Map<String, Object> mappedFields = fieldMapper.map(sourceIssue, jiraSource, jiraTarget);
 		for (Entry<String, Object> entry : mappedFields.entrySet()) {
 			Object existingValue = targetIssue.getOrCreateFields().getOther().get(entry.getKey());
 			if (!Objects.equals(existingValue, entry.getValue())) {

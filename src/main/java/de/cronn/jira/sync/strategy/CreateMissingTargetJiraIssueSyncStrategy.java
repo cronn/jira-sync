@@ -19,7 +19,7 @@ import de.cronn.jira.sync.domain.JiraPriority;
 import de.cronn.jira.sync.domain.JiraProject;
 import de.cronn.jira.sync.link.JiraIssueLinker;
 import de.cronn.jira.sync.mapping.CommentMapper;
-import de.cronn.jira.sync.mapping.CustomFieldMapper;
+import de.cronn.jira.sync.mapping.FieldMapper;
 import de.cronn.jira.sync.mapping.DescriptionMapper;
 import de.cronn.jira.sync.mapping.IssueTypeMapper;
 import de.cronn.jira.sync.mapping.LabelMapper;
@@ -42,7 +42,7 @@ public class CreateMissingTargetJiraIssueSyncStrategy implements MissingTargetJi
 	private VersionMapper versionMapper;
 	private CommentMapper commentMapper;
 	private JiraIssueLinker issueLinker;
-	private CustomFieldMapper customFieldMapper;
+	private FieldMapper fieldMapper;
 
 	@Autowired
 	public void setJiraSyncConfig(JiraSyncConfig jiraSyncConfig) {
@@ -90,8 +90,8 @@ public class CreateMissingTargetJiraIssueSyncStrategy implements MissingTargetJi
 	}
 
 	@Autowired
-	public void setCustomFieldMapper(CustomFieldMapper customFieldMapper) {
-		this.customFieldMapper = customFieldMapper;
+	public void setFieldMapper(FieldMapper fieldMapper) {
+		this.fieldMapper = fieldMapper;
 	}
 
 	@Override
@@ -121,7 +121,7 @@ public class CreateMissingTargetJiraIssueSyncStrategy implements MissingTargetJi
 	}
 
 	private void copyCustomFields(JiraService jiraSource, JiraService jiraTarget, JiraIssue sourceIssue, JiraIssue issueToCreate) {
-		Map<String, Object> mappedFields = customFieldMapper.map(sourceIssue, jiraSource, jiraTarget);
+		Map<String, Object> mappedFields = fieldMapper.map(sourceIssue, jiraSource, jiraTarget);
 		for (Entry<String, Object> entry : mappedFields.entrySet()) {
 			issueToCreate.getFields().setOther(entry.getKey(), entry.getValue());
 		}

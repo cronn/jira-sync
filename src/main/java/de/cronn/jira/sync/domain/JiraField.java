@@ -5,6 +5,7 @@ public class JiraField extends JiraIdResource {
 	private static final long serialVersionUID = 1L;
 
 	private String name;
+	private Boolean custom;
 
 	public JiraField() {
 	}
@@ -20,5 +21,13 @@ public class JiraField extends JiraIdResource {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public Boolean isCustom() {
+		return custom;
+	}
+
+	public void setCustom(Boolean custom) {
+		this.custom = custom;
 	}
 }
