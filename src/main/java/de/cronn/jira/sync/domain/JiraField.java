@@ -10,9 +10,10 @@ public class JiraField extends JiraIdResource {
 	public JiraField() {
 	}
 
-	public JiraField(String id, String name) {
+	public JiraField(String id, String name, boolean custom) {
 		super(id);
 		this.name = name;
+		this.custom = custom;
 	}
 
 	public String getName() {

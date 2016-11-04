@@ -88,8 +88,8 @@ public class JiraSyncApplicationTests {
 	private static final JiraUser SOURCE_USER_SOME = new JiraUser("some.user", "some.user", "Some User");
 	private static final JiraUser SOURCE_USER_ANOTHER = new JiraUser("anotheruser", "anotheruser", "Another User");
 
-	private static final JiraField SOURCE_CUSTOM_FIELD_FOUND_IN_VERSION = new JiraField("1", "Found in version");
-	private static final JiraField TARGET_CUSTOM_FIELD_FOUND_IN_VERSION = new JiraField("100", "Found in software version");
+	private static final JiraField SOURCE_CUSTOM_FIELD_FOUND_IN_VERSION = new JiraField("1", "Found in version", true);
+	private static final JiraField TARGET_CUSTOM_FIELD_FOUND_IN_VERSION = new JiraField("100", "Found in software version", true);
 
 	@Autowired
 	private TestClock clock;
