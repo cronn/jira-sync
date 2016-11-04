@@ -19,8 +19,9 @@ import de.cronn.jira.sync.service.JiraService;
 @Component
 public class DefaultFieldMapper implements FieldMapper {
 
+	private final static Logger log = LoggerFactory.getLogger(DefaultFieldMapper.class);
+
 	private JiraSyncConfig jiraSyncConfig;
-	private final static Logger logger = LoggerFactory.getLogger(DefaultFieldMapper.class);
 
 	@Autowired
 	public void setJiraSyncConfig(JiraSyncConfig jiraSyncConfig) {
@@ -38,7 +39,7 @@ public class DefaultFieldMapper implements FieldMapper {
 			Map<String, Object> sourceValue = (Map<String, Object>) fromFields.get(fromField.getId());
 			if (sourceValue != null) {
 				if (fromField.isCustom() && !toField.isCustom()) {
-					logger.warn("Conversion from standard field {} to custom field {} is currently not supported", fromField.getName(), toField.getName());
+					log.warn("Conversion from standard field {} to custom field {} is currently not supported", fromField.getName(), toField.getName());
 				}
 				if (toField.isCustom()) {
 					fields.put(toField.getId(), sourceValue);
