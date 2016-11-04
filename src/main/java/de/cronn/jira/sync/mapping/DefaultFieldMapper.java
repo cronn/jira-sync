@@ -36,7 +36,7 @@ public class DefaultFieldMapper implements FieldMapper {
 			JiraField toField = findField(toJira, entry.getValue());
 
 			Map<String, Object> fromFields = fromIssue.getOrCreateFields().getOther();
-			Map<String, Object> sourceValue = (Map<String, Object>) fromFields.get(fromField.getId());
+			Object sourceValue = fromFields.get(fromField.getId());
 			if (sourceValue != null) {
 				if (fromField.isCustom() && !toField.isCustom()) {
 					log.warn("Conversion from standard field {} to custom field {} is currently not supported", fromField.getName(), toField.getName());
@@ -44,7 +44,8 @@ public class DefaultFieldMapper implements FieldMapper {
 				if (toField.isCustom()) {
 					fields.put(toField.getId(), sourceValue);
 				} else {
-					fields.put(toField.getId(), sourceValue.get("value"));
+					Map<String, Object> sourceValueMap = (Map<String, Object>) sourceValue;
+					fields.put(toField.getId(), sourceValueMap.get("value"));
 				}
 			}
 		}
