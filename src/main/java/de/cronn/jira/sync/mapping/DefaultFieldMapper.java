@@ -38,7 +38,7 @@ public class DefaultFieldMapper implements FieldMapper {
 			Map<String, Object> fromFields = fromIssue.getOrCreateFields().getOther();
 			Object sourceValue = fromFields.get(fromField.getId());
 			if (sourceValue != null) {
-				if (fromField.isCustom() && !toField.isCustom()) {
+				if (!fromField.isCustom() && toField.isCustom()) {
 					log.warn("Conversion from standard field {} to custom field {} is currently not supported", fromField.getName(), toField.getName());
 				}
 				if (toField.isCustom()) {
