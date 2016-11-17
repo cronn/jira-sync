@@ -270,7 +270,6 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 
 		TransitionConfig transition = findTransition(sourceIssue, targetIssue, transitions.values(), jiraTarget, jiraSource);
 		if (transition != null) {
-			log.info("triggering transition from status '{}' to '{}'", sourceIssue.getFields().getStatus().getName(), transition.getSourceStatusToSet());
 			if (transition.isAssignToMyselfInSource()) {
 				JiraUser myself = jiraSource.getMyself();
 				if (!isEqual(sourceIssue, myself)) {
@@ -281,6 +280,8 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 			}
 
 			JiraTransition issueTransition = findIssueTransition(jiraSource, sourceIssue, transition);
+			log.info("triggering transition from status '{}' to '{}': {}", sourceIssue.getFields().getStatus().getName(), transition.getSourceStatusToSet(), issueTransition);
+			Assert.isTrue(Objects.equals(issueTransition.getTo().getName(), transition.getSourceStatusToSet()), "Unexpected issue transition: " + issueTransition);
 			sourceIssueUpdate.setTransition(issueTransition);
 
 			if (transition.isCopyResolutionToSource()) {
