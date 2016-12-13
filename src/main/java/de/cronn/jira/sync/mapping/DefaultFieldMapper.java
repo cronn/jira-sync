@@ -44,6 +44,7 @@ public class DefaultFieldMapper implements FieldMapper {
 				if (toField.isCustom()) {
 					fields.put(toField.getId(), sourceValue);
 				} else {
+					@SuppressWarnings("unchecked")
 					Map<String, Object> sourceValueMap = (Map<String, Object>) sourceValue;
 					fields.put(toField.getId(), sourceValueMap.get("value"));
 				}
