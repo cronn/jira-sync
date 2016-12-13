@@ -1,6 +1,7 @@
 package de.cronn.jira.sync.service;
 
 import java.io.IOException;
+import java.net.URL;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpResponse;
@@ -12,6 +13,12 @@ import de.cronn.jira.sync.JiraSyncException;
 
 public class JiraRestResponseErrorHandler extends DefaultResponseErrorHandler {
 
+	private final URL jiraUrl;
+
+	public JiraRestResponseErrorHandler(URL jiraUrl) {
+		this.jiraUrl = jiraUrl;
+	}
+
 	@Override
 	public void handleError(ClientHttpResponse response) throws IOException {
 		try {
@@ -20,9 +27,9 @@ public class JiraRestResponseErrorHandler extends DefaultResponseErrorHandler {
 			String responseBodyAsString = e.getResponseBodyAsString();
 			String message = e.getStatusCode().getReasonPhrase() + ": " + responseBodyAsString;
 			if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
-				throw new JiraResourceNotFoundException(message);
+				throw new JiraResourceNotFoundException(jiraUrl, message);
 			} else {
-				throw new JiraSyncException(message);
+				throw new JiraSyncException(jiraUrl, message);
 			}
 		}
 	}

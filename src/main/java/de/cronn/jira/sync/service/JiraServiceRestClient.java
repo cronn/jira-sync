@@ -85,7 +85,7 @@ public class JiraServiceRestClient implements JiraService {
 	}
 
 	private RestTemplate createRestTemplate(JiraConnectionProperties jiraConnectionProperties) {
-		RestTemplateBuilder builder = restTemplateBuilder.errorHandler(new JiraRestResponseErrorHandler());
+		RestTemplateBuilder builder = restTemplateBuilder.errorHandler(new JiraRestResponseErrorHandler(url));
 		BasicAuthentication basicAuth = jiraConnectionProperties.getBasicAuth();
 		if (basicAuth != null) {
 			builder = builder.basicAuthorization(basicAuth.getUsername(), basicAuth.getPassword());
