@@ -7,6 +7,7 @@ public enum SyncResult {
 	UNCHANGED_WARNING("warning (unchanged)"),
 	CHANGED("changed"),
 	CHANGED_TRANSITION("changed (transition)"),
+	FAILED("failed"),
 	;
 
 	private final String displayName;

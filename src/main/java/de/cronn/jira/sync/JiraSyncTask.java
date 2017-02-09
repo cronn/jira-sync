@@ -97,18 +97,28 @@ public class JiraSyncTask implements CommandLineRunner {
 		}
 
 		for (JiraIssue sourceIssue : issues) {
-			JiraProject project = sourceIssue.getFields().getProject();
-			if (!project.getKey().equals(projectSync.getSourceProject())) {
-				throw new JiraSyncException("Filter returned issue " + sourceIssue + " from unexpected project " + project);
-			}
-			JiraIssue targetIssue = jiraIssueLinker.resolveIssue(sourceIssue, jiraSource, jiraTarget);
-			IssueSyncStrategy syncStrategy = getSyncStrategy(targetIssue);
-			SyncResult syncResult = syncStrategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
+			SyncResult syncResult = syncIssue(sourceIssue, jiraSource, jiraTarget, projectSync);
+			log.info("'{}' {}", sourceIssue.getKey(), syncResult.getDisplayName());
 			resultCounts.compute(syncResult, (k, v) -> v + 1);
 		}
 
 		for (Entry<SyncResult, Long> entry : resultCounts.entrySet()) {
 			log.info("[{} -> {}]   {} issues: {}", projectSync.getSourceProject(), projectSync.getTargetProject(), entry.getKey().getDisplayName(), entry.getValue());
+		}
+	}
+
+	private SyncResult syncIssue(JiraIssue sourceIssue, JiraService jiraSource, JiraService jiraTarget, JiraProjectSync projectSync) {
+		JiraProject project = sourceIssue.getFields().getProject();
+		if (!project.getKey().equals(projectSync.getSourceProject())) {
+			throw new JiraSyncException("Filter returned issue " + sourceIssue + " from unexpected project " + project);
+		}
+		JiraIssue targetIssue = jiraIssueLinker.resolveIssue(sourceIssue, jiraSource, jiraTarget);
+		IssueSyncStrategy syncStrategy = getSyncStrategy(targetIssue);
+		try {
+			return syncStrategy.sync(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync);
+		} catch (JiraSyncException e) {
+			log.error("Issue synchronisation failed", e);
+			return SyncResult.FAILED;
 		}
 	}
 
