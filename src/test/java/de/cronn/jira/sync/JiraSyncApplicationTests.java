@@ -91,6 +91,9 @@ public class JiraSyncApplicationTests {
 	private static final JiraField SOURCE_CUSTOM_FIELD_FOUND_IN_VERSION = new JiraField("1", "Found in version", true);
 	private static final JiraField TARGET_CUSTOM_FIELD_FOUND_IN_VERSION = new JiraField("100", "Found in software version", true);
 
+	private static final JiraField SOURCE_CUSTOM_FIELD_FIXED_IN_VERSION = new JiraField("2", "Fixed in version", true);
+	private static final JiraField TARGET_CUSTOM_FIELD_FIXED_IN_VERSION = new JiraField("200", "Fixed in software version", true);
+
 	@Autowired
 	private TestClock clock;
 
@@ -171,6 +174,9 @@ public class JiraSyncApplicationTests {
 
 		jiraDummyService.addField(SOURCE, SOURCE_CUSTOM_FIELD_FOUND_IN_VERSION);
 		jiraDummyService.addField(TARGET, TARGET_CUSTOM_FIELD_FOUND_IN_VERSION);
+
+		jiraDummyService.addField(SOURCE, SOURCE_CUSTOM_FIELD_FIXED_IN_VERSION);
+		jiraDummyService.addField(TARGET, TARGET_CUSTOM_FIELD_FIXED_IN_VERSION);
 
 		jiraDummyService.setDefaultStatus(TARGET, TARGET_STATUS_OPEN);
 
@@ -419,6 +425,38 @@ public class JiraSyncApplicationTests {
 		assertThat(updatedSourceIssue.getFields().getStatus().getName()).isEqualTo(SOURCE_STATUS_RESOLVED.getName());
 		assertThat(updatedSourceIssue.getFields().getResolution().getName()).isEqualTo(SOURCE_RESOLUTION_FIXED.getName());
 		assertThat(getNames(updatedSourceIssue.getFields().getFixVersions())).containsExactly(SOURCE_VERSION_10.getName());
+	}
+
+	@Test
+	public void testCopyCustomFieldsWhenIssueIsClosed() throws Exception {
+		// given
+		JiraIssue sourceIssue = new JiraIssue(null, null, "My first bug", SOURCE_STATUS_OPEN);
+		sourceIssue.getFields().setProject(SOURCE_PROJECT);
+		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_BUG);
+		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
+
+		jiraSource.createIssue(sourceIssue);
+
+		syncTask.sync();
+
+		JiraIssue targetIssue = getSingleIssue(TARGET);
+
+		// when
+		JiraTransition transition = findTransition(TARGET, targetIssue.getKey(), TARGET_STATUS_CLOSED);
+
+		JiraIssueUpdate update = new JiraIssueUpdate();
+		update.setTransition(transition);
+		update.getOrCreateFields().setResolution(TARGET_RESOLUTION_DONE);
+		update.getOrCreateFields().setFixVersions(Collections.singleton(TARGET_VERSION_10));
+		update.getOrCreateFields().setOther(TARGET_CUSTOM_FIELD_FIXED_IN_VERSION.getId(), "1.0");
+		jiraDummyService.transitionIssue(TARGET, targetIssue.getKey(), update);
+
+		syncTask.sync();
+
+		// then
+		JiraIssue updatedSourceIssue = getSingleIssue(SOURCE);
+		assertThat(updatedSourceIssue.getFields().getStatus().getName()).isEqualTo(SOURCE_STATUS_RESOLVED.getName());
+		assertThat(updatedSourceIssue.getFields().getOther()).isEqualTo(Collections.singletonMap(SOURCE_CUSTOM_FIELD_FIXED_IN_VERSION.getId(), "1.0"));
 	}
 
 	@Test

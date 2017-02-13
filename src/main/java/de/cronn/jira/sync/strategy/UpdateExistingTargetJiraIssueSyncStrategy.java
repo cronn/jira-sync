@@ -27,6 +27,7 @@ import de.cronn.jira.sync.config.JiraProjectSync;
 import de.cronn.jira.sync.config.TransitionConfig;
 import de.cronn.jira.sync.domain.JiraComment;
 import de.cronn.jira.sync.domain.JiraComments;
+import de.cronn.jira.sync.domain.JiraField;
 import de.cronn.jira.sync.domain.JiraIdResource;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueFields;
@@ -291,6 +292,23 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 			if (transition.isCopyFixVersionsToSource()) {
 				processVersions(jiraSource, sourceIssue, targetIssue, sourceIssueUpdate, projectSync);
 			}
+
+			copyCustomFields(jiraSource, sourceIssue, targetIssue, jiraTarget, sourceIssueUpdate, transition);
+		}
+	}
+
+	private void copyCustomFields(JiraService jiraSource, JiraIssue sourceIssue, JiraIssue targetIssue, JiraService jiraTarget, JiraIssueUpdate sourceIssueUpdate, TransitionConfig transition) {
+		Map<String, String> customFieldsToCopyFromSourceToTarget = transition.getCustomFieldsToCopyFromTargetToSource();
+		for (Entry<String, String> entry : customFieldsToCopyFromSourceToTarget.entrySet()) {
+			String customFieldNameInTarget = entry.getKey();
+			String customFieldNameInSource = entry.getValue();
+			JiraField customFieldInTarget = jiraTarget.findField(customFieldNameInTarget);
+			JiraField customFieldInSource = jiraSource.findField(customFieldNameInSource);
+			Assert.isTrue(customFieldInTarget.isCustom(), customFieldInTarget + " is not a custom field in target");
+			Assert.isTrue(customFieldInSource.isCustom(), customFieldNameInSource + " is not a custom field in source");
+			Object valueInTarget = targetIssue.getFields().getOther().get(customFieldInTarget.getId());
+			sourceIssueUpdate.getOrCreateFields().setOther(customFieldInSource.getId(), valueInTarget);
+			sourceIssue.getFields().setOther(customFieldInSource.getId(), valueInTarget);
 		}
 	}
 

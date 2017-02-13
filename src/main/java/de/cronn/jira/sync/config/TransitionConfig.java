@@ -1,7 +1,9 @@
 package de.cronn.jira.sync.config;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -17,6 +19,7 @@ public class TransitionConfig {
 	private boolean onlyIfAssignedInTarget = false;
 	private boolean assignToMyselfInSource = false;
 	private boolean triggerIfIssueWasMovedBetweenProjects = false;
+	private Map<String, String> customFieldsToCopyFromTargetToSource = new LinkedHashMap<>();
 
 	public TransitionConfig() {
 	}
@@ -89,6 +92,14 @@ public class TransitionConfig {
 
 	public void setTriggerIfIssueWasMovedBetweenProjects(boolean triggerIfIssueWasMovedBetweenProjects) {
 		this.triggerIfIssueWasMovedBetweenProjects = triggerIfIssueWasMovedBetweenProjects;
+	}
+
+	public void setCustomFieldsToCopyFromTargetToSource(Map<String, String> customFieldsToCopyFromTargetToSource) {
+		this.customFieldsToCopyFromTargetToSource = customFieldsToCopyFromTargetToSource;
+	}
+
+	public Map<String, String> getCustomFieldsToCopyFromTargetToSource() {
+		return customFieldsToCopyFromTargetToSource;
 	}
 
 	@Override
