@@ -1,7 +1,6 @@
 package de.cronn.jira.sync.mapping;
 
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -10,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import de.cronn.jira.sync.JiraSyncException;
 import de.cronn.jira.sync.config.JiraSyncConfig;
 import de.cronn.jira.sync.domain.JiraField;
 import de.cronn.jira.sync.domain.JiraIssue;
@@ -32,8 +30,8 @@ public class DefaultFieldMapper implements FieldMapper {
 	public Map<String, Object> map(JiraIssue fromIssue, JiraService fromJira, JiraService toJira) {
 		Map<String, Object> fields = new LinkedHashMap<>();
 		for (Entry<String, String> entry : jiraSyncConfig.getFieldMapping().entrySet()) {
-			JiraField fromField = findField(fromJira, entry.getKey());
-			JiraField toField = findField(toJira, entry.getValue());
+			JiraField fromField = fromJira.findField(entry.getKey());
+			JiraField toField = toJira.findField(entry.getValue());
 
 			Map<String, Object> fromFields = fromIssue.getOrCreateFields().getOther();
 			Object sourceValue = fromFields.get(fromField.getId());
@@ -51,16 +49,6 @@ public class DefaultFieldMapper implements FieldMapper {
 			}
 		}
 		return fields;
-	}
-
-	private JiraField findField(JiraService jiraService, String fieldName) {
-		List<JiraField> fields = jiraService.getFields();
-		for (JiraField field : fields) {
-			if (field.getName().equals(fieldName)) {
-				return field;
-			}
-		}
-		throw new JiraSyncException("Field '" + fieldName + "' not found in " + jiraService);
 	}
 
 }

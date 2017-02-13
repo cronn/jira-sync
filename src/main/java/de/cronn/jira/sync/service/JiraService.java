@@ -69,4 +69,6 @@ public interface JiraService extends AutoCloseable {
 	void updateIssue(String issueKey, JiraIssueUpdate issueUpdate);
 
 	void transitionIssue(String issueKey, JiraIssueUpdate issueUpdate);
+
+	JiraField findField(String fieldName);
 }

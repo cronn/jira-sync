@@ -371,6 +371,17 @@ public class JiraServiceRestClient implements JiraService {
 	}
 
 	@Override
+	public JiraField findField(String fieldName) {
+		List<JiraField> fields = getFields();
+		for (JiraField field : fields) {
+			if (field.getName().equals(fieldName)) {
+				return field;
+			}
+		}
+		throw new JiraSyncException("Field '" + fieldName + "' not found in " + this);
+	}
+
+	@Override
 	public String toString() {
 		return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
 			.append("jiraConnectionProperties", jiraConnectionProperties)
