@@ -92,6 +92,11 @@ de.cronn.jira.sync.resolutionMapping[Duplicate]=Duplicate
 de.cronn.jira.sync.resolutionMapping[Incomplete]=Incomplete
 de.cronn.jira.sync.resolutionMapping[Cannot\ Reproduce]=Cannot Reproduce
 
+# Optional mapping of (custom) field values
+de.cronn.jira.sync.fieldValueMapping[field-name-in-source][source-value-1]=target_value_1
+de.cronn.jira.sync.fieldValueMapping[field-name-in-source][source-value-2]=target_value_2
+de.cronn.jira.sync.fieldValueMapping[field-name-in-source][source-value-3]=target_value_3
+
 ### Project Configuration ###
 
 de.cronn.jira.sync.projects[EX].sourceProject=EXAMPLE

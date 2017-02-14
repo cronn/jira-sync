@@ -180,7 +180,7 @@ public class JiraSyncApplicationTests {
 		jiraDummyService.addField(SOURCE, SOURCE_CUSTOM_FIELD_FOUND_IN_VERSION, null);
 		jiraDummyService.addField(TARGET, TARGET_CUSTOM_FIELD_FOUND_IN_VERSION, null);
 
-		jiraDummyService.addField(SOURCE, SOURCE_CUSTOM_FIELD_FIXED_IN_VERSION, Collections.singletonMap("1.0", 1L));
+		jiraDummyService.addField(SOURCE, SOURCE_CUSTOM_FIELD_FIXED_IN_VERSION, Collections.singletonMap("v1", 10L));
 		jiraDummyService.addField(TARGET, TARGET_CUSTOM_FIELD_FIXED_IN_VERSION, Collections.singletonMap("1.0", 100L));
 
 		jiraDummyService.setDefaultStatus(TARGET, TARGET_STATUS_OPEN);
@@ -462,8 +462,8 @@ public class JiraSyncApplicationTests {
 		JiraIssue updatedSourceIssue = getSingleIssue(SOURCE);
 		assertThat(updatedSourceIssue.getFields().getStatus().getName()).isEqualTo(SOURCE_STATUS_RESOLVED.getName());
 		Map<String, Object> expectedCustomFieldValue = new LinkedHashMap<>();
-		expectedCustomFieldValue.put("id", 1);
-		expectedCustomFieldValue.put("value", "1.0");
+		expectedCustomFieldValue.put("id", 10);
+		expectedCustomFieldValue.put("value", "v1");
 		assertThat(updatedSourceIssue.getFields().getOther()).isEqualTo(Collections.singletonMap(SOURCE_CUSTOM_FIELD_FIXED_IN_VERSION.getId(), expectedCustomFieldValue));
 	}
 

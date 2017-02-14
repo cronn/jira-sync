@@ -18,6 +18,7 @@ public class JiraSyncConfig {
 	private Map<String, String> issueTypeMapping = new LinkedHashMap<>();
 	private Map<String, String> resolutionMapping = new LinkedHashMap<>();
 	private Map<String, String> fieldMapping = new LinkedHashMap<>();
+	private Map<String, Map<String, String>> fieldValueMapping = new LinkedHashMap<>();
 
 	public JiraConnectionProperties getSource() {
 		return source;
@@ -91,4 +92,11 @@ public class JiraSyncConfig {
 		return fieldMapping;
 	}
 
+	public void setFieldValueMapping(Map<String, Map<String, String>> fieldValueMapping) {
+		this.fieldValueMapping = fieldValueMapping;
+	}
+
+	public Map<String, Map<String, String>> getFieldValueMapping() {
+		return fieldValueMapping;
+	}
 }

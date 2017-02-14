@@ -81,13 +81,27 @@ public class DefaultFieldMapper implements FieldMapper {
 			case "com.atlassian.jira.plugin.system.customfieldtypes:select":
 				Map<String, Object> allowedValuesForCustomField = toJira.getAllowedValuesForCustomField(toProject.getKey(), toField.getId());
 				@SuppressWarnings("unchecked")
-				Object source = ((Map<String, Object>) sourceValue).get("value");
+				String source = (String) ((Map<String, Object>) sourceValue).get("value");
+				Map<String, String> fieldValueMapping = jiraSyncConfig.getFieldValueMapping().get(toField.getName());
+				if (source != null && fieldValueMapping != null) {
+					Assert.isTrue(fieldValueMapping.containsValue(source), "found no field value mapping for field " + toField + " with value '" + source + "' ");
+					source = getKeyByValue(fieldValueMapping, source);
+				}
 				Object mappedValue = allowedValuesForCustomField.get(source);
-				Assert.notNull(mappedValue, "Found no matching value for '" + source + "'. Candidates: " + allowedValuesForCustomField.keySet());
+				Assert.notNull(mappedValue, "Found no matching value for '" + source + "' (" + toField + "). Candidates: " + allowedValuesForCustomField.keySet());
 				return mappedValue;
 			default:
 				throw new IllegalArgumentException("Unknown schema of custom field " + toField + ": " + toFieldSchemaType);
 		}
+	}
+
+	private static <T, E> T getKeyByValue(Map<T, E> map, E value) {
+		for (Entry<T, E> entry : map.entrySet()) {
+			if (Objects.equals(value, entry.getValue())) {
+				return entry.getKey();
+			}
+		}
+		return null;
 	}
 
 }
