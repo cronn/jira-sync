@@ -5,6 +5,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -118,8 +119,8 @@ public class JiraDummyService {
 		getData(context).addUser(user);
 	}
 
-	public void addField(Context context, JiraField field) {
-		getData(context).addField(field);
+	public void addField(Context context, JiraField field, Map<String, Long> allowedValues) {
+		getData(context).addField(field, allowedValues);
 	}
 
 	public void addResolution(Context context, JiraResolution resolution) {
@@ -234,6 +235,38 @@ public class JiraDummyService {
 		return issue;
 	}
 
+	@RequestMapping(path = "/api/2/issue/createmeta", method = RequestMethod.GET)
+	public Map<String, Object> getIssueCreateMeta(@PathVariable(CONTEXT) Context context) {
+		List<Map<String, Object>> projectsMeta = new ArrayList<>();
+		JiraDummyData data = getData(context);
+		for (JiraProject project : data.getProjects().values()) {
+			Map<String, Object> projectMeta = new LinkedHashMap<>();
+			projectMeta.put("key", project.getKey());
+			projectMeta.put("name", project.getName());
+			Map<String, Object> fieldsMeta = new LinkedHashMap<>();
+			for (Entry<JiraField, Map<String, Long>> entry : data.getCustomFields().entrySet()) {
+				Map<String, Object> customFieldMeta = new LinkedHashMap<>();
+				JiraField customField = entry.getKey();
+				customFieldMeta.put("name", customField.getName());
+				List<Map<String, Object>> allowedValues = new ArrayList<>();
+				Map<String, Long> customFieldAllowedValues = entry.getValue();
+				if (customFieldAllowedValues != null) {
+					for (Entry<String, Long> allowedValue : customFieldAllowedValues.entrySet()) {
+						Map<String, Object> allowedValueMap = new LinkedHashMap<>();
+						allowedValueMap.put("value", allowedValue.getKey());
+						allowedValueMap.put("id", allowedValue.getValue());
+						allowedValues.add(allowedValueMap);
+					}
+					customFieldMeta.put("allowedValues", allowedValues);
+				}
+				fieldsMeta.put(customField.getId(), customFieldMeta);
+			}
+			projectMeta.put("issuetypes", Collections.singletonList(Collections.singletonMap("fields", fieldsMeta)));
+			projectsMeta.add(projectMeta);
+		}
+		return Collections.singletonMap("projects", projectsMeta);
+	}
+
 	@RequestMapping(path = "/api/2/project/{projectKey}", method = RequestMethod.GET)
 	public JiraProject getProjectByKey(@PathVariable(CONTEXT) Context context, @PathVariable("projectKey") String projectKey) {
 		JiraProject jiraProject = getProjects(context).get(projectKey);
@@ -253,7 +286,8 @@ public class JiraDummyService {
 
 	@RequestMapping(path = "/api/2/field", method = RequestMethod.GET)
 	public List<JiraField> getFields(@PathVariable(CONTEXT) Context context) {
-		return getData(context).getCustomFields();
+		Map<JiraField, Map<String, Long>> customFields = getData(context).getCustomFields();
+		return new ArrayList<>(customFields.keySet());
 	}
 
 	@RequestMapping(path = "/api/2/resolution", method = RequestMethod.GET)

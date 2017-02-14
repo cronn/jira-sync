@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import de.cronn.jira.sync.config.JiraSyncConfig;
 import de.cronn.jira.sync.domain.JiraComment;
 import de.cronn.jira.sync.domain.JiraField;
+import de.cronn.jira.sync.domain.JiraFieldSchema;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueFields;
 import de.cronn.jira.sync.domain.JiraIssueStatus;
@@ -88,11 +90,14 @@ public class JiraSyncApplicationTests {
 	private static final JiraUser SOURCE_USER_SOME = new JiraUser("some.user", "some.user", "Some User");
 	private static final JiraUser SOURCE_USER_ANOTHER = new JiraUser("anotheruser", "anotheruser", "Another User");
 
-	private static final JiraField SOURCE_CUSTOM_FIELD_FOUND_IN_VERSION = new JiraField("1", "Found in version", true);
-	private static final JiraField TARGET_CUSTOM_FIELD_FOUND_IN_VERSION = new JiraField("100", "Found in software version", true);
+	private static final JiraFieldSchema FIELD_SCHEMA_LABELS = new JiraFieldSchema(null, null, "com.atlassian.jira.plugin.system.customfieldtypes:labels");
+	private static final JiraFieldSchema FIELD_SCHEMA_SELECT = new JiraFieldSchema(null, null, "com.atlassian.jira.plugin.system.customfieldtypes:select");
 
-	private static final JiraField SOURCE_CUSTOM_FIELD_FIXED_IN_VERSION = new JiraField("2", "Fixed in version", true);
-	private static final JiraField TARGET_CUSTOM_FIELD_FIXED_IN_VERSION = new JiraField("200", "Fixed in software version", true);
+	private static final JiraField SOURCE_CUSTOM_FIELD_FOUND_IN_VERSION = new JiraField("1", "Found in version", true, FIELD_SCHEMA_LABELS);
+	private static final JiraField TARGET_CUSTOM_FIELD_FOUND_IN_VERSION = new JiraField("100", "Found in software version", true, FIELD_SCHEMA_LABELS);
+
+	private static final JiraField SOURCE_CUSTOM_FIELD_FIXED_IN_VERSION = new JiraField("2", "Fixed in version", true, FIELD_SCHEMA_SELECT);
+	private static final JiraField TARGET_CUSTOM_FIELD_FIXED_IN_VERSION = new JiraField("200", "Fixed in software version", true, FIELD_SCHEMA_SELECT);
 
 	@Autowired
 	private TestClock clock;
@@ -172,11 +177,11 @@ public class JiraSyncApplicationTests {
 		jiraDummyService.addUser(SOURCE, SOURCE_USER_SOME);
 		jiraDummyService.addUser(SOURCE, SOURCE_USER_ANOTHER);
 
-		jiraDummyService.addField(SOURCE, SOURCE_CUSTOM_FIELD_FOUND_IN_VERSION);
-		jiraDummyService.addField(TARGET, TARGET_CUSTOM_FIELD_FOUND_IN_VERSION);
+		jiraDummyService.addField(SOURCE, SOURCE_CUSTOM_FIELD_FOUND_IN_VERSION, null);
+		jiraDummyService.addField(TARGET, TARGET_CUSTOM_FIELD_FOUND_IN_VERSION, null);
 
-		jiraDummyService.addField(SOURCE, SOURCE_CUSTOM_FIELD_FIXED_IN_VERSION);
-		jiraDummyService.addField(TARGET, TARGET_CUSTOM_FIELD_FIXED_IN_VERSION);
+		jiraDummyService.addField(SOURCE, SOURCE_CUSTOM_FIELD_FIXED_IN_VERSION, Collections.singletonMap("1.0", 1L));
+		jiraDummyService.addField(TARGET, TARGET_CUSTOM_FIELD_FIXED_IN_VERSION, Collections.singletonMap("1.0", 100L));
 
 		jiraDummyService.setDefaultStatus(TARGET, TARGET_STATUS_OPEN);
 
@@ -448,7 +453,7 @@ public class JiraSyncApplicationTests {
 		update.setTransition(transition);
 		update.getOrCreateFields().setResolution(TARGET_RESOLUTION_DONE);
 		update.getOrCreateFields().setFixVersions(Collections.singleton(TARGET_VERSION_10));
-		update.getOrCreateFields().setOther(TARGET_CUSTOM_FIELD_FIXED_IN_VERSION.getId(), "1.0");
+		update.getOrCreateFields().setOther(TARGET_CUSTOM_FIELD_FIXED_IN_VERSION.getId(), Collections.singletonMap("value", "1.0"));
 		jiraDummyService.transitionIssue(TARGET, targetIssue.getKey(), update);
 
 		syncTask.sync();
@@ -456,7 +461,10 @@ public class JiraSyncApplicationTests {
 		// then
 		JiraIssue updatedSourceIssue = getSingleIssue(SOURCE);
 		assertThat(updatedSourceIssue.getFields().getStatus().getName()).isEqualTo(SOURCE_STATUS_RESOLVED.getName());
-		assertThat(updatedSourceIssue.getFields().getOther()).isEqualTo(Collections.singletonMap(SOURCE_CUSTOM_FIELD_FIXED_IN_VERSION.getId(), "1.0"));
+		Map<String, Object> expectedCustomFieldValue = new LinkedHashMap<>();
+		expectedCustomFieldValue.put("id", 1);
+		expectedCustomFieldValue.put("value", "1.0");
+		assertThat(updatedSourceIssue.getFields().getOther()).isEqualTo(Collections.singletonMap(SOURCE_CUSTOM_FIELD_FIXED_IN_VERSION.getId(), expectedCustomFieldValue));
 	}
 
 	@Test

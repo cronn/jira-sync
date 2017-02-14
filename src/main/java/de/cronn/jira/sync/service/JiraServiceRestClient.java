@@ -8,6 +8,7 @@ import java.security.GeneralSecurityException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -198,6 +199,25 @@ public class JiraServiceRestClient implements JiraService {
 	public JiraIssue getIssueByKey(String issueKey) {
 		validateIssueKey(issueKey);
 		return getForObject("/rest/api/2/issue/{key}", JiraIssue.class, issueKey);
+	}
+
+	@Override
+	@Cacheable(value = CACHE_NAME_FIELD_ALLOWED_VALUES, key = "{ #root.target.url, #projectKey, #customFieldId }")
+	@SuppressWarnings("unchecked")
+	public Map<String, Object> getAllowedValuesForCustomField(String projectKey, String customFieldId) {
+		validateProjectKey(projectKey);
+		log.debug("[{}], fetching allowed values for custom field {}", getUrl(), customFieldId);
+		Map<String, Object> createMeta = getForObject("/rest/api/2/issue/createmeta?projectKeys={projectKey}&expand=projects.issuetypes.fields", Map.class, projectKey);
+		Map<String, Object> project = ((List<Map<String, Object>>) createMeta.get("projects")).get(0);
+		Map<String, Object> issueType = ((List<Map<String, Object>>) project.get("issuetypes")).get(0);
+		Map<String, Object> customField = ((Map<String, Map<String, Object>>) issueType.get("fields")).get(customFieldId);
+		List<Map<String, Object>> allowedValues = (List<Map<String, Object>>) customField.get("allowedValues");
+		Map<String, Object> allowedValuesByValue = new LinkedHashMap<>();
+		for (Map<String, Object> allowedValue : allowedValues) {
+			String value = (String) allowedValue.get("value");
+			allowedValuesByValue.put(value, allowedValue);
+		}
+		return allowedValuesByValue;
 	}
 
 	@Override

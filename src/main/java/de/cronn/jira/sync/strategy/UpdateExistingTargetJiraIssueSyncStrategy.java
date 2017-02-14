@@ -34,14 +34,15 @@ import de.cronn.jira.sync.domain.JiraIssueFields;
 import de.cronn.jira.sync.domain.JiraIssueStatus;
 import de.cronn.jira.sync.domain.JiraIssueUpdate;
 import de.cronn.jira.sync.domain.JiraPriority;
+import de.cronn.jira.sync.domain.JiraProject;
 import de.cronn.jira.sync.domain.JiraResolution;
 import de.cronn.jira.sync.domain.JiraTransition;
 import de.cronn.jira.sync.domain.JiraUser;
 import de.cronn.jira.sync.domain.JiraVersion;
 import de.cronn.jira.sync.link.JiraIssueLinker;
 import de.cronn.jira.sync.mapping.CommentMapper;
-import de.cronn.jira.sync.mapping.FieldMapper;
 import de.cronn.jira.sync.mapping.DescriptionMapper;
+import de.cronn.jira.sync.mapping.FieldMapper;
 import de.cronn.jira.sync.mapping.LabelMapper;
 import de.cronn.jira.sync.mapping.PriorityMapper;
 import de.cronn.jira.sync.mapping.ResolutionMapper;
@@ -158,7 +159,8 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 	}
 
 	private void processCustomFields(JiraService jiraSource, JiraService jiraTarget, JiraIssue sourceIssue, JiraIssue targetIssue, JiraIssueUpdate targetIssueUpdate) {
-		Map<String, Object> mappedFields = fieldMapper.map(sourceIssue, jiraSource, jiraTarget);
+		JiraProject targetProject = targetIssue.getFields().getProject();
+		Map<String, Object> mappedFields = fieldMapper.map(sourceIssue, jiraSource, jiraTarget, targetProject);
 		for (Entry<String, Object> entry : mappedFields.entrySet()) {
 			Object existingValue = targetIssue.getOrCreateFields().getOther().get(entry.getKey());
 			if (!Objects.equals(existingValue, entry.getValue())) {
@@ -306,9 +308,11 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 			JiraField customFieldInSource = jiraSource.findField(customFieldNameInSource);
 			Assert.isTrue(customFieldInTarget.isCustom(), customFieldInTarget + " is not a custom field in target");
 			Assert.isTrue(customFieldInSource.isCustom(), customFieldNameInSource + " is not a custom field in source");
-			Object valueInTarget = targetIssue.getFields().getOther().get(customFieldInTarget.getId());
-			sourceIssueUpdate.getOrCreateFields().setOther(customFieldInSource.getId(), valueInTarget);
-			sourceIssue.getFields().setOther(customFieldInSource.getId(), valueInTarget);
+
+			JiraProject sourceProject = sourceIssue.getFields().getProject();
+			Object mappedValue = fieldMapper.mapValue(targetIssue, customFieldInTarget, customFieldInSource, jiraSource, sourceProject);
+			sourceIssueUpdate.getOrCreateFields().setOther(customFieldInSource.getId(), mappedValue);
+			sourceIssue.getFields().setOther(customFieldInSource.getId(), mappedValue);
 		}
 	}
 

@@ -5,18 +5,20 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 
 public class JiraField extends JiraIdResource {
 
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 2L;
 
 	private String name;
 	private Boolean custom;
+	private JiraFieldSchema schema;
 
 	public JiraField() {
 	}
 
-	public JiraField(String id, String name, boolean custom) {
+	public JiraField(String id, String name, boolean custom, JiraFieldSchema schema) {
 		super(id);
 		this.name = name;
 		this.custom = custom;
+		this.schema = schema;
 	}
 
 	public String getName() {
@@ -33,6 +35,14 @@ public class JiraField extends JiraIdResource {
 
 	public void setCustom(Boolean custom) {
 		this.custom = custom;
+	}
+
+	public JiraFieldSchema getSchema() {
+		return schema;
+	}
+
+	public void setSchema(JiraFieldSchema schema) {
+		this.schema = schema;
 	}
 
 	@Override

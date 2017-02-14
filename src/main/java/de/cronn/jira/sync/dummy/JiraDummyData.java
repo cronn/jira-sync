@@ -32,7 +32,7 @@ public class JiraDummyData {
 	private final List<JiraResolution> resolutions = new ArrayList<>();
 	private final List<JiraTransition> transitions = new ArrayList<>();
 	private final List<JiraVersion> versions = new ArrayList<>();
-	private final List<JiraField> customFields = new ArrayList<>();
+	private final Map<JiraField, Map<String, Long>> customFields = new LinkedHashMap<>();
 	private final Map<String, AtomicLong> keyCounters = new LinkedHashMap<>();
 	private final AtomicLong idCounter = new AtomicLong();
 	private final Map<String, JiraUser> users = new LinkedHashMap<>();
@@ -56,7 +56,7 @@ public class JiraDummyData {
 		return versions;
 	}
 
-	public List<JiraField> getCustomFields() {
+	public Map<JiraField, Map<String, Long>> getCustomFields() {
 		return customFields;
 	}
 
@@ -116,8 +116,8 @@ public class JiraDummyData {
 		return idCounter;
 	}
 
-	public void addField(JiraField field) {
-		customFields.add(field);
+	public void addField(JiraField field, Map<String, Long> allowedValues) {
+		customFields.put(field, allowedValues);
 	}
 
 	public void addUser(JiraUser user) {

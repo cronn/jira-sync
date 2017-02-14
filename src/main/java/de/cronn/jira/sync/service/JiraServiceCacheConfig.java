@@ -42,6 +42,7 @@ public class JiraServiceCacheConfig {
 	static final String CACHE_NAME_RESOLUTIONS = "resolutions";
 	static final String CACHE_NAME_FIELDS = "fields";
 	static final String CACHE_NAME_REMOTE_LINKS = "remoteLinks";
+	static final String CACHE_NAME_FIELD_ALLOWED_VALUES = "fieldAllowedValues";
 
 	private static final Duration ONE_HOUR = Duration.of(1, TimeUnit.HOURS);
 	private static final Duration THIRTY_SECONDS = Duration.of(30, TimeUnit.SECONDS);
@@ -61,6 +62,7 @@ public class JiraServiceCacheConfig {
 		createCache(cacheManager, CACHE_NAME_FIELDS, ONE_HOUR, persistentCache);
 		createCache(cacheManager, CACHE_NAME_REMOTE_LINKS, ONE_HOUR, persistentCache);
 		createCache(cacheManager, CACHE_NAME_USERS, ONE_HOUR, persistentCache);
+		createCache(cacheManager, CACHE_NAME_FIELD_ALLOWED_VALUES, ONE_HOUR, persistentCache);
 		createCache(cacheManager, CACHE_NAME_MYSELF, ONE_HOUR, false);
 		createCache(cacheManager, CACHE_NAME_SERVER_INFO, THIRTY_SECONDS, false);
 		return cacheManager;

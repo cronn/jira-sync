@@ -4,6 +4,7 @@ import java.net.URL;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import de.cronn.jira.sync.config.JiraConnectionProperties;
 import de.cronn.jira.sync.domain.JiraComment;
@@ -39,6 +40,8 @@ public interface JiraService extends AutoCloseable {
 	JiraUser getUserByName(String username);
 
 	JiraIssue getIssueByKey(String key);
+
+	Map<String, Object> getAllowedValuesForCustomField(String projectKey, String customFieldId);
 
 	JiraProject getProjectByKey(String projectKey);
 

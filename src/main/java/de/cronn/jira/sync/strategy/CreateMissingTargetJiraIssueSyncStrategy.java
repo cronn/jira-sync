@@ -121,7 +121,8 @@ public class CreateMissingTargetJiraIssueSyncStrategy implements MissingTargetJi
 	}
 
 	private void copyCustomFields(JiraService jiraSource, JiraService jiraTarget, JiraIssue sourceIssue, JiraIssue issueToCreate) {
-		Map<String, Object> mappedFields = fieldMapper.map(sourceIssue, jiraSource, jiraTarget);
+		JiraProject targetProject = issueToCreate.getFields().getProject();
+		Map<String, Object> mappedFields = fieldMapper.map(sourceIssue, jiraSource, jiraTarget, targetProject);
 		for (Entry<String, Object> entry : mappedFields.entrySet()) {
 			issueToCreate.getFields().setOther(entry.getKey(), entry.getValue());
 		}

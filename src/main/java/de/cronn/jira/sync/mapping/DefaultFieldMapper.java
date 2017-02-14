@@ -3,15 +3,18 @@ package de.cronn.jira.sync.mapping;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
 import de.cronn.jira.sync.config.JiraSyncConfig;
 import de.cronn.jira.sync.domain.JiraField;
 import de.cronn.jira.sync.domain.JiraIssue;
+import de.cronn.jira.sync.domain.JiraProject;
 import de.cronn.jira.sync.service.JiraService;
 
 @Component
@@ -27,13 +30,13 @@ public class DefaultFieldMapper implements FieldMapper {
 	}
 
 	@Override
-	public Map<String, Object> map(JiraIssue fromIssue, JiraService fromJira, JiraService toJira) {
+	public Map<String, Object> map(JiraIssue fromIssue, JiraService fromJira, JiraService toJira, JiraProject toProject) {
 		Map<String, Object> fields = new LinkedHashMap<>();
 		for (Entry<String, String> entry : jiraSyncConfig.getFieldMapping().entrySet()) {
 			JiraField fromField = fromJira.findField(entry.getKey());
 			JiraField toField = toJira.findField(entry.getValue());
 
-			Object mappedValue = mapValue(fromIssue, fromField, toField);
+			Object mappedValue = mapValue(fromIssue, fromField, toField, toJira, toProject);
 			if (mappedValue != null) {
 				fields.put(toField.getId(), mappedValue);
 			}
@@ -42,7 +45,7 @@ public class DefaultFieldMapper implements FieldMapper {
 	}
 
 	@Override
-	public Object mapValue(JiraIssue fromIssue, JiraField fromField, JiraField toField) {
+	public Object mapValue(JiraIssue fromIssue, JiraField fromField, JiraField toField, JiraService toJira, JiraProject toProject) {
 		Map<String, Object> fromFields = fromIssue.getOrCreateFields().getOther();
 		Object sourceValue = fromFields.get(fromField.getId());
 
@@ -55,11 +58,35 @@ public class DefaultFieldMapper implements FieldMapper {
 		}
 
 		if (toField.isCustom()) {
-			return sourceValue;
+			return mapCustomFieldValue(fromField, toField, sourceValue, toJira, toProject);
 		} else {
 			@SuppressWarnings("unchecked")
 			Map<String, Object> sourceValueMap = (Map<String, Object>) sourceValue;
 			return sourceValueMap.get("value");
+		}
+	}
+
+	private Object mapCustomFieldValue(JiraField fromField, JiraField toField, Object sourceValue, JiraService toJira, JiraProject toProject) {
+		String toFieldSchemaType = toField.getSchema().getCustom();
+		String fromFieldSchemaType = fromField.getSchema().getCustom();
+
+		if (!Objects.equals(fromFieldSchemaType, toFieldSchemaType)) {
+			throw new IllegalArgumentException("Schema types of custom field " + fromField + " and " + toField + " do not match: "
+				+ fromFieldSchemaType + " vs. " + toFieldSchemaType);
+		}
+
+		switch (toFieldSchemaType) {
+			case "com.atlassian.jira.plugin.system.customfieldtypes:labels":
+				return sourceValue;
+			case "com.atlassian.jira.plugin.system.customfieldtypes:select":
+				Map<String, Object> allowedValuesForCustomField = toJira.getAllowedValuesForCustomField(toProject.getKey(), toField.getId());
+				@SuppressWarnings("unchecked")
+				Object source = ((Map<String, Object>) sourceValue).get("value");
+				Object mappedValue = allowedValuesForCustomField.get(source);
+				Assert.notNull(mappedValue, "Found no matching value for '" + source + "'. Candidates: " + allowedValuesForCustomField.keySet());
+				return mappedValue;
+			default:
+				throw new IllegalArgumentException("Unknown schema of custom field " + toField + ": " + toFieldSchemaType);
 		}
 	}
 
