@@ -82,7 +82,8 @@ public class DefaultFieldMapper implements FieldMapper {
 				Map<String, Object> allowedValuesForCustomField = toJira.getAllowedValuesForCustomField(toProject.getKey(), toField.getId());
 				@SuppressWarnings("unchecked")
 				String source = (String) ((Map<String, Object>) sourceValue).get("value");
-				Map<String, String> fieldValueMapping = jiraSyncConfig.getFieldValueMapping().get(toField.getName());
+				Map<String, Map<String, String>> fieldValueMappings = jiraSyncConfig.getProjectConfigBySourceProject(toProject).getFieldValueMappings();
+				Map<String, String> fieldValueMapping = fieldValueMappings.get(toField.getName());
 				if (source != null && fieldValueMapping != null) {
 					Assert.isTrue(fieldValueMapping.containsValue(source), "found no field value mapping for field " + toField + " with value '" + source + "' ");
 					source = getKeyByValue(fieldValueMapping, source);

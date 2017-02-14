@@ -23,6 +23,7 @@ public class JiraProjectSync {
 	private Set<String> versionsToIgnore = new LinkedHashSet<>();
 	private Set<String> skipUpdateInTargetWhenStatusIn = new LinkedHashSet<>();
 	private boolean copyCommentsToTarget = false;
+	private Map<String, Map<String, String>> fieldValueMappings = new LinkedHashMap<>();
 
 	public String getSourceProject() {
 		return sourceProject;
@@ -122,6 +123,14 @@ public class JiraProjectSync {
 
 	public boolean isCopyCommentsToTarget() {
 		return copyCommentsToTarget;
+	}
+
+	public void setFieldValueMappings(Map<String, Map<String, String>> fieldValueMappings) {
+		this.fieldValueMappings = fieldValueMappings;
+	}
+
+	public Map<String, Map<String, String>> getFieldValueMappings() {
+		return fieldValueMappings;
 	}
 
 	@Override

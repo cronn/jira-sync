@@ -5,6 +5,8 @@ import java.util.Map;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import de.cronn.jira.sync.domain.JiraProject;
+
 @ConfigurationProperties(prefix = "de.cronn.jira.sync")
 public class JiraSyncConfig {
 
@@ -18,7 +20,6 @@ public class JiraSyncConfig {
 	private Map<String, String> issueTypeMapping = new LinkedHashMap<>();
 	private Map<String, String> resolutionMapping = new LinkedHashMap<>();
 	private Map<String, String> fieldMapping = new LinkedHashMap<>();
-	private Map<String, Map<String, String>> fieldValueMapping = new LinkedHashMap<>();
 
 	public JiraConnectionProperties getSource() {
 		return source;
@@ -92,11 +93,10 @@ public class JiraSyncConfig {
 		return fieldMapping;
 	}
 
-	public void setFieldValueMapping(Map<String, Map<String, String>> fieldValueMapping) {
-		this.fieldValueMapping = fieldValueMapping;
-	}
-
-	public Map<String, Map<String, String>> getFieldValueMapping() {
-		return fieldValueMapping;
+	public JiraProjectSync getProjectConfigBySourceProject(JiraProject sourceProject) {
+		return getProjects().values().stream()
+			.filter(project -> project.getSourceProject().equals(sourceProject.getKey()))
+			.findFirst()
+			.orElseThrow(() -> new IllegalArgumentException("Found no project config for '" + sourceProject + "'"));
 	}
 }
