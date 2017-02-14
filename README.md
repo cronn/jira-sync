@@ -108,7 +108,7 @@ de.cronn.jira.sync.projects[EX].transitions[ResolveWhenClosed].targetStatusIn=Cl
 de.cronn.jira.sync.projects[EX].transitions[ResolveWhenClosed].sourceStatusToSet=Resolved
 de.cronn.jira.sync.projects[EX].transitions[ResolveWhenClosed].copyResolutionToSource=true
 de.cronn.jira.sync.projects[EX].transitions[ResolveWhenClosed].copyFixVersionsToSource=true
-de.cronn.jira.sync.projects[EX].transitions[ResolveWhenClosed].customFieldsToCopyFromTargetToSource[field-name-in-target]=field-name-in-source
+de.cronn.jira.sync.projects[EX].transitions[ResolveWhenClosed].customFieldsToCopyFromTargetToSource[field-name-in-source]=field-name-in-target
 
 de.cronn.jira.sync.projects[EX].transitions[TakeInProgress].sourceStatusIn=Open,Reopened
 de.cronn.jira.sync.projects[EX].transitions[TakeInProgress].targetStatusIn=Open,Reopened,Blocked,In Progress,In Review

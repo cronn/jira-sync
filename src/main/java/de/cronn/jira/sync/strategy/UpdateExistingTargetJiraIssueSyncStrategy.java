@@ -302,8 +302,8 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 	private void copyCustomFields(JiraService jiraSource, JiraIssue sourceIssue, JiraIssue targetIssue, JiraService jiraTarget, JiraIssueUpdate sourceIssueUpdate, TransitionConfig transition) {
 		Map<String, String> customFieldsToCopyFromSourceToTarget = transition.getCustomFieldsToCopyFromTargetToSource();
 		for (Entry<String, String> entry : customFieldsToCopyFromSourceToTarget.entrySet()) {
-			String customFieldNameInTarget = entry.getKey();
-			String customFieldNameInSource = entry.getValue();
+			String customFieldNameInSource = entry.getKey();
+			String customFieldNameInTarget = entry.getValue();
 			JiraField customFieldInTarget = jiraTarget.findField(customFieldNameInTarget);
 			JiraField customFieldInSource = jiraSource.findField(customFieldNameInSource);
 			Assert.isTrue(customFieldInTarget.isCustom(), customFieldInTarget + " is not a custom field in target");
