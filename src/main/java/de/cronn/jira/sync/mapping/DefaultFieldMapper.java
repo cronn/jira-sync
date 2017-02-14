@@ -33,22 +33,34 @@ public class DefaultFieldMapper implements FieldMapper {
 			JiraField fromField = fromJira.findField(entry.getKey());
 			JiraField toField = toJira.findField(entry.getValue());
 
-			Map<String, Object> fromFields = fromIssue.getOrCreateFields().getOther();
-			Object sourceValue = fromFields.get(fromField.getId());
-			if (sourceValue != null) {
-				if (!fromField.isCustom() && toField.isCustom()) {
-					log.warn("Conversion from standard field {} to custom field {} is currently not supported", fromField.getName(), toField.getName());
-				}
-				if (toField.isCustom()) {
-					fields.put(toField.getId(), sourceValue);
-				} else {
-					@SuppressWarnings("unchecked")
-					Map<String, Object> sourceValueMap = (Map<String, Object>) sourceValue;
-					fields.put(toField.getId(), sourceValueMap.get("value"));
-				}
+			Object mappedValue = mapValue(fromIssue, fromField, toField);
+			if (mappedValue != null) {
+				fields.put(toField.getId(), mappedValue);
 			}
 		}
 		return fields;
+	}
+
+	@Override
+	public Object mapValue(JiraIssue fromIssue, JiraField fromField, JiraField toField) {
+		Map<String, Object> fromFields = fromIssue.getOrCreateFields().getOther();
+		Object sourceValue = fromFields.get(fromField.getId());
+
+		if (sourceValue == null) {
+			return null;
+		}
+
+		if (!fromField.isCustom() && toField.isCustom()) {
+			log.warn("Conversion from standard field {} to custom field {} is currently not supported", fromField.getName(), toField.getName());
+		}
+
+		if (toField.isCustom()) {
+			return sourceValue;
+		} else {
+			@SuppressWarnings("unchecked")
+			Map<String, Object> sourceValueMap = (Map<String, Object>) sourceValue;
+			return sourceValueMap.get("value");
+		}
 	}
 
 }
