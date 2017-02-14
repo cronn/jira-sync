@@ -77,6 +77,7 @@ public class DefaultFieldMapper implements FieldMapper {
 
 		switch (toFieldSchemaType) {
 			case "com.atlassian.jira.plugin.system.customfieldtypes:labels":
+			case "com.atlassian.jira.plugin.system.customfieldtypes:textarea":
 				return sourceValue;
 			case "com.atlassian.jira.plugin.system.customfieldtypes:select":
 				Map<String, Object> allowedValuesForCustomField = toJira.getAllowedValuesForCustomField(toProject.getKey(), toField.getId());
