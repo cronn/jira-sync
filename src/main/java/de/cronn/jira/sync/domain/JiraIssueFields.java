@@ -41,7 +41,7 @@ public class JiraIssueFields extends JiraResource {
 
 	private JiraComments comment;
 
-	protected Map<String, Object> other = new LinkedHashMap<>();
+	private Map<String, Object> other = new LinkedHashMap<>();
 
 	public JiraIssueFields() {
 	}
