@@ -89,7 +89,7 @@ public class DefaultFieldMapper implements FieldMapper {
 					source = getKeyByValue(fieldValueMapping, source);
 				}
 				Object mappedValue = allowedValuesForCustomField.get(source);
-				Assert.notNull(mappedValue, "Found no matching value for '" + source + "' (" + toField + "). Candidates: " + allowedValuesForCustomField.keySet());
+				Assert.notNull(mappedValue, "Found no matching allowed value for '" + source + "' (" + toField + "). Candidates: " + allowedValuesForCustomField.keySet());
 				return mappedValue;
 			default:
 				throw new IllegalArgumentException("Unknown schema of custom field " + toField + ": " + toFieldSchemaType);
