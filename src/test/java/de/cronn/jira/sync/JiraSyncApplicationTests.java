@@ -47,6 +47,7 @@ import de.cronn.jira.sync.domain.JiraVersion;
 import de.cronn.jira.sync.dummy.JiraDummyService;
 import de.cronn.jira.sync.dummy.JiraDummyService.Context;
 import de.cronn.jira.sync.service.JiraService;
+import de.cronn.jira.sync.strategy.SyncResult;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -251,7 +252,7 @@ public class JiraSyncApplicationTests {
 	@Test
 	public void testEmptySync() throws Exception {
 		// when
-		syncTask.sync();
+		syncAndAssertNoChanges();
 
 		// then
 		assertThat(jiraDummyService.getAllIssues(TARGET)).isEmpty();
@@ -272,7 +273,7 @@ public class JiraSyncApplicationTests {
 		clock.windForwardSeconds(30);
 
 		// when
-		syncTask.sync();
+		syncAndCheckResult();
 
 		// then
 		JiraIssue targetIssue = getSingleIssue(TARGET);
@@ -300,6 +301,8 @@ public class JiraSyncApplicationTests {
 		JiraRemoteLinkObject firstRemoteLinkInTarget = remoteLinksInTarget.iterator().next().getObject();
 		assertThat(firstRemoteLinkInTarget.getUrl()).isEqualTo(new URL(sourceBaseUrl + "/browse/PROJECT_ONE-1"));
 		assertThat(firstRemoteLinkInTarget.getIcon().getUrl16x16()).isEqualTo(new URL("https://jira-target/favicon.ico"));
+
+		syncAndAssertNoChanges();
 	}
 
 	@Test
@@ -313,13 +316,15 @@ public class JiraSyncApplicationTests {
 		jiraSource.createIssue(sourceIssue);
 
 		// when
-		syncTask.sync();
+		syncAndCheckResult();
 
 		// then
 		JiraIssue targetIssue = getSingleIssue(TARGET);
 		assertThat(targetIssue.getFields().getIssuetype().getName()).isEqualTo(TARGET_TYPE_BUG.getName());
 		assertThat(targetIssue.getFields().getPriority().getName()).isEqualTo(TARGET_PRIORITY_DEFAULT.getName());
 		assertThat(targetIssue.getFields().getVersions()).isEmpty();
+
+		syncAndAssertNoChanges();
 	}
 
 	private JiraIssue getSingleIssue(Context context) {
@@ -353,11 +358,13 @@ public class JiraSyncApplicationTests {
 		createIssueInSource("some issue", SOURCE_TYPE_UNKNOWN);
 
 		// when
-		syncTask.sync();
+		syncAndCheckResult();
 
 		// then
 		JiraIssue targetIssue = getSingleIssue(TARGET);
 		assertThat(targetIssue.getFields().getIssuetype().getName()).isEqualTo(TARGET_TYPE_TASK.getName());
+
+		syncAndAssertNoChanges();
 	}
 
 	@Test
@@ -372,12 +379,14 @@ public class JiraSyncApplicationTests {
 		jiraSource.createIssue(sourceIssue);
 
 		// when
-		syncTask.sync();
+		syncAndCheckResult();
 
 		// then
 		JiraIssue targetIssue = getSingleIssue(TARGET);
 		assertThat(targetIssue.getFields().getIssuetype().getName()).isEqualTo(TARGET_TYPE_TASK.getName());
 		assertThat(targetIssue.getFields().getOther()).isEqualTo(Collections.singletonMap(TARGET_CUSTOM_FIELD_FOUND_IN_VERSION.getId(), Arrays.asList("1.0", "1.1")));
+
+		syncAndAssertNoChanges();
 	}
 
 	@Test
@@ -385,7 +394,7 @@ public class JiraSyncApplicationTests {
 		// given
 		JiraIssue createdSourceIssue = createIssueInSource("My first bug");
 
-		syncTask.sync();
+		syncAndCheckResult();
 
 		JiraIssue targetIssue = getSingleIssue(TARGET);
 		assertThat(targetIssue.getFields().getDescription()).isEqualTo("");
@@ -398,7 +407,7 @@ public class JiraSyncApplicationTests {
 		Instant beforeSecondUpdate = Instant.now(clock);
 		clock.windForwardSeconds(30);
 
-		syncTask.sync();
+		syncAndCheckResult();
 
 		// then
 		targetIssue = getSingleIssue(TARGET);
@@ -407,6 +416,8 @@ public class JiraSyncApplicationTests {
 
 		JiraIssue sourceIssue = getSingleIssue(SOURCE);
 		assertThat(sourceIssue.getFields().getUpdated().toInstant()).isEqualTo(beforeSecondUpdate);
+
+		syncAndAssertNoChanges();
 	}
 
 	@Test
@@ -414,7 +425,7 @@ public class JiraSyncApplicationTests {
 		// given
 		createIssueInSource("My first bug");
 
-		syncTask.sync();
+		syncAndCheckResult();
 
 		JiraIssue targetIssue = getSingleIssue(TARGET);
 
@@ -427,13 +438,15 @@ public class JiraSyncApplicationTests {
 		update.getOrCreateFields().setFixVersions(Collections.singleton(TARGET_VERSION_10));
 		jiraDummyService.transitionIssue(TARGET, targetIssue.getKey(), update);
 
-		syncTask.sync();
+		syncAndCheckResult();
 
 		// then
 		JiraIssue updatedSourceIssue = getSingleIssue(SOURCE);
 		assertThat(updatedSourceIssue.getFields().getStatus().getName()).isEqualTo(SOURCE_STATUS_RESOLVED.getName());
 		assertThat(updatedSourceIssue.getFields().getResolution().getName()).isEqualTo(SOURCE_RESOLUTION_FIXED.getName());
 		assertThat(getNames(updatedSourceIssue.getFields().getFixVersions())).containsExactly(SOURCE_VERSION_10.getName());
+
+		syncAndAssertNoChanges();
 	}
 
 	@Test
@@ -446,7 +459,7 @@ public class JiraSyncApplicationTests {
 
 		jiraSource.createIssue(sourceIssue);
 
-		syncTask.sync();
+		syncAndCheckResult();
 
 		JiraIssue targetIssue = getSingleIssue(TARGET);
 
@@ -460,7 +473,7 @@ public class JiraSyncApplicationTests {
 		update.getOrCreateFields().setOther(TARGET_CUSTOM_FIELD_FIXED_IN_VERSION.getId(), Collections.singletonMap("value", "1.0"));
 		jiraDummyService.transitionIssue(TARGET, targetIssue.getKey(), update);
 
-		syncTask.sync();
+		syncAndCheckResult();
 
 		// then
 		JiraIssue updatedSourceIssue = getSingleIssue(SOURCE);
@@ -469,6 +482,8 @@ public class JiraSyncApplicationTests {
 		expectedCustomFieldValue.put("id", 10);
 		expectedCustomFieldValue.put("value", "v1");
 		assertThat(updatedSourceIssue.getFields().getOther()).isEqualTo(Collections.singletonMap(SOURCE_CUSTOM_FIELD_FIXED_IN_VERSION.getId(), expectedCustomFieldValue));
+
+		syncAndAssertNoChanges();
 	}
 
 	@Test
@@ -476,7 +491,7 @@ public class JiraSyncApplicationTests {
 		// given
 		JiraIssue createdSourceIssue = createIssueInSource("My first bug");
 
-		syncTask.sync();
+		syncAndCheckResult();
 
 		moveTicketForwardAndBack(createdSourceIssue.getKey());
 
@@ -490,11 +505,13 @@ public class JiraSyncApplicationTests {
 		jiraDummyService.transitionIssue(TARGET, targetIssue.getKey(), update);
 
 		// when
-		syncTask.sync();
+		syncAndCheckResult();
 
 		// then
 		JiraIssue updatedSourceIssue = getSingleIssue(SOURCE);
 		assertThat(updatedSourceIssue.getFields().getStatus().getName()).isEqualTo(SOURCE_STATUS_OPEN.getName());
+
+		syncAndAssertNoChanges();
 	}
 
 	private void moveTicketForwardAndBack(String issueKey) {
@@ -511,7 +528,7 @@ public class JiraSyncApplicationTests {
 		// given
 		JiraIssue createdSourceIssue = createIssueInSource("My first bug");
 
-		syncTask.sync();
+		syncAndCheckResult();
 
 		moveTicketForwardAndBack(createdSourceIssue.getKey());
 
@@ -527,11 +544,13 @@ public class JiraSyncApplicationTests {
 		syncConfig.getProjects().get("PRJ_ONE").getTransition("ResolveWhenClosed").setTriggerIfIssueWasMovedBetweenProjects(true);
 
 		// when
-		syncTask.sync();
+		syncAndCheckResult();
 
 		// then
 		JiraIssue updatedSourceIssue = getSingleIssue(SOURCE);
 		assertThat(updatedSourceIssue.getFields().getStatus().getName()).isEqualTo(SOURCE_STATUS_RESOLVED.getName());
+
+		syncAndAssertNoChanges();
 	}
 
 	private JiraIssue createIssueInSource(String summary) {
@@ -561,8 +580,8 @@ public class JiraSyncApplicationTests {
 		// given
 		JiraIssue createdSourceIssue = createIssueInSource("My first bug");
 
-		syncTask.sync();
-		syncTask.sync();
+		syncAndCheckResult();
+		syncAndCheckResult();
 
 		JiraIssue currentSourceIssue = getSingleIssue(TARGET);
 
@@ -573,13 +592,15 @@ public class JiraSyncApplicationTests {
 		JiraIssue targetIssue = getSingleIssue(TARGET);
 		targetIssue.getFields().setAssignee(new JiraUser("some", "body"));
 
-		syncTask.sync();
+		syncAndCheckResult();
 
 		// then
 		JiraIssue updatedSourceIssue = jiraDummyService.getIssueByKey(SOURCE, createdSourceIssue.getKey());
 
 		assertThat(updatedSourceIssue.getFields().getStatus().getName()).isEqualTo(SOURCE_STATUS_IN_PROGRESS.getName());
 		assertThat(updatedSourceIssue.getFields().getAssignee().getKey()).isEqualTo("myself");
+
+		syncAndAssertNoChanges();
 	}
 
 	@Test
@@ -591,7 +612,7 @@ public class JiraSyncApplicationTests {
 		jiraSource.addComment(createdIssue.getKey(), "some other comment");
 
 		// when
-		syncTask.sync();
+		syncAndCheckResult();
 
 		// then
 		JiraIssue targetIssue = getSingleIssue(TARGET);
@@ -608,6 +629,8 @@ public class JiraSyncApplicationTests {
 			"some other comment\n" +
 			"~??[comment 1_2|https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-1?focusedCommentId=1_2&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_2]??~\n" +
 			"{panel}");
+
+		syncAndAssertNoChanges();
 	}
 
 	@Test
@@ -624,7 +647,7 @@ public class JiraSyncApplicationTests {
 		jiraSource.addComment(createdIssue.getKey(), "[~yetanotheruser]: some comment");
 
 		// when
-		syncTask.sync();
+		syncAndCheckResult();
 
 		// then
 		JiraIssue targetIssue = getSingleIssue(TARGET);
@@ -643,6 +666,8 @@ public class JiraSyncApplicationTests {
 			"[~yetanotheruser]: some comment\n" +
 			"~??[comment 1_2|https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-1?focusedCommentId=1_2&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_2]??~\n" +
 			"{panel}");
+
+		syncAndAssertNoChanges();
 	}
 
 	@Test
@@ -658,7 +683,7 @@ public class JiraSyncApplicationTests {
 		jiraSource.addComment(createdIssue.getKey(), "see ticket " + SOURCE_PROJECT.getKey() + "-456");
 
 		// when
-		syncTask.sync();
+		syncAndCheckResult();
 
 		// then
 		JiraIssue targetIssue = getSingleIssue(TARGET);
@@ -673,6 +698,8 @@ public class JiraSyncApplicationTests {
 			"see ticket [PROJECT_ONE-456|https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-456]\n" +
 			"~??[comment 1_1|https://localhost:" + this.port + "/SOURCE/browse/PROJECT_ONE-1?focusedCommentId=1_1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_1]??~\n" +
 			"{panel}");
+
+		syncAndAssertNoChanges();
 	}
 
 	@Test
@@ -680,7 +707,7 @@ public class JiraSyncApplicationTests {
 		// given
 		JiraIssue createdSourceIssue = createIssueInSource("My first bug");
 
-		syncTask.sync();
+		syncAndCheckResult();
 
 		JiraIssue targetIssue = getSingleIssue(TARGET);
 		assertThat(targetIssue.getFields().getComment()).isNull();
@@ -692,7 +719,7 @@ public class JiraSyncApplicationTests {
 
 		clock.windForwardSeconds(30);
 
-		syncTask.sync();
+		syncAndCheckResult();
 
 		// then
 		targetIssue = getSingleIssue(TARGET);
@@ -702,6 +729,36 @@ public class JiraSyncApplicationTests {
 			"some comment\n" +
 			"~??[comment 1_1|https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-1?focusedCommentId=1_1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_1]??~\n" +
 			"{panel}");
+
+		syncAndAssertNoChanges();
+	}
+
+	private List<ProjectSyncResult> syncAndCheckResult() {
+		List<ProjectSyncResult> results = syncTask.sync();
+		assertThat(results).hasSize(1);
+		assertThat(results.get(0).hasFailed()).isFalse();
+		return results;
+	}
+
+	private void syncAndAssertNoChanges() {
+		List<ProjectSyncResult> results = syncAndCheckResult();
+		for (ProjectSyncResult result : results) {
+			for (SyncResult syncResult : SyncResult.values()) {
+				switch (syncResult) {
+					case UNCHANGED:
+						break;
+					case UNCHANGED_WARNING:
+					case CHANGED:
+					case CHANGED_TRANSITION:
+					case FAILED:
+					case CREATED:
+						assertThat(result.getCount(syncResult)).as("number of " + syncResult + " issues").isZero();
+						break;
+					default:
+						throw new IllegalArgumentException("Unknown syncResult: " + syncResult);
+				}
+			}
+		}
 	}
 
 	@Test
@@ -715,7 +772,7 @@ public class JiraSyncApplicationTests {
 
 		JiraIssue createdSourceIssue = jiraSource.createIssue(sourceIssue);
 
-		syncTask.sync();
+		syncAndCheckResult();
 
 		JiraIssue targetIssue = getSingleIssue(TARGET);
 		assertThat(targetIssue.getFields().getComment()).isNull();
@@ -729,11 +786,13 @@ public class JiraSyncApplicationTests {
 
 		clock.windForwardSeconds(30);
 
-		syncTask.sync();
+		syncAndCheckResult();
 
 		// then
 		targetIssue = getSingleIssue(TARGET);
 		assertThat(targetIssue.getFields().getOther()).isEqualTo(Collections.singletonMap(TARGET_CUSTOM_FIELD_FOUND_IN_VERSION.getId(), Arrays.asList("1.0", "1.1")));
+
+		syncAndAssertNoChanges();
 	}
 
 	@Test
@@ -746,7 +805,7 @@ public class JiraSyncApplicationTests {
 
 		ZonedDateTime firstSyncTime = ZonedDateTime.now(clock);
 
-		syncTask.sync();
+		syncAndCheckResult();
 
 		clock.windForwardSeconds(30);
 
@@ -759,7 +818,7 @@ public class JiraSyncApplicationTests {
 
 		ZonedDateTime secondSyncTime = ZonedDateTime.now(clock);
 
-		syncTask.sync();
+		syncAndCheckResult();
 
 		targetIssue = getSingleIssue(TARGET);
 		assertThat(targetIssue.getFields().getComment().getComments()).hasSize(2);
@@ -770,6 +829,8 @@ public class JiraSyncApplicationTests {
 			"updated second comment\n" +
 			"~??[comment 1_2|https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-1?focusedCommentId=1_2&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_2]??~\n" +
 			"{panel}");
+
+		syncAndAssertNoChanges();
 	}
 
 	@Test
@@ -778,17 +839,19 @@ public class JiraSyncApplicationTests {
 		JiraIssue createdSourceIssue = createIssueInSource("My first bug");
 		jiraSource.addComment(createdSourceIssue.getKey(), "some comment");
 
-		syncTask.sync();
+		syncAndCheckResult();
 
 		JiraIssue targetIssue = getSingleIssue(TARGET);
 		assertThat(targetIssue.getFields().getComment().getComments()).hasSize(1);
 
-		syncTask.sync();
+		syncAndCheckResult();
 
 		// then
 		targetIssue = getSingleIssue(TARGET);
 		List<JiraComment> comments = targetIssue.getFields().getComment().getComments();
 		assertThat(comments).hasSize(1);
+
+		syncAndAssertNoChanges();
 	}
 
 	@Test
@@ -798,7 +861,7 @@ public class JiraSyncApplicationTests {
 
 		jiraSource.addComment(createdSourceIssue.getKey(), "first comment in source");
 
-		syncTask.sync();
+		syncAndCheckResult();
 
 		JiraIssue targetIssue = getSingleIssue(TARGET);
 		assertThat(targetIssue.getFields().getComment().getComments()).hasSize(1);
@@ -819,7 +882,7 @@ public class JiraSyncApplicationTests {
 
 		clock.windForwardSeconds(30);
 
-		syncTask.sync();
+		syncAndCheckResult();
 
 		// then
 		targetIssue = getSingleIssue(TARGET);
@@ -837,6 +900,8 @@ public class JiraSyncApplicationTests {
 			.contains("third comment in source")
 			.contains("2016-05-23 20:01:00 CEST|titleBGColor=#CCC|bgColor=#DDD")
 			.contains("This comment was added behind time. The order of comments might not represent the real order.");
+
+		syncAndAssertNoChanges();
 	}
 
 	@Test
@@ -846,7 +911,7 @@ public class JiraSyncApplicationTests {
 
 		JiraComment comment = jiraSource.addComment(createdSourceIssue.getKey(), "first comment in source");
 
-		syncTask.sync();
+		syncAndCheckResult();
 
 		JiraIssue targetIssue = getSingleIssue(TARGET);
 		assertThat(targetIssue.getFields().getComment().getComments()).hasSize(1);
@@ -866,7 +931,7 @@ public class JiraSyncApplicationTests {
 		clock.windForwardSeconds(30);
 
 		// when
-		syncTask.sync();
+		syncAndCheckResult();
 
 		// then
 		targetIssue = getSingleIssue(TARGET);
@@ -876,6 +941,8 @@ public class JiraSyncApplicationTests {
 		List<JiraComment> comments = targetIssue.getFields().getComment().getComments();
 		assertThat(comments).hasSize(1);
 		assertThat(comments.get(0).getBody()).contains("first comment in source");
+
+		syncAndAssertNoChanges();
 	}
 
 }

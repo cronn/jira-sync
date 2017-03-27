@@ -2,6 +2,7 @@ package de.cronn.jira.sync;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -57,10 +58,10 @@ public class JiraSyncTask implements CommandLineRunner {
 		}
 	}
 
-	public void sync() {
+	public List<ProjectSyncResult> sync() {
 		if (jiraSyncConfig.getSource() == null || jiraSyncConfig.getTarget() == null) {
 			log.warn("Source or target is not defined");
-			return;
+			return Collections.emptyList();
 		}
 		try {
 			jiraSource.login(jiraSyncConfig.getSource());
@@ -73,9 +74,9 @@ public class JiraSyncTask implements CommandLineRunner {
 			Map<String, JiraProjectSync> projects = jiraSyncConfig.getProjects();
 			if (projects.isEmpty()) {
 				log.warn("No projects configured");
-				return;
+				return Collections.emptyList();
 			}
-			syncProjects(projects);
+			return syncProjects(projects);
 		} catch (Exception e) {
 			log.error("Synchronisation failed", e);
 			throw e;
@@ -85,7 +86,7 @@ public class JiraSyncTask implements CommandLineRunner {
 		}
 	}
 
-	private void syncProjects(Map<String, JiraProjectSync> projects) {
+	private List<ProjectSyncResult> syncProjects(Map<String, JiraProjectSync> projects) {
 		List<ProjectSyncResult> projectSyncResults = new ArrayList<>();
 		for (JiraProjectSync projectSync : projects.values()) {
 			ProjectSyncResult syncResult = syncProject(jiraSource, jiraTarget, projectSync);
@@ -98,10 +99,12 @@ public class JiraSyncTask implements CommandLineRunner {
 			String formattedProjects = failedProjects.stream().map(this::format).collect(Collectors.joining(", "));
 			throw new JiraSyncException("Synchronisation failed with :" + formattedProjects);
 		}
+
+		return projectSyncResults;
 	}
 
 	private List<JiraProjectSync> findFailedProjects(List<ProjectSyncResult> projectSyncResults) {
-		return projectSyncResults.stream().filter(ProjectSyncResult::isFailed)
+		return projectSyncResults.stream().filter(ProjectSyncResult::hasFailed)
 				.map(ProjectSyncResult::getProjectSync)
 				.collect(Collectors.toList());
 	}
@@ -131,9 +134,7 @@ public class JiraSyncTask implements CommandLineRunner {
 			log.info("{}   {} issues: {}", format(projectSync), entry.getKey().getDisplayName(), entry.getValue());
 		}
 
-		long failCount = resultCounts.get(SyncResult.FAILED);
-		ProjectSyncResultType resultType = failCount > 0 ? ProjectSyncResultType.FAILED : ProjectSyncResultType.SUCCEEDED;
-		return new ProjectSyncResult(projectSync, resultType);
+		return new ProjectSyncResult(projectSync, resultCounts);
 	}
 
 	private SyncResult syncIssue(JiraIssue sourceIssue, JiraService jiraSource, JiraService jiraTarget, JiraProjectSync projectSync) {

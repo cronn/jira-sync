@@ -1,29 +1,32 @@
 package de.cronn.jira.sync;
 
+import java.util.Map;
+
 import org.springframework.util.Assert;
 
 import de.cronn.jira.sync.config.JiraProjectSync;
+import de.cronn.jira.sync.strategy.SyncResult;
 
 class ProjectSyncResult {
-	private JiraProjectSync projectSync;
-	private ProjectSyncResultType resultType;
+	private final JiraProjectSync projectSync;
+	private final Map<SyncResult, Long> resultCounts;
 
-	public ProjectSyncResult(JiraProjectSync projectSync, ProjectSyncResultType resultType) {
+	public ProjectSyncResult(JiraProjectSync projectSync, Map<SyncResult, Long> resultCounts) {
 		Assert.notNull(projectSync, "projectSync required");
-		Assert.notNull(projectSync, "resultType required");
+		Assert.notNull(projectSync, "resultCounts required");
 		this.projectSync = projectSync;
-		this.resultType = resultType;
+		this.resultCounts = resultCounts;
 	}
 
 	public JiraProjectSync getProjectSync() {
 		return projectSync;
 	}
 
-	public ProjectSyncResultType getResultType() {
-		return resultType;
+	public boolean hasFailed() {
+		return getCount(SyncResult.FAILED) > 0L;
 	}
 
-	public boolean isFailed() {
-		return resultType == ProjectSyncResultType.FAILED;
+	public Long getCount(SyncResult syncResult) {
+		return resultCounts.getOrDefault(syncResult, 0L);
 	}
 }
