@@ -1,6 +1,5 @@
 package de.cronn.jira.sync.config;
 
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -22,12 +21,6 @@ public class TransitionConfig {
 	private Map<String, String> customFieldsToCopyFromTargetToSource = new LinkedHashMap<>();
 
 	public TransitionConfig() {
-	}
-
-	public TransitionConfig(Collection<String> sourceStatusIn, Collection<String> targetStatusIn, String sourceStatusToSet) {
-		this.sourceStatusIn = new LinkedHashSet<>(sourceStatusIn);
-		this.targetStatusIn = new LinkedHashSet<>(targetStatusIn);
-		this.sourceStatusToSet = sourceStatusToSet;
 	}
 
 	public Set<String> getSourceStatusIn() {

@@ -282,9 +282,10 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 				}
 			}
 
-			JiraTransition issueTransition = findIssueTransition(jiraSource, sourceIssue, transition);
-			log.info("triggering transition from status '{}' to '{}': {}", sourceIssue.getFields().getStatus().getName(), transition.getSourceStatusToSet(), issueTransition);
-			Assert.isTrue(Objects.equals(issueTransition.getTo().getName(), transition.getSourceStatusToSet()), "Unexpected issue transition: " + issueTransition);
+			String sourceStatusToSet = transition.getSourceStatusToSet();
+			JiraTransition issueTransition = findIssueTransition(jiraSource, sourceIssue, sourceStatusToSet);
+			log.info("triggering transition from status '{}' to '{}': {}", sourceIssue.getFields().getStatus().getName(), sourceStatusToSet, issueTransition);
+			Assert.isTrue(Objects.equals(issueTransition.getTo().getName(), sourceStatusToSet), "Unexpected issue transition: " + issueTransition);
 			sourceIssueUpdate.setTransition(issueTransition);
 
 			if (transition.isCopyResolutionToSource()) {
@@ -379,17 +380,16 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		}
 	}
 
-	private JiraTransition findIssueTransition(JiraService jiraTarget, JiraIssue targetIssue, TransitionConfig transitionConfig) {
-		String sourceStatusToSet = transitionConfig.getSourceStatusToSet();
-		List<JiraTransition> allTransitions = jiraTarget.getTransitions(targetIssue.getKey());
+	private JiraTransition findIssueTransition(JiraService jiraService, JiraIssue issue, String statusToTransitionTo) {
+		List<JiraTransition> allTransitions = jiraService.getTransitions(issue.getKey());
 		List<JiraTransition> filteredTransitions = allTransitions.stream()
-			.filter(jiraTransition -> jiraTransition.getTo().getName().equals(sourceStatusToSet))
+			.filter(jiraTransition -> jiraTransition.getTo().getName().equals(statusToTransitionTo))
 			.collect(Collectors.toList());
 
 		if (filteredTransitions.isEmpty()) {
-			throw new JiraSyncException("Found no transition to status '" + sourceStatusToSet + "'");
+			throw new JiraSyncException("Found no transition to status '" + statusToTransitionTo + "'");
 		} else if (filteredTransitions.size() > 1) {
-			throw new JiraSyncException("Found multiple transitions to status '" + sourceStatusToSet + "': " + filteredTransitions);
+			throw new JiraSyncException("Found multiple transitions to status '" + statusToTransitionTo + "': " + filteredTransitions);
 		} else {
 			return filteredTransitions.get(0);
 		}
