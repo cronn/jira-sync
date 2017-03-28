@@ -13,6 +13,7 @@ public class TransitionConfig {
 	private Set<String> sourceStatusIn = new LinkedHashSet<>();
 	private Set<String> targetStatusIn = new LinkedHashSet<>();
 	private String sourceStatusToSet;
+	private String targetStatusToSet;
 	private boolean copyResolutionToSource = false;
 	private boolean copyFixVersionsToSource = false;
 	private boolean onlyIfAssignedInTarget = false;
@@ -41,6 +42,14 @@ public class TransitionConfig {
 
 	public void setSourceStatusToSet(String sourceStatusToSet) {
 		this.sourceStatusToSet = sourceStatusToSet;
+	}
+
+	public String getTargetStatusToSet() {
+		return targetStatusToSet;
+	}
+
+	public void setTargetStatusToSet(String targetStatusToSet) {
+		this.targetStatusToSet = targetStatusToSet;
 	}
 
 	public boolean isCopyResolutionToSource() {
@@ -101,6 +110,7 @@ public class TransitionConfig {
 			.append("sourceStatusIn", sourceStatusIn)
 			.append("targetStatusIn", targetStatusIn)
 			.append("sourceStatusToSet", sourceStatusToSet)
+			.append("targetStatusToSet", targetStatusToSet)
 			.toString();
 	}
 }

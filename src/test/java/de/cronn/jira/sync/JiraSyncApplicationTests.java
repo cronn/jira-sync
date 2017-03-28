@@ -59,11 +59,14 @@ public class JiraSyncApplicationTests {
 	private static final JiraProject TARGET_PROJECT = new JiraProject("100", "PRJ_ONE");
 
 	private static final JiraIssueStatus SOURCE_STATUS_OPEN = new JiraIssueStatus("1", "Open");
-	private static final JiraIssueStatus SOURCE_STATUS_IN_PROGRESS = new JiraIssueStatus("2", "In Progress");
-	private static final JiraIssueStatus SOURCE_STATUS_RESOLVED = new JiraIssueStatus("3", "Resolved");
+	private static final JiraIssueStatus SOURCE_STATUS_REOPENED = new JiraIssueStatus("2", "Reopened");
+	private static final JiraIssueStatus SOURCE_STATUS_IN_PROGRESS = new JiraIssueStatus("3", "In Progress");
+	private static final JiraIssueStatus SOURCE_STATUS_RESOLVED = new JiraIssueStatus("4", "Resolved");
+	private static final JiraIssueStatus SOURCE_STATUS_CLOSED = new JiraIssueStatus("5", "Closed");
 	private static final JiraIssueStatus TARGET_STATUS_OPEN = new JiraIssueStatus("100", "Open");
-	private static final JiraIssueStatus TARGET_STATUS_RESOLVED = new JiraIssueStatus("101", "Resolved");
-	private static final JiraIssueStatus TARGET_STATUS_CLOSED = new JiraIssueStatus("102", "Closed");
+	private static final JiraIssueStatus TARGET_STATUS_REOPENED = new JiraIssueStatus("101", "Reopened");
+	private static final JiraIssueStatus TARGET_STATUS_RESOLVED = new JiraIssueStatus("102", "Resolved");
+	private static final JiraIssueStatus TARGET_STATUS_CLOSED = new JiraIssueStatus("103", "Closed");
 
 	private static final JiraIssueType SOURCE_TYPE_BUG = new JiraIssueType("1", "Bug");
 	private static final JiraIssueType SOURCE_TYPE_UNKNOWN = new JiraIssueType("2", "Unknown");
@@ -167,9 +170,12 @@ public class JiraSyncApplicationTests {
 
 		jiraDummyService.addTransition(SOURCE, new JiraTransition("1", "Set resolved", SOURCE_STATUS_RESOLVED));
 		jiraDummyService.addTransition(SOURCE, new JiraTransition("2", "Set in progress", SOURCE_STATUS_IN_PROGRESS));
+		jiraDummyService.addTransition(SOURCE, new JiraTransition("3", "Close", SOURCE_STATUS_CLOSED));
+		jiraDummyService.addTransition(SOURCE, new JiraTransition("4", "Reopen", SOURCE_STATUS_REOPENED));
 
 		jiraDummyService.addTransition(TARGET, new JiraTransition("100", "Resolve", TARGET_STATUS_RESOLVED));
 		jiraDummyService.addTransition(TARGET, new JiraTransition("101", "Close", TARGET_STATUS_CLOSED));
+		jiraDummyService.addTransition(TARGET, new JiraTransition("102", "Reopen", TARGET_STATUS_REOPENED));
 
 		jiraDummyService.addVersion(SOURCE, SOURCE_VERSION_10);
 		jiraDummyService.addVersion(SOURCE, SOURCE_VERSION_11);
@@ -355,7 +361,7 @@ public class JiraSyncApplicationTests {
 	@Test
 	public void testCreateTicketInTarget_WithFallbackType() throws Exception {
 		// given
-		createIssueInSource("some issue", SOURCE_TYPE_UNKNOWN);
+		createIssueInSource(SOURCE_TYPE_UNKNOWN);
 
 		// when
 		syncAndCheckResult();
@@ -392,7 +398,7 @@ public class JiraSyncApplicationTests {
 	@Test
 	public void testUpdateTicketInTarget() throws Exception {
 		// given
-		JiraIssue createdSourceIssue = createIssueInSource("My first bug");
+		JiraIssue createdSourceIssue = createIssueInSource();
 
 		syncAndCheckResult();
 
@@ -423,7 +429,7 @@ public class JiraSyncApplicationTests {
 	@Test
 	public void testSetTicketToResolvedInSourceWhenTargetTicketIsClosed() throws Exception {
 		// given
-		createIssueInSource("My first bug");
+		createIssueInSource();
 
 		syncAndCheckResult();
 
@@ -489,7 +495,7 @@ public class JiraSyncApplicationTests {
 	@Test
 	public void testDoNotTriggerTransitionAfterTicketWasMovedBetweenProjects() throws Exception {
 		// given
-		JiraIssue createdSourceIssue = createIssueInSource("My first bug");
+		JiraIssue createdSourceIssue = createIssueInSource();
 
 		syncAndCheckResult();
 
@@ -526,7 +532,7 @@ public class JiraSyncApplicationTests {
 	@DirtiesContext
 	public void testTriggerTransitionAfterTicketWasMovedBetweenProjects() throws Exception {
 		// given
-		JiraIssue createdSourceIssue = createIssueInSource("My first bug");
+		JiraIssue createdSourceIssue = createIssueInSource();
 
 		syncAndCheckResult();
 
@@ -553,12 +559,12 @@ public class JiraSyncApplicationTests {
 		syncAndAssertNoChanges();
 	}
 
-	private JiraIssue createIssueInSource(String summary) {
-		return createIssueInSource(summary, SOURCE_TYPE_BUG);
+	private JiraIssue createIssueInSource() {
+		return createIssueInSource(SOURCE_TYPE_BUG);
 	}
 
-	private JiraIssue createIssueInSource(String summary, JiraIssueType issueType) {
-		JiraIssue sourceIssue = new JiraIssue(null, null, summary, SOURCE_STATUS_OPEN);
+	private JiraIssue createIssueInSource(JiraIssueType issueType) {
+		JiraIssue sourceIssue = new JiraIssue(null, null, "some issue", SOURCE_STATUS_OPEN);
 		sourceIssue.getFields().setProject(SOURCE_PROJECT);
 		sourceIssue.getFields().setIssuetype(issueType);
 		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
@@ -578,14 +584,14 @@ public class JiraSyncApplicationTests {
 	@Test
 	public void testSetTicketToInProgressInSourceWhenTargetGetsAssigned() throws Exception {
 		// given
-		JiraIssue createdSourceIssue = createIssueInSource("My first bug");
+		JiraIssue createdSourceIssue = createIssueInSource();
 
 		syncAndCheckResult();
-		syncAndCheckResult();
+		syncAndAssertNoChanges();
 
-		JiraIssue currentSourceIssue = getSingleIssue(TARGET);
+		JiraIssue currentTargetIssue = getSingleIssue(TARGET);
 
-		assertThat(currentSourceIssue.getFields().getStatus().getName()).isEqualTo(SOURCE_STATUS_OPEN.getName());
+		assertThat(currentTargetIssue.getFields().getStatus().getName()).isEqualTo(SOURCE_STATUS_OPEN.getName());
 
 		// when
 
@@ -604,9 +610,42 @@ public class JiraSyncApplicationTests {
 	}
 
 	@Test
+	public void testSetTicketToReopenedInTargetWhenSourceIsReopened() throws Exception {
+		// given
+		JiraIssue createdSourceIssue = createIssueInSource(SOURCE_TYPE_BUG);
+
+		syncAndCheckResult();
+		syncAndAssertNoChanges();
+
+		JiraIssue targetIssue = getSingleIssue(TARGET);
+
+		transitionIssue(TARGET, targetIssue, TARGET_STATUS_CLOSED);
+
+		// when
+		transitionIssue(SOURCE, createdSourceIssue, SOURCE_STATUS_REOPENED);
+
+		syncAndCheckResult();
+
+		// then
+		JiraIssue updatedTargetIssue = getSingleIssue(TARGET);
+
+		assertThat(updatedTargetIssue.getFields().getStatus().getName()).isEqualTo(SOURCE_STATUS_REOPENED.getName());
+
+		syncAndAssertNoChanges();
+	}
+
+	private void transitionIssue(Context context, JiraIssue targetIssue, JiraIssueStatus statusToTransitionTo) {
+		JiraTransition transition = findTransition(context, targetIssue.getKey(), statusToTransitionTo);
+
+		JiraIssueUpdate update = new JiraIssueUpdate();
+		update.setTransition(transition);
+		jiraDummyService.transitionIssue(context, targetIssue.getKey(), update);
+	}
+
+	@Test
 	public void testCreateTicketInTarget_WithComments() throws Exception {
 		// given
-		JiraIssue createdIssue = createIssueInSource("some issue", SOURCE_TYPE_UNKNOWN);
+		JiraIssue createdIssue = createIssueInSource(SOURCE_TYPE_UNKNOWN);
 		jiraSource.addComment(createdIssue.getKey(), "some comment");
 		clock.windForwardSeconds(120);
 		jiraSource.addComment(createdIssue.getKey(), "some other comment");
@@ -705,7 +744,7 @@ public class JiraSyncApplicationTests {
 	@Test
 	public void testUpdateTicketInTarget_addComment() throws Exception {
 		// given
-		JiraIssue createdSourceIssue = createIssueInSource("My first bug");
+		JiraIssue createdSourceIssue = createIssueInSource();
 
 		syncAndCheckResult();
 
@@ -797,7 +836,7 @@ public class JiraSyncApplicationTests {
 
 	@Test
 	public void testUpdateCommentInSource() throws Exception {
-		JiraIssue createdSourceIssue = createIssueInSource("My first bug");
+		JiraIssue createdSourceIssue = createIssueInSource();
 		jiraSource.addComment(createdSourceIssue.getKey(), "first comment");
 		JiraComment secondComment = jiraSource.addComment(createdSourceIssue.getKey(), "second comment");
 
@@ -836,7 +875,7 @@ public class JiraSyncApplicationTests {
 	@Test
 	public void testCreateTicketInTargetWithComment_UpdateDoesNotAddItAgain() throws Exception {
 		// given
-		JiraIssue createdSourceIssue = createIssueInSource("My first bug");
+		JiraIssue createdSourceIssue = createIssueInSource();
 		jiraSource.addComment(createdSourceIssue.getKey(), "some comment");
 
 		syncAndCheckResult();
@@ -857,7 +896,7 @@ public class JiraSyncApplicationTests {
 	@Test
 	public void testUpdateTicketInTarget_addCommentAfterCommentWasAddedInTarget() throws Exception {
 		// given
-		JiraIssue createdSourceIssue = createIssueInSource("My first bug");
+		JiraIssue createdSourceIssue = createIssueInSource();
 
 		jiraSource.addComment(createdSourceIssue.getKey(), "first comment in source");
 
@@ -907,7 +946,7 @@ public class JiraSyncApplicationTests {
 	@Test
 	public void testDoNotUpdateTicketInStatusResolvedOrClosed() throws Exception {
 		// given
-		JiraIssue createdSourceIssue = createIssueInSource("My first bug");
+		JiraIssue createdSourceIssue = createIssueInSource();
 
 		JiraComment comment = jiraSource.addComment(createdSourceIssue.getKey(), "first comment in source");
 

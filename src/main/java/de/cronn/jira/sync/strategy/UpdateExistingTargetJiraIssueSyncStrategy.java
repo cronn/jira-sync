@@ -114,7 +114,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		JiraIssueUpdate targetIssueUpdate = new JiraIssueUpdate();
 		JiraIssueUpdate sourceIssueUpdate = new JiraIssueUpdate();
 
-		processTransition(jiraSource, sourceIssue, targetIssue, projectSync, sourceIssueUpdate, jiraTarget);
+		processTransition(jiraSource, jiraTarget, sourceIssue, targetIssue, projectSync, sourceIssueUpdate, targetIssueUpdate);
 		processDescription(sourceIssue, targetIssue, targetIssueUpdate, jiraSource);
 		processLabels(sourceIssue, targetIssue, targetIssueUpdate, projectSync);
 		processPriority(jiraTarget, sourceIssue, targetIssue, targetIssueUpdate);
@@ -139,16 +139,19 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		}
 
 		if (!targetIssueUpdate.isEmpty()) {
-			Assert.isNull(targetIssueUpdate.getTransition());
-			if (shouldSkipUpdate(targetIssue, projectSync)) {
-				log.debug("skipping update of {} in status {}", targetIssue, targetIssue.getFields().getStatus().getName());
+			if (targetIssueUpdate.getTransition() != null) {
+				jiraTarget.transitionIssue(targetIssue.getKey(), targetIssueUpdate);
 			} else {
-				log.info("updating issue");
-				jiraTarget.updateIssue(targetIssue.getKey(), targetIssueUpdate);
+				if (shouldSkipUpdate(targetIssue, projectSync)) {
+					log.debug("skipping update of {} in status {}", targetIssue, targetIssue.getFields().getStatus().getName());
+				} else {
+					log.info("updating issue");
+					jiraTarget.updateIssue(targetIssue.getKey(), targetIssueUpdate);
+				}
 			}
 		}
 
-		if (sourceIssueUpdate.getTransition() != null) {
+		if (sourceIssueUpdate.getTransition() != null || targetIssueUpdate.getTransition() != null) {
 			return SyncResult.CHANGED_TRANSITION;
 		} else {
 			return SyncResult.CHANGED;
@@ -265,7 +268,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		return null;
 	}
 
-	private void processTransition(JiraService jiraSource, JiraIssue sourceIssue, JiraIssue targetIssue, JiraProjectSync projectSync, JiraIssueUpdate sourceIssueUpdate, JiraService jiraTarget) {
+	private void processTransition(JiraService jiraSource, JiraService jiraTarget, JiraIssue sourceIssue, JiraIssue targetIssue, JiraProjectSync projectSync, JiraIssueUpdate sourceIssueUpdate, JiraIssueUpdate targetIssueUpdate) {
 		Map<String, TransitionConfig> transitions = projectSync.getTransitions();
 		if (transitions.isEmpty()) {
 			log.trace("No transitions configured");
@@ -284,20 +287,30 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 			}
 
 			String sourceStatusToSet = transition.getSourceStatusToSet();
-			JiraTransition issueTransition = findIssueTransition(jiraSource, sourceIssue, sourceStatusToSet);
-			log.info("triggering transition from status '{}' to '{}': {}", sourceIssue.getFields().getStatus().getName(), sourceStatusToSet, issueTransition);
-			Assert.isTrue(Objects.equals(issueTransition.getTo().getName(), sourceStatusToSet), "Unexpected issue transition: " + issueTransition);
-			sourceIssueUpdate.setTransition(issueTransition);
+			if (sourceStatusToSet != null) {
+				JiraTransition issueTransition = findIssueTransition(jiraSource, sourceIssue, sourceStatusToSet);
+				sourceIssueUpdate.setTransition(issueTransition);
 
-			if (transition.isCopyResolutionToSource()) {
-				processResolution(jiraSource, sourceIssue, targetIssue, sourceIssueUpdate);
+				if (transition.isCopyResolutionToSource()) {
+					processResolution(jiraSource, sourceIssue, targetIssue, sourceIssueUpdate);
+				}
+
+				if (transition.isCopyFixVersionsToSource()) {
+					processVersions(jiraSource, sourceIssue, targetIssue, sourceIssueUpdate, projectSync);
+				}
+
+				copyCustomFields(jiraSource, sourceIssue, targetIssue, jiraTarget, sourceIssueUpdate, transition);
+			} else {
+				String targetStatusToSet = transition.getTargetStatusToSet();
+				Assert.notNull(targetStatusToSet, "Expected targetStatusToSet in " + transition);
+
+				JiraTransition issueTransition = findIssueTransition(jiraTarget, targetIssue, targetStatusToSet);
+				targetIssueUpdate.setTransition(issueTransition);
+
+				Assert.isTrue(!transition.isCopyFixVersionsToSource(), "Unexpected property set for " + transition + ": copyFixVersionsToSource");
+				Assert.isTrue(!transition.isCopyResolutionToSource(), "Unexpected property set for " + transition + ": copyResolutionToSource");
+				Assert.isTrue(transition.getCustomFieldsToCopyFromTargetToSource().isEmpty(), "Unexpected properties set for " + transition + ": customFieldsToCopyFromTargetToSource");
 			}
-
-			if (transition.isCopyFixVersionsToSource()) {
-				processVersions(jiraSource, sourceIssue, targetIssue, sourceIssueUpdate, projectSync);
-			}
-
-			copyCustomFields(jiraSource, sourceIssue, targetIssue, jiraTarget, sourceIssueUpdate, transition);
 		}
 	}
 
@@ -356,8 +369,12 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 			return null;
 		} else if (transitionConfigs.size() == 1) {
 			TransitionConfig transitionConfig = transitionConfigs.get(0);
-			String statusToTransitionTo = transitionConfig.getSourceStatusToSet();
-			Assert.notNull(statusToTransitionTo);
+			String sourceStatusToSet = transitionConfig.getSourceStatusToSet();
+			String targetStatusToSet = transitionConfig.getTargetStatusToSet();
+			if ((sourceStatusToSet != null && targetStatusToSet != null)
+				|| (sourceStatusToSet == null && targetStatusToSet == null)) {
+				throw new IllegalArgumentException("Need to set either 'sourceStatusToSet' or 'targetStatusToSet' in " + transitionConfig);
+			}
 			return transitionConfig;
 		} else {
 			throw new JiraSyncException("Illegal number of matching transitions: " + transitionConfigs);
@@ -392,7 +409,10 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		} else if (filteredTransitions.size() > 1) {
 			throw new JiraSyncException("Found multiple transitions to status '" + statusToTransitionTo + "': " + filteredTransitions);
 		} else {
-			return filteredTransitions.get(0);
+			JiraTransition transition = filteredTransitions.get(0);
+			log.info("triggering transition from status '{}' to '{}': {}", issue.getFields().getStatus().getName(), statusToTransitionTo, transition);
+			Assert.isTrue(Objects.equals(transition.getTo().getName(), statusToTransitionTo), "Unexpected issue transition: " + transition);
+			return transition;
 		}
 	}
 
