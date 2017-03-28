@@ -15,6 +15,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -205,7 +206,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 	private void updateComment(JiraIssue sourceIssue, JiraIssue targetIssue, JiraComment sourceComment, JiraComment targetComment, JiraService jiraSource, JiraService jiraTarget) {
 		boolean behindTime = commentMapper.wasAddedBehindTime(targetComment);
 		String commentText = commentMapper.map(sourceIssue, sourceComment, jiraSource, behindTime);
-		if (!Objects.equals(commentText, targetComment.getBody())) {
+		if (isNotEqual(commentText, targetComment.getBody())) {
 			log.info("updating comment {}", targetComment.getId());
 			jiraTarget.updateComment(targetIssue.getKey(), targetComment.getId(), commentText);
 		}
@@ -406,9 +407,20 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 	private void processDescription(JiraIssue sourceIssue, JiraIssue targetIssue, JiraIssueUpdate issueUpdate, JiraService jiraSource) {
 		String existingDescription = descriptionMapper.getDescription(targetIssue);
 		String newDescription = descriptionMapper.mapTargetDescription(sourceIssue, targetIssue, jiraSource);
-		if (!Objects.equals(existingDescription, newDescription)) {
+		if (isNotEqual(existingDescription, newDescription)) {
 			issueUpdate.getOrCreateFields().setDescription(newDescription);
 		}
+	}
+
+	private static boolean isNotEqual(String one, String other) {
+		return !isEqual(one, other);
+	}
+
+	private static boolean isEqual(String one, String other) {
+		if (StringUtils.isEmpty(one) && StringUtils.isEmpty(other)) {
+			return true;
+		}
+		return Objects.equals(one, other);
 	}
 
 	private void processLabels(JiraIssue sourceIssue, JiraIssue targetIssue, JiraIssueUpdate issueUpdate, JiraProjectSync projectSync) {
