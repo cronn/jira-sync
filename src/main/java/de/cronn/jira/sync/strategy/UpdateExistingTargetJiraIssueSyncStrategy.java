@@ -463,11 +463,11 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		Set<JiraVersion> sourceVersions = versionGetter.apply(sourceIssue.getFields());
 		Set<JiraVersion> targetVersions = versionGetter.apply(targetIssue.getFields());
 
-		if (CollectionUtils.isEmpty(sourceVersions) && CollectionUtils.isEmpty(targetVersions)) {
+		Set<JiraVersion> mappedSourceVersions = versionMapper.mapSourceToTarget(jiraTarget, sourceVersions, projectSync);
+
+		if (CollectionUtils.isEmpty(sourceVersions) && CollectionUtils.isEmpty(mappedSourceVersions)) {
 			return;
 		}
-
-		Set<JiraVersion> mappedSourceVersions = versionMapper.mapSourceToTarget(jiraTarget, sourceVersions, projectSync);
 
 		if (!Objects.equals(targetVersions, mappedSourceVersions)) {
 			versionsSetter.accept(mappedSourceVersions);
