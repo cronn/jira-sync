@@ -130,14 +130,17 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 			return SyncResult.UNCHANGED;
 		}
 
-		if (!sourceIssueUpdate.isEmpty()) {
-			if (sourceIssueUpdate.getTransition() != null) {
-				jiraSource.transitionIssue(sourceIssue.getKey(), sourceIssueUpdate);
-			} else {
-				log.warn("Ignoring source issue update of {} without transition", sourceIssue);
-			}
-		}
+		processSourceIssueUpdate(jiraSource, sourceIssue, sourceIssueUpdate);
+		processTargetIssueUpdate(jiraTarget, targetIssue, targetIssueUpdate, projectSync);
 
+		if (sourceIssueUpdate.getTransition() != null || targetIssueUpdate.getTransition() != null) {
+			return SyncResult.CHANGED_TRANSITION;
+		} else {
+			return SyncResult.CHANGED;
+		}
+	}
+
+	private void processTargetIssueUpdate(JiraService jiraTarget, JiraIssue targetIssue, JiraIssueUpdate targetIssueUpdate, JiraProjectSync projectSync) {
 		if (!targetIssueUpdate.isEmpty()) {
 			if (targetIssueUpdate.getTransition() != null) {
 				jiraTarget.transitionIssue(targetIssue.getKey(), targetIssueUpdate);
@@ -150,11 +153,15 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 				}
 			}
 		}
+	}
 
-		if (sourceIssueUpdate.getTransition() != null || targetIssueUpdate.getTransition() != null) {
-			return SyncResult.CHANGED_TRANSITION;
-		} else {
-			return SyncResult.CHANGED;
+	private void processSourceIssueUpdate(JiraService jiraSource, JiraIssue sourceIssue, JiraIssueUpdate sourceIssueUpdate) {
+		if (!sourceIssueUpdate.isEmpty()) {
+			if (sourceIssueUpdate.getTransition() != null) {
+				jiraSource.transitionIssue(sourceIssue.getKey(), sourceIssueUpdate);
+			} else {
+				log.warn("Ignoring source issue update of {} without transition", sourceIssue);
+			}
 		}
 	}
 
