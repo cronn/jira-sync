@@ -443,7 +443,10 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 
 	private void processPriority(JiraService jiraTarget, JiraIssue sourceIssue, JiraIssue targetIssue, JiraIssueUpdate issueUpdate) {
 		JiraPriority sourcePriority = priorityMapper.mapPriority(jiraTarget, sourceIssue);
-		assertFieldNotNull(sourceIssue, sourcePriority, "priority");
+		if (sourcePriority == null) {
+			log.debug("Skipping unknown priority {} of {}", sourceIssue.getFields().getPriority(), sourceIssue);
+			return;
+		}
 		JiraPriority targetPriority = targetIssue.getFields().getPriority();
 		if (!isIdEqual(sourcePriority, targetPriority)) {
 			issueUpdate.getOrCreateFields().setPriority(sourcePriority);

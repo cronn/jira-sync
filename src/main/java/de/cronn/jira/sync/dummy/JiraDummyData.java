@@ -38,6 +38,7 @@ public class JiraDummyData {
 	private final Map<String, JiraUser> users = new LinkedHashMap<>();
 	private String baseUrl;
 	private BasicAuthCredentials basicAuthCredentials;
+	private JiraPriority defaultPriority;
 
 	public JiraLoginRequest getCredentials() {
 		return credentials;
@@ -74,6 +75,14 @@ public class JiraDummyData {
 
 	public List<JiraPriority> getPriorities() {
 		return priorities;
+	}
+
+	public JiraPriority getDefaultPriority() {
+		return defaultPriority;
+	}
+
+	public void setDefaultPriority(JiraPriority defaultPriority) {
+		this.defaultPriority = defaultPriority;
 	}
 
 	public Map<String, JiraIssue> getIssues() {

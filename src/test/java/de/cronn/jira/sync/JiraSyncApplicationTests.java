@@ -74,7 +74,8 @@ public class JiraSyncApplicationTests {
 	private static final JiraPriority SOURCE_PRIORITY_HIGH = new JiraPriority("1", "High");
 	private static final JiraPriority SOURCE_PRIORITY_UNMAPPED = new JiraPriority("99", "Unmapped priority");
 
-	private static final JiraPriority TARGET_PRIORITY_CRITICAL = new JiraPriority("100", "Critical");
+	private static final JiraPriority TARGET_PRIORITY_DEFAULT = new JiraPriority("100", "Default");
+	private static final JiraPriority TARGET_PRIORITY_CRITICAL = new JiraPriority("101", "Critical");
 
 	private static final JiraResolution SOURCE_RESOLUTION_FIXED = new JiraResolution("1", "Fixed");
 	private static final JiraResolution TARGET_RESOLUTION_DONE = new JiraResolution("100", "Done");
@@ -155,7 +156,10 @@ public class JiraSyncApplicationTests {
 
 		jiraDummyService.addPriority(SOURCE, SOURCE_PRIORITY_HIGH);
 		jiraDummyService.addPriority(SOURCE, SOURCE_PRIORITY_UNMAPPED);
+		jiraDummyService.addPriority(TARGET, TARGET_PRIORITY_DEFAULT);
 		jiraDummyService.addPriority(TARGET, TARGET_PRIORITY_CRITICAL);
+
+		jiraDummyService.setDefaultPriority(TARGET, TARGET_PRIORITY_DEFAULT);
 
 		jiraDummyService.addResolution(SOURCE, SOURCE_RESOLUTION_FIXED);
 		jiraDummyService.addResolution(TARGET, TARGET_RESOLUTION_DONE);
@@ -314,7 +318,7 @@ public class JiraSyncApplicationTests {
 		// then
 		JiraIssue targetIssue = getSingleIssue(TARGET);
 		assertThat(targetIssue.getFields().getIssuetype().getName()).isEqualTo(TARGET_TYPE_BUG.getName());
-		assertThat(targetIssue.getFields().getPriority()).isNull();
+		assertThat(targetIssue.getFields().getPriority().getName()).isEqualTo(TARGET_PRIORITY_DEFAULT.getName());
 		assertThat(targetIssue.getFields().getVersions()).isEmpty();
 	}
 

@@ -115,6 +115,10 @@ public class JiraDummyService {
 		getData(context).getPriorities().add(priority);
 	}
 
+	public void setDefaultPriority(Context context, JiraPriority priority) {
+		getData(context).setDefaultPriority(priority);
+	}
+
 	public void addUser(Context context, JiraUser user) {
 		getData(context).addUser(user);
 	}
@@ -435,9 +439,13 @@ public class JiraDummyService {
 		validateVersions(context, fields.getVersions());
 		validateVersions(context, fields.getFixVersions());
 
-		if (fields.getPriority() != null) {
-			validatePriority(context, fields.getPriority());
+		if (fields.getPriority() == null) {
+			JiraPriority defaultPriority = getData(context).getDefaultPriority();
+			Assert.notNull(defaultPriority, "defaultPriority must be set");
+			fields.setPriority(defaultPriority);
 		}
+
+		validatePriority(context, fields.getPriority());
 
 		refreshUpdatedTimestamp(issue);
 
