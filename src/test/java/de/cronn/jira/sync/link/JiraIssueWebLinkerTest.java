@@ -3,7 +3,6 @@ package de.cronn.jira.sync.link;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import java.net.URL;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -15,7 +14,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import de.cronn.jira.sync.JiraSyncException;
 import de.cronn.jira.sync.domain.JiraIssue;
@@ -27,7 +26,6 @@ import de.cronn.jira.sync.service.JiraService;
 @RunWith(MockitoJUnitRunner.class)
 public class JiraIssueWebLinkerTest {
 
-	private static final String JIRA_SOURCE_URL = "https://jira.source";
 	private static final String JIRA_TARGET_URL = "https://jira.target";
 
 	private static final Instant UPDATED = Instant.parse("2016-01-01T00:00:00.000Z");
@@ -40,10 +38,6 @@ public class JiraIssueWebLinkerTest {
 
 	@Before
 	public void setUp() throws Exception {
-		when(jiraSource.getUrl()).thenReturn(new URL(JIRA_SOURCE_URL));
-		when(jiraTarget.getUrl()).thenReturn(new URL(JIRA_TARGET_URL));
-
-		when(jiraSource.getServerInfo()).thenReturn(new JiraServerInfo(JIRA_SOURCE_URL));
 		when(jiraTarget.getServerInfo()).thenReturn(new JiraServerInfo(JIRA_TARGET_URL));
 	}
 
@@ -151,9 +145,6 @@ public class JiraIssueWebLinkerTest {
 		JiraIssue sourceIssue = createJiraIssue("SOURCE-123", "1");
 		JiraIssue targetIssue1 = createJiraIssue("TARGET-123", "1");
 		JiraIssue targetIssue2 = createJiraIssue("TARGET-456", "2");
-
-		when(jiraTarget.getIssueByKey(targetIssue1.getKey())).thenReturn(targetIssue1);
-		when(jiraTarget.getIssueByKey(targetIssue2.getKey())).thenReturn(targetIssue2);
 
 		List<JiraRemoteLink> remoteLinks = new ArrayList<>();
 		remoteLinks.add(new JiraRemoteLink(JIRA_TARGET_URL + "/browse/" + targetIssue1.getKey()));

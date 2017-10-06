@@ -9,7 +9,7 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.service.JiraService;
@@ -21,11 +21,9 @@ public class DefaultDescriptionMapperTest {
 	private JiraService jiraSource;
 
 	@Spy
-	@InjectMocks
 	private UsernameReplacer usernameReplacer = new DefaultUsernameReplacer();
 
 	@Spy
-	@InjectMocks
 	private TicketReferenceReplacer ticketReferenceReplacer = new DefaultTicketReferenceReplacer();
 
 	@InjectMocks
