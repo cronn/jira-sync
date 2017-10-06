@@ -45,7 +45,7 @@ public class JiraDummyData {
 	}
 
 	public void setCredentials(JiraLoginRequest credentials) {
-		Assert.isNull(this.credentials);
+		Assert.isNull(this.credentials, "credentials already set");
 		this.credentials = credentials;
 	}
 
@@ -130,8 +130,8 @@ public class JiraDummyData {
 	}
 
 	public void addUser(JiraUser user) {
-		Object old = users.put(user.getName(), user);
-		Assert.isNull(old);
+		Object old = users.putIfAbsent(user.getName(), user);
+		Assert.isNull(old, "user " + user.getName() + " already exists");
 	}
 
 	public JiraUser getUser(String username) {

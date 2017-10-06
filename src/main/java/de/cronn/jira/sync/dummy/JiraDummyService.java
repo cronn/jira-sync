@@ -95,10 +95,10 @@ public class JiraDummyService {
 	}
 
 	public void addProject(Context context, JiraProject project) {
-		Assert.notNull(project.getKey());
-		Assert.notNull(project.getId());
-		Object old = getProjects(context).put(project.getKey(), project);
-		Assert.isNull(old);
+		Assert.notNull(project.getKey(), "project.key must not be null");
+		Assert.notNull(project.getId(), "project.id must not be null");
+		Object old = getProjects(context).putIfAbsent(project.getKey(), project);
+		Assert.isNull(old, "project " + project.getKey() + " already exists");
 	}
 
 	public void addTransition(Context context, JiraTransition transition) {
@@ -134,8 +134,8 @@ public class JiraDummyService {
 	public void associateFilterIdToProject(Context context, String filterId, JiraProject project) {
 		validateProject(context, project);
 		Map<String, JiraProject> projectAssociatedToFilterId = getData(context).getProjectAssociatedToFilterId();
-		Object old = projectAssociatedToFilterId.put(filterId, project);
-		Assert.isNull(old);
+		Object old = projectAssociatedToFilterId.putIfAbsent(filterId, project);
+		Assert.isNull(old, "project already associated to filter " + filterId);
 	}
 
 	private Map<String, JiraProject> getProjects(Context context) {
@@ -223,7 +223,7 @@ public class JiraDummyService {
 
 	@RequestMapping(path = "/api/2/user", method = RequestMethod.GET)
 	public ResponseEntity<Object> getUser(@PathVariable(CONTEXT) Context context, @RequestParam("username") String username) {
-		Assert.hasText(username);
+		Assert.hasText(username, "username must not be empty");
 		JiraUser user = getData(context).getUser(username);
 		if (user == null) {
 			return new ResponseEntity<>("user not found", HttpStatus.NOT_FOUND);
@@ -309,7 +309,7 @@ public class JiraDummyService {
 	}
 
 	private JiraDummyData getData(Context context) {
-		Assert.notNull(context);
+		Assert.notNull(context, "context must not be null");
 		return data.computeIfAbsent(context, k -> new JiraDummyData());
 	}
 
@@ -423,8 +423,8 @@ public class JiraDummyService {
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
 		}
 
-		Assert.isNull(issue.getKey());
-		Assert.isNull(issue.getId());
+		Assert.isNull(issue.getKey(), "issue.key aready set");
+		Assert.isNull(issue.getId(), "issue.id already set");
 		issue.setKey(generateKey(context, project));
 		issue.setId(generateId(context));
 		if (fields.getStatus() == null) {
@@ -455,7 +455,7 @@ public class JiraDummyService {
 
 	private void registerIssue(Context context, JiraIssue issue) {
 		String issueKey = issue.getKey();
-		Assert.hasText(issueKey);
+		Assert.hasText(issueKey, "issueKey must not be empty");
 		Object old = getIssueMap(context).put(issueKey, issue);
 		Assert.isNull(old, "an issue with key '" + issueKey + "' is already registered: " + old);
 	}
@@ -467,7 +467,7 @@ public class JiraDummyService {
 
 	private String generateKey(@PathVariable(CONTEXT) Context context, JiraProject project) {
 		String projectKey = project.getKey();
-		Assert.notNull(projectKey);
+		Assert.notNull(projectKey, "projectKey must not be null");
 		AtomicLong keyCounter = getData(context).getOrCreateKeyCounter(projectKey);
 		long id = keyCounter.incrementAndGet();
 		return projectKey + "-" + id;
@@ -476,7 +476,7 @@ public class JiraDummyService {
 	@RequestMapping(path = "/api/2/issue/{issueKey}", method = RequestMethod.PUT)
 	public void updateIssue(@PathVariable(CONTEXT) Context context, @PathVariable("issueKey") String issueKey, @RequestBody JiraIssueUpdate jiraIssueUpdate) {
 		JiraIssue issueInSystem = getIssueByKey(context, issueKey);
-		Assert.isNull(jiraIssueUpdate.getTransition());
+		Assert.isNull(jiraIssueUpdate.getTransition(), "jiraIssueUpdate.transition must not be null");
 		updateFields(context, jiraIssueUpdate, issueInSystem);
 	}
 
@@ -500,7 +500,7 @@ public class JiraDummyService {
 
 
 	private void validateProject(Context context, JiraProject project) {
-		Assert.notNull(project);
+		Assert.notNull(project, "project must not be null");
 		for (JiraProject jiraProject : getProjects(context).values()) {
 			if (jiraProject.getKey().equals(project.getKey()) && jiraProject.getId().equals(project.getId())) {
 				return;
@@ -558,8 +558,8 @@ public class JiraDummyService {
 			issueInSystem.getFields().setOther(entry.getKey(), entry.getValue());
 		}
 
-		Assert.isNull(fieldToUpdate.getLabels());
-		Assert.isNull(fieldToUpdate.getPriority());
+		Assert.isNull(fieldToUpdate.getLabels(), "labels must be null");
+		Assert.isNull(fieldToUpdate.getPriority(), "priority must be null");
 
 		refreshUpdatedTimestamp(issueInSystem);
 	}
@@ -571,10 +571,10 @@ public class JiraDummyService {
 	@RequestMapping(path = "/api/2/issue/{issueKey}/transitions", method = RequestMethod.POST)
 	public void transitionIssue(@PathVariable(CONTEXT) Context context, @PathVariable("issueKey") String issueKey, @RequestBody JiraIssueUpdate jiraIssueUpdate) {
 		JiraIssue issueInSystem = getIssueByKey(context, issueKey);
-		Assert.notNull(jiraIssueUpdate.getTransition());
+		Assert.notNull(jiraIssueUpdate.getTransition(), "transition must not be null");
 
 		JiraIssueStatus targetStatus = jiraIssueUpdate.getTransition().getTo();
-		Assert.notNull(targetStatus);
+		Assert.notNull(targetStatus, "targetStatus must not be null");
 		log.debug("Updating status of {} to {}", issueKey, targetStatus);
 		issueInSystem.getFields().setStatus(targetStatus);
 

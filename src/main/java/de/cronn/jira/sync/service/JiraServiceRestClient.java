@@ -342,7 +342,7 @@ public class JiraServiceRestClient implements JiraService {
 	@Override
 	public JiraComment addComment(String issueKey, String commentText) {
 		validateIssueKey(issueKey);
-		Assert.hasText(commentText);
+		Assert.hasText(commentText, "commentText must not be empty");
 		JiraComment comment = new JiraComment(commentText);
 		return restTemplate.postForObject(restUrl("/rest/api/2/issue/{issueId}/comment"), comment, JiraComment.class, issueKey);
 	}
@@ -350,7 +350,7 @@ public class JiraServiceRestClient implements JiraService {
 	@Override
 	public void updateComment(String issueKey, String commentId, String commentText) {
 		validateIssueKey(issueKey);
-		Assert.hasText(commentText);
+		Assert.hasText(commentText, "commentText must not be empty");
 		JiraComment comment = new JiraComment(commentText);
 		restTemplate.put(restUrl("/rest/api/2/issue/{issueId}/comment/{commentId}"), comment, issueKey, commentId);
 	}

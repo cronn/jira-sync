@@ -72,7 +72,7 @@ public class JiraIssueWebLinker implements JiraIssueLinker {
 	}
 
 	private JiraIssue resolveKey(JiraService toJiraService, String key) {
-		Assert.hasText(key);
+		Assert.hasText(key, "key must not be empty");
 		JiraIssue issue = toJiraService.getIssueByKey(key);
 		if (issue == null) {
 			throw new JiraSyncException("Failed to resolve '" + key + "' in " + toJiraService);

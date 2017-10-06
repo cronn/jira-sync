@@ -89,7 +89,7 @@ public class DefaultCommentMapper implements CommentMapper {
 
 	private String getIssueKey(JiraIssue issue) {
 		String key = issue.getKey();
-		Assert.notNull(key);
+		Assert.notNull(key, "key must not be null");
 		return key;
 	}
 
@@ -104,19 +104,19 @@ public class DefaultCommentMapper implements CommentMapper {
 	}
 
 	private String formatDate(ZonedDateTime zonedDateTime) {
-		Assert.notNull(zonedDateTime);
+		Assert.notNull(zonedDateTime, "zonedDateTime must not be null");
 		return DATE_TIME_FORMATTER.format(zonedDateTime.withZoneSameInstant(clock.getZone()));
 	}
 
 	private String getOriginalCommentId(JiraComment comment) {
 		String originalCommentId = comment.getId();
-		Assert.notNull(originalCommentId);
+		Assert.notNull(originalCommentId, "originalCommentId must not be null");
 		return originalCommentId;
 	}
 
 	private String getAuthorDisplayName(JiraComment comment) {
 		String author = comment.getAuthor().getDisplayName();
-		Assert.notNull(author);
+		Assert.notNull(author, "author must not be null");
 		return author;
 	}
 
