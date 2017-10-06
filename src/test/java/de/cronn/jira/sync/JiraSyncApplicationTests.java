@@ -772,6 +772,51 @@ public class JiraSyncApplicationTests {
 		syncAndAssertNoChanges();
 	}
 
+	@Test
+	public void testUpdateTicketInTarget_addCommentWithLinkToOtherComment() throws Exception {
+		// given
+		JiraIssue createdSourceIssue = createIssueInSource();
+
+		syncAndCheckResult();
+
+		JiraIssue targetIssue = getSingleIssue(TARGET);
+		assertThat(targetIssue.getFields().getComment()).isNull();
+
+		// when
+		clock.windForwardSeconds(30);
+
+		jiraSource.addComment(createdSourceIssue.getKey(), "some comment");
+
+		clock.windForwardSeconds(30);
+
+		syncAndCheckResult();
+
+		// then
+		targetIssue = getSingleIssue(TARGET);
+		List<JiraComment> comments = targetIssue.getFields().getComment().getComments();
+		assertThat(comments).hasSize(1);
+		String linkToFirstComment = "https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-1?focusedCommentId=1_1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_1";
+		assertThat(comments.get(0).getBody()).contains(linkToFirstComment);
+
+		syncAndAssertNoChanges();
+
+		clock.windForwardSeconds(30);
+
+		jiraSource.addComment(createdSourceIssue.getKey(), "see the [first comment|" + linkToFirstComment + "]");
+
+		syncAndCheckResult();
+
+		targetIssue = getSingleIssue(TARGET);
+		comments = targetIssue.getFields().getComment().getComments();
+		assertThat(comments).hasSize(2);
+
+		syncAndAssertNoChanges();
+
+		targetIssue = getSingleIssue(TARGET);
+		comments = targetIssue.getFields().getComment().getComments();
+		assertThat(comments).hasSize(2);
+	}
+
 	private List<ProjectSyncResult> syncAndCheckResult() {
 		List<ProjectSyncResult> results = syncTask.sync();
 		assertThat(results).hasSize(1);

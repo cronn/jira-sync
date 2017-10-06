@@ -4,6 +4,7 @@ import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -50,9 +51,10 @@ public class DefaultCommentMapper implements CommentMapper {
 		String sourceKey = getIssueKey(sourceIssue);
 		String commentText = usernameReplacer.replaceUsernames(comment.getBody(), jiraSource);
 		commentText = ticketReferenceReplacer.replaceTicketReferences(commentText, jiraSource);
+		String signature = "~??[comment " + originalCommentId + "|" + buildCommentLink(jiraSource, originalCommentId, sourceKey) + "]??~";
 		return "{panel:title=" + author + " - " + dateString + "|" + getPanelColors(behindTime) + "}\n" +
 			commentText + "\n" +
-			"~??[comment " + originalCommentId + "|" + buildCommentLink(jiraSource, originalCommentId, sourceKey) + "]??~\n" +
+			signature + "\n" +
 			(behindTime ? "~(!) " + THIS_COMMENT_WAS_ADDED_BEHIND_TIME + ". The order of comments might not represent the real order.~\n" : "") +
 			"{panel}";
 	}
@@ -73,8 +75,16 @@ public class DefaultCommentMapper implements CommentMapper {
 	@Override
 	public boolean isMapped(JiraComment commentInSource, String commentTextInTarget) {
 		String sourceCommentId = commentInSource.getId();
-		Assert.hasText(sourceCommentId);
-		return commentTextInTarget.startsWith("{panel:title=") && commentTextInTarget.contains("focusedCommentId=" + sourceCommentId + "&");
+		Assert.hasText(sourceCommentId, "sourceCommentId must not be empty");
+		if (commentTextInTarget.startsWith("{panel:title=")) {
+			String signatureStart = Pattern.quote("~??[comment " + sourceCommentId + "|");
+			String middle = Pattern.quote("focusedCommentId=" + sourceCommentId + "&");
+			String signatureEnd = Pattern.quote("]??~");
+			Pattern signaturePattern = Pattern.compile(signatureStart + ".+" + middle + ".+" + signatureEnd);
+			return signaturePattern.matcher(commentTextInTarget).find();
+		} else {
+			return false;
+		}
 	}
 
 	private String buildCommentLink(JiraService jiraSource, String originalCommentId, String sourceKey) {
