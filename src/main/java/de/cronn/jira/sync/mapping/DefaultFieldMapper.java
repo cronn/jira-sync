@@ -11,10 +11,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
+import de.cronn.jira.sync.MapUtils;
+import de.cronn.jira.sync.config.JiraProjectSync;
 import de.cronn.jira.sync.config.JiraSyncConfig;
 import de.cronn.jira.sync.domain.JiraField;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraProject;
+import de.cronn.jira.sync.domain.WellKnownCustomFieldType;
 import de.cronn.jira.sync.service.JiraService;
 
 @Component
@@ -67,8 +70,8 @@ public class DefaultFieldMapper implements FieldMapper {
 	}
 
 	private Object mapCustomFieldValue(JiraField fromField, JiraField toField, Object sourceValue, JiraService toJira, JiraProject toProject) {
-		String toFieldSchemaType = toField.getSchema().getCustom();
-		String fromFieldSchemaType = fromField.getSchema().getCustom();
+		WellKnownCustomFieldType toFieldSchemaType = WellKnownCustomFieldType.getByCustomSchema(toField.getSchema());
+		WellKnownCustomFieldType fromFieldSchemaType = WellKnownCustomFieldType.getByCustomSchema(fromField.getSchema());
 
 		if (!Objects.equals(fromFieldSchemaType, toFieldSchemaType)) {
 			throw new IllegalArgumentException("Schema types of custom field " + fromField + " and " + toField + " do not match: "
@@ -76,24 +79,40 @@ public class DefaultFieldMapper implements FieldMapper {
 		}
 
 		switch (toFieldSchemaType) {
-			case "com.atlassian.jira.plugin.system.customfieldtypes:labels":
-			case "com.atlassian.jira.plugin.system.customfieldtypes:textarea":
+			case LABELS:
+			case TEXTAREA:
 				return sourceValue;
-			case "com.atlassian.jira.plugin.system.customfieldtypes:select":
-				Map<String, Object> allowedValuesForCustomField = toJira.getAllowedValuesForCustomField(toProject.getKey(), toField.getId());
+			case SELECT:
 				@SuppressWarnings("unchecked")
-				String source = (String) ((Map<String, Object>) sourceValue).get("value");
-				Map<String, Map<String, String>> fieldValueMappings = jiraSyncConfig.getProjectConfigBySourceProject(toProject).getFieldValueMappings();
-				Map<String, String> fieldValueMapping = fieldValueMappings.get(toField.getName());
-				if (source != null && fieldValueMapping != null) {
-					Assert.isTrue(fieldValueMapping.containsValue(source), "found no field value mapping for field " + toField + " with value '" + source + "' ");
-					source = getKeyByValue(fieldValueMapping, source);
-				}
-				Object mappedValue = allowedValuesForCustomField.get(source);
-				Assert.notNull(mappedValue, "Found no matching allowed value for '" + source + "' (" + toField + "). Candidates: " + allowedValuesForCustomField.keySet());
-				return mappedValue;
+				Map<String, String> sourceValueMap = (Map<String, String>) sourceValue;
+				return mapSelectValue(fromField, toField, sourceValueMap, toJira, toProject);
 			default:
 				throw new IllegalArgumentException("Unknown schema of custom field " + toField + ": " + toFieldSchemaType);
+		}
+	}
+
+	private Object mapSelectValue(JiraField fromField, JiraField toField, Map<String, String> sourceValue, JiraService toJira, JiraProject toProject) {
+		Map<String, Object> allowedValuesForCustomField = toJira.getAllowedValuesForCustomField(toProject.getKey(), toField.getId());
+		String source = sourceValue.get("value");
+		Map<String, String> fieldValueMapping = getFieldValueMappings(fromField, toField, toJira, toProject);
+		if (source != null && fieldValueMapping != null) {
+			Assert.isTrue(fieldValueMapping.containsValue(source), "found no field value mapping for field " + toField + " with value '" + source + "' ");
+			source = getKeyByValue(fieldValueMapping, source);
+		}
+		Object mappedValue = allowedValuesForCustomField.get(source);
+		Assert.notNull(mappedValue, "Found no matching allowed value for '" + source + "' (" + toField + "). Candidates: " + allowedValuesForCustomField.keySet());
+		return mappedValue;
+	}
+
+	private Map<String, String> getFieldValueMappings(JiraField fromField, JiraField toField, JiraService toJira, JiraProject toProject) {
+		if (toJira.isSource()) {
+			JiraProjectSync projectConfig = jiraSyncConfig.getProjectConfigBySourceProject(toProject);
+			Map<String, Map<String, String>> fieldValueMappings = projectConfig.getFieldValueMappings();
+			return fieldValueMappings.get(toField.getName());
+		} else {
+			JiraProjectSync projectConfig = jiraSyncConfig.getProjectConfigByTargetProject(toProject);
+			Map<String, Map<String, String>> fieldValueMappings = projectConfig.getFieldValueMappings();
+			return MapUtils.calculateInverseMapping(fieldValueMappings.get(fromField.getName()));
 		}
 	}
 

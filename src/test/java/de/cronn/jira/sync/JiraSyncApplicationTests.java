@@ -203,8 +203,8 @@ public class JiraSyncApplicationTests {
 
 		jiraDummyService.expectBasicAuth(TARGET, "basic-auth-user", "secret");
 
-		jiraSource.login(syncConfig.getSource());
-		jiraTarget.login(syncConfig.getTarget());
+		jiraSource.login(syncConfig.getSource(), true);
+		jiraTarget.login(syncConfig.getTarget(), false);
 	}
 
 	@After
@@ -385,13 +385,14 @@ public class JiraSyncApplicationTests {
 	}
 
 	@Test
-	public void testCreateTicketInTarget_WithCustomField() throws Exception {
+	public void testCreateTicketInTarget_WithCustomFields() throws Exception {
 		// given
 		JiraIssue sourceIssue = new JiraIssue(null, null, "some issue", SOURCE_STATUS_OPEN);
 		sourceIssue.getFields().setProject(SOURCE_PROJECT);
 		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_UNKNOWN);
 		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
 		sourceIssue.getFields().setOther(SOURCE_CUSTOM_FIELD_FOUND_IN_VERSION.getId(), Arrays.asList("1.0", "1.1"));
+		sourceIssue.getFields().setOther(SOURCE_CUSTOM_FIELD_FIXED_IN_VERSION.getId(), Collections.singletonMap("value", "v1"));
 
 		jiraSource.createIssue(sourceIssue);
 
@@ -401,7 +402,12 @@ public class JiraSyncApplicationTests {
 		// then
 		JiraIssue targetIssue = getSingleIssue(TARGET);
 		assertThat(targetIssue.getFields().getIssuetype().getName()).isEqualTo(TARGET_TYPE_TASK.getName());
-		assertThat(targetIssue.getFields().getOther()).containsExactly(entry(TARGET_CUSTOM_FIELD_FOUND_IN_VERSION.getId(), Arrays.asList("1.0", "1.1")));
+		Map<String, Object> other = targetIssue.getFields().getOther();
+
+		assertThat(other).containsExactly(
+			entry(TARGET_CUSTOM_FIELD_FOUND_IN_VERSION.getId(), Arrays.asList("1.0", "1.1")),
+			entry(TARGET_CUSTOM_FIELD_FIXED_IN_VERSION.getId(), idValueMap(100, "1.0"))
+		);
 
 		syncAndAssertNoChanges();
 	}

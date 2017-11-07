@@ -64,8 +64,8 @@ public class JiraSyncTask implements CommandLineRunner {
 			return Collections.emptyList();
 		}
 		try {
-			jiraSource.login(jiraSyncConfig.getSource());
-			jiraTarget.login(jiraSyncConfig.getTarget());
+			jiraSource.login(jiraSyncConfig.getSource(), true);
+			jiraTarget.login(jiraSyncConfig.getTarget(), false);
 
 			log.info("going to link source={} with target={}", jiraSource, jiraTarget);
 			log.info("jiraSource server info: {}", jiraSource.getServerInfo());

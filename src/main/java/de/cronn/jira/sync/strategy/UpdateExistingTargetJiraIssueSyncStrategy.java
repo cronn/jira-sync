@@ -40,6 +40,7 @@ import de.cronn.jira.sync.domain.JiraResolution;
 import de.cronn.jira.sync.domain.JiraTransition;
 import de.cronn.jira.sync.domain.JiraUser;
 import de.cronn.jira.sync.domain.JiraVersion;
+import de.cronn.jira.sync.domain.WellKnownCustomFieldType;
 import de.cronn.jira.sync.link.JiraIssueLinker;
 import de.cronn.jira.sync.mapping.CommentMapper;
 import de.cronn.jira.sync.mapping.DescriptionMapper;
@@ -173,11 +174,36 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		JiraProject targetProject = targetIssue.getFields().getProject();
 		Map<String, Object> mappedFields = fieldMapper.map(sourceIssue, jiraSource, jiraTarget, targetProject);
 		for (Entry<String, Object> entry : mappedFields.entrySet()) {
-			Object existingValue = targetIssue.getOrCreateFields().getOther().get(entry.getKey());
-			if (!Objects.equals(existingValue, entry.getValue())) {
-				targetIssueUpdate.getOrCreateFields().setOther(entry.getKey(), entry.getValue());
+			String fieldId = entry.getKey();
+			Object existingValue = targetIssue.getOrCreateFields().getOther().get(fieldId);
+			JiraField fieldInTarget = jiraTarget.findFieldById(fieldId);
+			if (!haveSameValue(fieldInTarget, existingValue, entry.getValue())) {
+				targetIssueUpdate.getOrCreateFields().setOther(fieldId, entry.getValue());
 			}
 		}
+	}
+
+	private boolean haveSameValue(JiraField fieldInTarget, Object existingValue, Object newValue) {
+		WellKnownCustomFieldType fieldType = WellKnownCustomFieldType.getByCustomSchema(fieldInTarget.getSchema());
+		if (fieldType.equals(WellKnownCustomFieldType.SELECT)) {
+			return equalsCustomFieldSelect(existingValue, newValue);
+		} else {
+			return Objects.equals(existingValue, newValue);
+		}
+	}
+
+	private static boolean equalsCustomFieldSelect(Object existingValue, Object newValue) {
+		if (existingValue == newValue) {
+			return true;
+		}
+		if (existingValue == null || newValue == null) {
+			return false;
+		}
+		@SuppressWarnings("unchecked")
+		Object oneValue = ((Map<String, Object>) existingValue).get("value");
+		@SuppressWarnings("unchecked")
+		Object otherValue = ((Map<String, Object>) newValue).get("value");
+		return Objects.equals(oneValue, otherValue);
 	}
 
 	private void processComments(JiraIssue sourceIssue, JiraIssue targetIssue, JiraService jiraSource, JiraService jiraTarget) {

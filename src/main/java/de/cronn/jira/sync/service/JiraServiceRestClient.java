@@ -80,6 +80,7 @@ public class JiraServiceRestClient implements JiraService {
 	private JiraConnectionProperties jiraConnectionProperties;
 	private SshProxy sshProxy;
 	private URL url;
+	private boolean source;
 
 	public JiraServiceRestClient(RestTemplateBuilder restTemplateBuilder) {
 		this.restTemplateBuilder = restTemplateBuilder;
@@ -140,8 +141,9 @@ public class JiraServiceRestClient implements JiraService {
 	}
 
 	@Override
-	public void login(JiraConnectionProperties jiraConnectionProperties) {
+	public void login(JiraConnectionProperties jiraConnectionProperties, boolean source) {
 		this.jiraConnectionProperties = jiraConnectionProperties;
+		this.source = source;
 		validate(jiraConnectionProperties);
 		this.url = jiraConnectionProperties.getUrl();
 		this.restTemplate = createRestTemplate(jiraConnectionProperties);
@@ -402,9 +404,26 @@ public class JiraServiceRestClient implements JiraService {
 	}
 
 	@Override
+	public JiraField findFieldById(String id) {
+		List<JiraField> fields = getFields();
+		for (JiraField field : fields) {
+			if (field.getId().equals(id)) {
+				return field;
+			}
+		}
+		throw new JiraSyncException("Field '" + id + "' not found in " + this);
+	}
+
+	@Override
+	public boolean isSource() {
+		return source;
+	}
+
+	@Override
 	public String toString() {
 		return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
 			.append("jiraConnectionProperties", jiraConnectionProperties)
+			.append("source", source)
 			.toString();
 	}
 }

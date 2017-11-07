@@ -24,7 +24,7 @@ public interface JiraService extends AutoCloseable {
 
 	URL getUrl();
 
-	void login(JiraConnectionProperties connectionProperties);
+	void login(JiraConnectionProperties connectionProperties, boolean source);
 
 	void logout();
 
@@ -74,4 +74,9 @@ public interface JiraService extends AutoCloseable {
 	void transitionIssue(String issueKey, JiraIssueUpdate issueUpdate);
 
 	JiraField findField(String fieldName);
+
+	JiraField findFieldById(String id);
+
+	boolean isSource();
+
 }

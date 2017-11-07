@@ -99,4 +99,11 @@ public class JiraSyncConfig {
 			.findFirst()
 			.orElseThrow(() -> new IllegalArgumentException("Found no project config for '" + sourceProject + "'"));
 	}
+
+	public JiraProjectSync getProjectConfigByTargetProject(JiraProject targetProject) {
+		return getProjects().values().stream()
+			.filter(project -> project.getTargetProject().equals(targetProject.getKey()))
+			.findFirst()
+			.orElseThrow(() -> new IllegalArgumentException("Found no project config for '" + targetProject + "'"));
+	}
 }

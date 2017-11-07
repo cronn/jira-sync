@@ -2,7 +2,6 @@ package de.cronn.jira.sync.mapping;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
+import de.cronn.jira.sync.MapUtils;
 import de.cronn.jira.sync.config.JiraProjectSync;
 import de.cronn.jira.sync.domain.JiraVersion;
 import de.cronn.jira.sync.service.JiraService;
@@ -34,18 +34,9 @@ public class DefaultVersionMapper implements VersionMapper {
 
 	@Override
 	public Set<JiraVersion> mapTargetToSource(JiraService jiraService, Collection<JiraVersion> versionsToMap, JiraProjectSync projectSync) {
-		Map<String, String> inverseVersionMapping = calculateInverseMapping(projectSync.getVersionMapping());
+		Map<String, String> inverseVersionMapping = MapUtils.calculateInverseMapping(projectSync.getVersionMapping());
 		String project = projectSync.getSourceProject();
 		return mapVersions(jiraService, versionsToMap, inverseVersionMapping, Collections.emptySet(), project);
-	}
-
-	private static Map<String, String> calculateInverseMapping(Map<String, String> versionMapping) {
-		Map<String, String> inverse = new LinkedHashMap<>();
-		for (Map.Entry<String, String> entry : versionMapping.entrySet()) {
-			Object old = inverse.put(entry.getValue(), entry.getKey());
-			Assert.isNull(old, "Non-unique version mapping");
-		}
-		return inverse;
 	}
 
 	private Set<JiraVersion> mapVersions(JiraService jiraService, Collection<JiraVersion> versionsToMap, Map<String, String> versionMapping, Set<String> versionsToIgnore, String projectKey) {
