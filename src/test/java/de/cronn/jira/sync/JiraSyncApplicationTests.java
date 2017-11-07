@@ -213,15 +213,26 @@ public class JiraSyncApplicationTests {
 		jiraTarget.logout();
 	}
 
+	private static Map<String, Object> idValueMap(int id, String value) {
+		Map<String, Object> map = new LinkedHashMap<>();
+		map.put("id", id);
+		map.put("value", value);
+		return map;
+	}
+
 	@Test
 	public void testConfiguration() throws Exception {
 		Map<String, String> resolutionMapping = syncConfig.getResolutionMapping();
-		assertThat(resolutionMapping.keySet()).containsExactlyInAnyOrder("Fixed", "Duplicate", "Incomplete", "Won't Fix", "Won't Do", "Cannot Reproduce", "Done");
 
-		assertThat(resolutionMapping).containsEntry("Fixed", "Fixed");
-		assertThat(resolutionMapping).containsEntry("Done", "Fixed");
-		assertThat(resolutionMapping).containsEntry("Cannot Reproduce", "Cannot Reproduce");
-		assertThat(resolutionMapping).containsEntry("Won't Fix", "Won't Fix");
+		assertThat(resolutionMapping).containsExactly(
+			entry("Done", "Fixed"),
+			entry("Won't Fix", "Won't Fix"),
+			entry("Won't Do", "Rejected"),
+			entry("Incomplete", "Incomplete"),
+			entry("Fixed", "Fixed"),
+			entry("Cannot Reproduce", "Cannot Reproduce"),
+			entry("Duplicate", "Duplicate")
+		);
 	}
 
 	@Test
@@ -390,7 +401,7 @@ public class JiraSyncApplicationTests {
 		// then
 		JiraIssue targetIssue = getSingleIssue(TARGET);
 		assertThat(targetIssue.getFields().getIssuetype().getName()).isEqualTo(TARGET_TYPE_TASK.getName());
-		assertThat(targetIssue.getFields().getOther()).isEqualTo(Collections.singletonMap(TARGET_CUSTOM_FIELD_FOUND_IN_VERSION.getId(), Arrays.asList("1.0", "1.1")));
+		assertThat(targetIssue.getFields().getOther()).containsExactly(entry(TARGET_CUSTOM_FIELD_FOUND_IN_VERSION.getId(), Arrays.asList("1.0", "1.1")));
 
 		syncAndAssertNoChanges();
 	}
@@ -484,10 +495,8 @@ public class JiraSyncApplicationTests {
 		// then
 		JiraIssue updatedSourceIssue = getSingleIssue(SOURCE);
 		assertThat(updatedSourceIssue.getFields().getStatus().getName()).isEqualTo(SOURCE_STATUS_RESOLVED.getName());
-		Map<String, Object> expectedCustomFieldValue = new LinkedHashMap<>();
-		expectedCustomFieldValue.put("id", 10);
-		expectedCustomFieldValue.put("value", "v1");
-		assertThat(updatedSourceIssue.getFields().getOther()).isEqualTo(Collections.singletonMap(SOURCE_CUSTOM_FIELD_FIXED_IN_VERSION.getId(), expectedCustomFieldValue));
+		Map<String, Object> expectedCustomFieldValue = idValueMap(10, "v1");
+		assertThat(updatedSourceIssue.getFields().getOther()).containsExactly(entry(SOURCE_CUSTOM_FIELD_FIXED_IN_VERSION.getId(), expectedCustomFieldValue));
 
 		syncAndAssertNoChanges();
 	}
@@ -874,7 +883,7 @@ public class JiraSyncApplicationTests {
 
 		// then
 		targetIssue = getSingleIssue(TARGET);
-		assertThat(targetIssue.getFields().getOther()).isEqualTo(Collections.singletonMap(TARGET_CUSTOM_FIELD_FOUND_IN_VERSION.getId(), Arrays.asList("1.0", "1.1")));
+		assertThat(targetIssue.getFields().getOther()).containsExactly(entry(TARGET_CUSTOM_FIELD_FOUND_IN_VERSION.getId(), Arrays.asList("1.0", "1.1")));
 
 		syncAndAssertNoChanges();
 	}
