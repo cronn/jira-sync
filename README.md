@@ -5,10 +5,10 @@
 
 Asynchronous synchronisation of two Jira instances implemented with [Spring Boot][spring-boot].
 
-                                                   ·----·
+                                                   ╭────╮
        _ _                                         | cr |
       (_|_)_ __ __ _      ___ _   _ _ __   ___     | nn | cronn
-      | | | '__/ _` |____/ __| | | | '_ \ / __|    ·----·
+      | | | '__/ _` |____/ __| | | | '_ \ / __|    ╰────╯
       | | | | | (_| |____\__ \ |_| | | | | (__
      _/ |_|_|  \__,_|    |___/\__, |_| |_|\___|
     |__/                      |___/
