@@ -1,13 +1,13 @@
 buildscript {
 	ext {
-		springBootVersion = '1.5.7.RELEASE'
+		springBootVersion = '1.5.9.RELEASE'
 	}
 	repositories {
 		jcenter()
 	}
 	dependencies {
 		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
-		classpath 'org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.5'
+		classpath 'org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.6.1'
 	}
 }
 
@@ -83,6 +83,6 @@ dependencies {
 }
 
 task wrapper(type: Wrapper) {
-	gradleVersion = "4.2.1"
+	gradleVersion = "4.4.1"
 	distributionType = "ALL"
 }
