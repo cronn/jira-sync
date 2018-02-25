@@ -25,6 +25,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpMethod;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -60,6 +61,9 @@ public class JiraSyncApplicationTests {
 	private static final JiraProject SOURCE_PROJECT = new JiraProject("1", "PROJECT_ONE");
 	private static final JiraProject SOURCE_PROJECT_OTHER = new JiraProject("2", "PROJECT_OTHER");
 	private static final JiraProject TARGET_PROJECT = new JiraProject("100", "PRJ_ONE");
+
+	private static final JiraProject SOURCE_PROJECT_2 = new JiraProject("20", "SRC_TWO");
+	private static final JiraProject TARGET_PROJECT_2 = new JiraProject("200", "TRG_TWO");
 
 	private static final JiraIssueStatus SOURCE_STATUS_OPEN = new JiraIssueStatus("1", "Open");
 	private static final JiraIssueStatus SOURCE_STATUS_REOPENED = new JiraIssueStatus("2", "Reopened");
@@ -125,6 +129,9 @@ public class JiraSyncApplicationTests {
 	@Autowired
 	private JiraSyncConfig syncConfig;
 
+	@Autowired
+	private StoringRequestFilter storingRequestFilter;
+
 	@LocalServerPort
 	private int port;
 
@@ -178,7 +185,11 @@ public class JiraSyncApplicationTests {
 		jiraDummyService.addProject(SOURCE, SOURCE_PROJECT_OTHER);
 		jiraDummyService.addProject(TARGET, TARGET_PROJECT);
 
+		jiraDummyService.addProject(SOURCE, SOURCE_PROJECT_2);
+		jiraDummyService.addProject(TARGET, TARGET_PROJECT_2);
+
 		jiraDummyService.associateFilterIdToProject(SOURCE, "12345", SOURCE_PROJECT);
+		jiraDummyService.associateFilterIdToProject(SOURCE, "2222", SOURCE_PROJECT_2);
 
 		jiraDummyService.addPriority(SOURCE, SOURCE_PRIORITY_HIGH);
 		jiraDummyService.addPriority(SOURCE, SOURCE_PRIORITY_UNMAPPED);
@@ -219,6 +230,7 @@ public class JiraSyncApplicationTests {
 		jiraDummyService.setDefaultStatus(TARGET, TARGET_STATUS_OPEN);
 
 		TARGET_PROJECT.setIssueTypes(Arrays.asList(TARGET_TYPE_BUG, TARGET_TYPE_IMPROVEMENT, TARGET_TYPE_TASK));
+		TARGET_PROJECT_2.setIssueTypes(Arrays.asList(TARGET_TYPE_BUG, TARGET_TYPE_IMPROVEMENT, TARGET_TYPE_TASK));
 
 		jiraDummyService.expectLoginRequest(SOURCE, "jira-sync", "secret in source");
 		jiraDummyService.expectLoginRequest(TARGET, "jira-sync", "secret in target");
@@ -227,6 +239,8 @@ public class JiraSyncApplicationTests {
 
 		jiraSource.login(syncConfig.getSource(), true);
 		jiraTarget.login(syncConfig.getTarget(), false);
+
+		storingRequestFilter.clear();
 	}
 
 	@After
@@ -365,6 +379,31 @@ public class JiraSyncApplicationTests {
 
 		syncAndAssertNoChanges();
 	}
+
+	@Test
+	public void testNotConfiguredVersions() throws Exception {
+		// given
+		JiraIssue sourceIssue = new JiraIssue(null, null, "some bug", SOURCE_STATUS_OPEN);
+		sourceIssue.getFields().setProject(SOURCE_PROJECT_2);
+		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_UNMAPPED);
+		sourceIssue.getFields().setVersions(null);
+		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_BUG);
+		jiraSource.createIssue(sourceIssue);
+
+		// when
+		syncAndCheckResult();
+
+		// then
+		JiraIssue targetIssue = getSingleIssue(TARGET);
+		String payload = storingRequestFilter.getPayload(HttpMethod.POST, "/TARGET/rest/api/2/issue");
+		assertThat(payload).isNotEmpty();
+		assertThat(payload).doesNotContain("\"versions\":[]");
+		assertThat(payload).doesNotContain("\"fixVersions\":[]");
+		assertThat(targetIssue.getFields().getVersions()).isNull();
+
+		syncAndAssertNoChanges();
+	}
+
 
 	private JiraIssue getSingleIssue(Context context) {
 		Set<JiraIssue> issues = jiraDummyService.getAllIssues(context);
@@ -856,8 +895,9 @@ public class JiraSyncApplicationTests {
 
 	private List<ProjectSyncResult> syncAndCheckResult() {
 		List<ProjectSyncResult> results = syncTask.sync();
-		assertThat(results).hasSize(1);
+		assertThat(results).hasSize(2);
 		assertThat(results.get(0).hasFailed()).isFalse();
+		assertThat(results.get(1).hasFailed()).isFalse();
 		return results;
 	}
 

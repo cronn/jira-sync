@@ -62,11 +62,30 @@ public class DefaultVersionMapperTest {
 	public void testMapVersion_Empty() throws Exception {
 		projectSync = new JiraProjectSync();
 
+		Map<String, String> versionMapping = new LinkedHashMap<>();
+		versionMapping.put(SOURCE_VERSION_1.getName(), TARGET_VERSION_1.getName());
+		versionMapping.put(SOURCE_VERSION_2.getName(), TARGET_VERSION_2.getName());
+		projectSync.setVersionMapping(versionMapping);
+
 		Set<JiraVersion> versions = versionMapper.mapSourceToTarget(jiraService, null, projectSync);
 		assertThat(versions).isEmpty();
 
 		versions = versionMapper.mapSourceToTarget(jiraService, Collections.emptySet(), projectSync);
 		assertThat(versions).isEmpty();
+
+		verifyNoMoreInteractions(jiraService);
+	}
+
+	@Test
+	public void testMapVersion_NotConfigured() throws Exception {
+		projectSync = new JiraProjectSync();
+		projectSync.setVersionMapping(null);
+
+		Set<JiraVersion> versions = versionMapper.mapSourceToTarget(jiraService, null, projectSync);
+		assertThat(versions).isNull();
+
+		versions = versionMapper.mapSourceToTarget(jiraService, Collections.emptySet(), projectSync);
+		assertThat(versions).isNull();
 
 		verifyNoMoreInteractions(jiraService);
 	}

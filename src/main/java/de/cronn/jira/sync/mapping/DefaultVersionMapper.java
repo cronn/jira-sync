@@ -40,9 +40,9 @@ public class DefaultVersionMapper implements VersionMapper {
 	}
 
 	private Set<JiraVersion> mapVersions(JiraService jiraService, Collection<JiraVersion> versionsToMap, Map<String, String> versionMapping, Set<String> versionsToIgnore, String projectKey) {
-		if (versionMapping == null) {
+		if (CollectionUtils.isEmpty(versionMapping)) {
 			log.warn("no version mapping configured for project '{}'", projectKey);
-			return Collections.emptySet();
+			return null;
 		}
 
 		if (CollectionUtils.isEmpty(versionsToMap)) {
