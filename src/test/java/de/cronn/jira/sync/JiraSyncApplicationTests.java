@@ -23,9 +23,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.web.filter.CommonsRequestLoggingFilter;
 
 import de.cronn.jira.sync.config.JiraSyncConfig;
 import de.cronn.jira.sync.domain.JiraComment;
@@ -128,6 +131,25 @@ public class JiraSyncApplicationTests {
 	private String sourceBaseUrl;
 
 	private String targetBaseUrl;
+
+	@TestConfiguration
+	static class TestConfig {
+		@Bean
+		public CommonsRequestLoggingFilter requestLoggingFilter() {
+			CommonsRequestLoggingFilter filter = new CommonsRequestLoggingFilter();
+			filter.setIncludeQueryString(true);
+			filter.setIncludePayload(true);
+			filter.setMaxPayloadLength(10000);
+			filter.setIncludeHeaders(false);
+			filter.setAfterMessagePrefix("REQUEST DATA : ");
+			return filter;
+		}
+
+		@Bean
+		public StoringRequestFilter storingRequestFilter() {
+			return new StoringRequestFilter();
+		}
+	}
 
 	@Before
 	public void resetClock() {
