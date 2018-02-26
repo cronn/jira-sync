@@ -34,7 +34,9 @@ public class DefaultVersionMapper implements VersionMapper {
 
 	@Override
 	public Set<JiraVersion> mapTargetToSource(JiraService jiraService, Collection<JiraVersion> versionsToMap, JiraProjectSync projectSync) {
-		Map<String, String> inverseVersionMapping = MapUtils.calculateInverseMapping(projectSync.getVersionMapping());
+		Map<String, String> versionMapping = projectSync.getVersionMapping();
+		Assert.notNull(versionMapping, "No version mapping configured for " + projectSync);
+		Map<String, String> inverseVersionMapping = MapUtils.calculateInverseMapping(versionMapping);
 		String project = projectSync.getSourceProject();
 		return mapVersions(jiraService, versionsToMap, inverseVersionMapping, Collections.emptySet(), project);
 	}

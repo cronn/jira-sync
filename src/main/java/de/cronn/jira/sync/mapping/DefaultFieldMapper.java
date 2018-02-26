@@ -111,8 +111,10 @@ public class DefaultFieldMapper implements FieldMapper {
 			return fieldValueMappings.get(toField.getName());
 		} else {
 			JiraProjectSync projectConfig = jiraSyncConfig.getProjectConfigByTargetProject(toProject);
-			Map<String, Map<String, String>> fieldValueMappings = projectConfig.getFieldValueMappings();
-			return MapUtils.calculateInverseMapping(fieldValueMappings.get(fromField.getName()));
+			String fromFieldName = fromField.getName();
+			Map<String, String> fieldValueMappings = projectConfig.getFieldValueMappings().get(fromFieldName);
+			Assert.notNull(fieldValueMappings, "No field value mapping configured for field '" + fromFieldName + "'");
+			return MapUtils.calculateInverseMapping(fieldValueMappings);
 		}
 	}
 
