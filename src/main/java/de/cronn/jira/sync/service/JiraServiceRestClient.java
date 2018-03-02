@@ -192,7 +192,7 @@ public class JiraServiceRestClient implements JiraService {
 		try {
 			return getForObject("/rest/api/2/user/?username={username}", JiraUser.class, username);
 		} catch (JiraResourceNotFoundException e) {
-			log.debug("user '{}' not found: {}", e.getMessage());
+			log.debug("user '{}' not found: {}", username, e.getMessage());
 			return null;
 		}
 	}
