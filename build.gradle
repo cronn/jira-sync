@@ -11,11 +11,16 @@ buildscript {
 	}
 }
 
-apply plugin: 'java'
+plugins {
+	id 'java'
+	id 'jacoco'
+	id 'eclipse'
+	id 'idea'
+
+	id 'com.github.kt3k.coveralls' version '2.6.3'
+}
+
 apply plugin: 'org.sonarqube'
-apply plugin: 'jacoco'
-apply plugin: 'eclipse'
-apply plugin: 'idea'
 apply plugin: 'org.springframework.boot'
 
 group = 'de.cronn'
