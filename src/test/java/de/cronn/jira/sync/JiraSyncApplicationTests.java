@@ -228,7 +228,7 @@ public class JiraSyncApplicationTests {
 		jiraDummyService.addField(TARGET, TARGET_CUSTOM_FIELD_FIXED_IN_VERSION, Collections.singletonMap("1.0", 100L));
 
 		jiraDummyService.setDefaultStatus(TARGET, TARGET_STATUS_OPEN);
-
+		
 		TARGET_PROJECT.setIssueTypes(Arrays.asList(TARGET_TYPE_BUG, TARGET_TYPE_IMPROVEMENT, TARGET_TYPE_TASK));
 		TARGET_PROJECT_2.setIssueTypes(Arrays.asList(TARGET_TYPE_BUG, TARGET_TYPE_IMPROVEMENT, TARGET_TYPE_TASK));
 
@@ -1106,4 +1106,11 @@ public class JiraSyncApplicationTests {
 		syncAndAssertNoChanges();
 	}
 
+	@Test
+	public void testgetAllowedValuesForCustomField() {
+		Map<String, Object> fields = jiraSource.getAllowedValuesForCustomField(SOURCE_PROJECT.getKey(), SOURCE_CUSTOM_FIELD_FIXED_IN_VERSION.getId());
+		assertThat(fields).isNotNull();
+		assertThat(fields.values().size()).isGreaterThanOrEqualTo(1);
+	}
+	
 }

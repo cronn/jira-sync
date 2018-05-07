@@ -36,6 +36,7 @@ import de.cronn.jira.sync.domain.JiraFilterResult;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueFields;
 import de.cronn.jira.sync.domain.JiraIssueStatus;
+import de.cronn.jira.sync.domain.JiraIssueType;
 import de.cronn.jira.sync.domain.JiraIssueUpdate;
 import de.cronn.jira.sync.domain.JiraLoginRequest;
 import de.cronn.jira.sync.domain.JiraLoginResponse;
@@ -265,7 +266,12 @@ public class JiraDummyService {
 				}
 				fieldsMeta.put(customField.getId(), customFieldMeta);
 			}
-			projectMeta.put("issuetypes", Collections.singletonList(Collections.singletonMap("fields", fieldsMeta)));
+			List<Map<String, Map<String, Object>>> issueTypes = new ArrayList<Map<String, Map<String, Object>>>();
+			Map<String, Object> unknownIssueType = new LinkedHashMap<>();
+			unknownIssueType.put("name", "unknown issueType");
+			issueTypes.add(Collections.singletonMap("fields", null));
+			issueTypes.add(Collections.singletonMap("fields", fieldsMeta));
+			projectMeta.put("issuetypes", issueTypes);
 			projectsMeta.add(projectMeta);
 		}
 		return Collections.singletonMap("projects", projectsMeta);
