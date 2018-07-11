@@ -87,7 +87,7 @@ dependencies {
 	testCompile("org.springframework.boot:spring-boot-starter-web")
 }
 
-task wrapper(type: Wrapper) {
-	gradleVersion = "4.7"
-	distributionType = "ALL"
+wrapper {
+	gradleVersion = "4.8.1"
+	distributionType = Wrapper.DistributionType.ALL
 }
