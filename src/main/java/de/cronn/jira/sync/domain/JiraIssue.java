@@ -12,6 +12,8 @@ public class JiraIssue extends JiraIdResource {
 	private String key;
 
 	private JiraIssueFields fields;
+	
+	private JiraChangeLog changelog;
 
 	public JiraIssue() {
 	}
@@ -46,6 +48,14 @@ public class JiraIssue extends JiraIdResource {
 
 	public JiraIssueFields getFields() {
 		return fields;
+	}
+	
+	public JiraChangeLog getChangelog() {
+		return changelog;
+	}
+
+	public void setChangelog(JiraChangeLog changelog) {
+		this.changelog = changelog;
 	}
 
 	@JsonIgnore
