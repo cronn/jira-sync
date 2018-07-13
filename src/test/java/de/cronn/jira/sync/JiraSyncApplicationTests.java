@@ -1,7 +1,10 @@
 package de.cronn.jira.sync;
 
-import static de.cronn.jira.sync.dummy.JiraDummyService.Context.*;
-import static org.assertj.core.api.Assertions.*;
+import static de.cronn.jira.sync.dummy.JiraDummyService.Context.SOURCE;
+import static de.cronn.jira.sync.dummy.JiraDummyService.Context.TARGET;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.Assertions.fail;
 
 import java.net.URL;
 import java.time.Instant;
@@ -260,7 +263,7 @@ public class JiraSyncApplicationTests {
 	public void testConfiguration() throws Exception {
 		Map<String, String> resolutionMapping = syncConfig.getResolutionMapping();
 
-		assertThat(resolutionMapping).containsExactly(
+		assertThat(resolutionMapping).containsOnly(
 			entry("Done", "Fixed"),
 			entry("Won't Fix", "Won't Fix"),
 			entry("Won't Do", "Rejected"),
