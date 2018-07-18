@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class JiraChangeLog implements Serializable {
 
 	private static final long serialVersionUID = 1L;
@@ -37,11 +39,13 @@ public class JiraChangeLog implements Serializable {
 		this.history = history;
 	}
 	
+	@JsonIgnore
 	public JiraChangeLog addHistoryEntry(JiraIssueHistoryEntry historyEntry) {
-		this.history.add(historyEntry);
+		getHistory().add(historyEntry);
 		return this;
 	}
 	
+	@JsonIgnore
 	public JiraIssueHistoryEntry getLatestStatusTransition() {
 		return history.stream()
 			.filter(historyEntry -> historyEntry.hasItemWithField("status"))
@@ -49,6 +53,4 @@ public class JiraChangeLog implements Serializable {
 			.findFirst().orElse(null);
 	}
 
-
-	
 }

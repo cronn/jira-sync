@@ -35,8 +35,9 @@ import de.cronn.jira.sync.domain.JiraFieldsUpdate;
 import de.cronn.jira.sync.domain.JiraFilterResult;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueFields;
+import de.cronn.jira.sync.domain.JiraIssueHistoryEntry;
+import de.cronn.jira.sync.domain.JiraIssueHistoryItem;
 import de.cronn.jira.sync.domain.JiraIssueStatus;
-import de.cronn.jira.sync.domain.JiraIssueType;
 import de.cronn.jira.sync.domain.JiraIssueUpdate;
 import de.cronn.jira.sync.domain.JiraLoginRequest;
 import de.cronn.jira.sync.domain.JiraLoginResponse;
@@ -52,6 +53,7 @@ import de.cronn.jira.sync.domain.JiraTransition;
 import de.cronn.jira.sync.domain.JiraTransitions;
 import de.cronn.jira.sync.domain.JiraUser;
 import de.cronn.jira.sync.domain.JiraVersion;
+import de.cronn.jira.sync.domain.WellKnownJiraField;
 
 @RestController
 @RequestMapping("/{" + JiraDummyService.CONTEXT + "}/rest")
@@ -483,7 +485,11 @@ public class JiraDummyService {
 	public void updateIssue(@PathVariable(CONTEXT) Context context, @PathVariable("issueKey") String issueKey, @RequestBody JiraIssueUpdate jiraIssueUpdate) {
 		JiraIssue issueInSystem = getIssueByKey(context, issueKey);
 		Assert.isNull(jiraIssueUpdate.getTransition(), "jiraIssueUpdate.transition must not be null");
-		updateFields(context, jiraIssueUpdate, issueInSystem);
+		
+		JiraIssueHistoryEntry historyEntry = createJiraIssueHistoryEntry();
+		issueInSystem.getOrCreateChangeLog().addHistoryEntry(historyEntry);
+		
+		updateFields(context, jiraIssueUpdate, issueInSystem, historyEntry);
 	}
 
 	private void validateValidVersion(Context context, JiraVersion version) {
@@ -530,22 +536,31 @@ public class JiraDummyService {
 		throw new IllegalArgumentException("Unknown resolution: " + resolution);
 	}
 
-	private void updateFields(Context context, JiraIssueUpdate jiraIssueUpdate, JiraIssue issueInSystem) {
+	private void updateFields(Context context, JiraIssueUpdate jiraIssueUpdate, JiraIssue issueInSystem, JiraIssueHistoryEntry historyEntry) {
 		JiraFieldsUpdate fieldToUpdate = jiraIssueUpdate.getFields();
 		if (fieldToUpdate == null) {
 			return;
 		}
 
 		if (fieldToUpdate.getDescription() != null) {
+			historyEntry.addItem(new JiraIssueHistoryItem(WellKnownJiraField.DESCRIPTION)
+				.withFromString(issueInSystem.getFields().getDescription())
+				.withToString(fieldToUpdate.getDescription()));
 			issueInSystem.getFields().setDescription(fieldToUpdate.getDescription());
 		}
 
 		if (fieldToUpdate.getResolution() != null) {
 			validateResolution(context, fieldToUpdate.getResolution());
+			historyEntry.addItem(new JiraIssueHistoryItem(WellKnownJiraField.RESOLUTION)
+				.withFromString(getResolutionNameOrNull(issueInSystem))
+				.withToString(fieldToUpdate.getResolution().getName()));
 			issueInSystem.getFields().setResolution(fieldToUpdate.getResolution());
 		}
 
 		if (fieldToUpdate.getAssignee() != null) {
+			historyEntry.addItem(new JiraIssueHistoryItem(WellKnownJiraField.ASSIGNEE)
+				.withFromString(getAssigneeNameOrNull(issueInSystem))
+				.withToString(fieldToUpdate.getAssignee().getName()));
 			issueInSystem.getFields().setAssignee(fieldToUpdate.getAssignee());
 		}
 
@@ -570,6 +585,14 @@ public class JiraDummyService {
 		refreshUpdatedTimestamp(issueInSystem);
 	}
 
+	private String getAssigneeNameOrNull(JiraIssue issue) {
+		return issue.getFields().getAssignee() != null ? issue.getFields().getAssignee().getName() : null;
+	}
+
+	private String getResolutionNameOrNull(JiraIssue issue) {
+		return issue.getFields().getResolution() != null ? issue.getFields().getResolution().getName() : null;
+	}
+
 	private void refreshUpdatedTimestamp(JiraIssue issue) {
 		issue.getFields().setUpdated(ZonedDateTime.now(clock));
 	}
@@ -582,9 +605,23 @@ public class JiraDummyService {
 		JiraIssueStatus targetStatus = jiraIssueUpdate.getTransition().getTo();
 		Assert.notNull(targetStatus, "targetStatus must not be null");
 		log.debug("Updating status of {} to {}", issueKey, targetStatus);
-		issueInSystem.getFields().setStatus(targetStatus);
+		JiraIssueHistoryEntry historyEntry = createHistoryEntryForTransition(issueInSystem.getFields().getStatus(), targetStatus);
+		issueInSystem.getOrCreateChangeLog().addHistoryEntry(historyEntry);
 
-		updateFields(context, jiraIssueUpdate, issueInSystem);
+		issueInSystem.getFields().setStatus(targetStatus);
+		updateFields(context, jiraIssueUpdate, issueInSystem, historyEntry);
+	}
+
+	private JiraIssueHistoryEntry createHistoryEntryForTransition(JiraIssueStatus from, JiraIssueStatus to) {
+		JiraIssueHistoryEntry historyEntry = createJiraIssueHistoryEntry();
+		historyEntry.addItem(JiraIssueHistoryItem.createStatusTransition(from.getName(), to.getName()));
+		
+		return historyEntry;
+	}
+
+	private JiraIssueHistoryEntry createJiraIssueHistoryEntry() {
+		JiraIssueHistoryEntry historyEntry = new JiraIssueHistoryEntry().withCreated(ZonedDateTime.now(clock));
+		return historyEntry;
 	}
 
 	public void moveIssue(Context context, String issueKey, String projectKey) {

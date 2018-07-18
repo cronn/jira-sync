@@ -57,6 +57,12 @@ public class JiraIssueFields extends JiraResource {
 	public void setProject(JiraProject project) {
 		this.project = project;
 	}
+	
+	@JsonIgnore
+	public JiraIssueFields withProject(JiraProject project) {
+		this.setProject(project);
+		return this;
+	}
 
 	public String getSummary() {
 		return summary;
@@ -97,6 +103,12 @@ public class JiraIssueFields extends JiraResource {
 	public void setPriority(JiraPriority priority) {
 		this.priority = priority;
 	}
+	
+	@JsonIgnore
+	public JiraIssueFields withPriority(JiraPriority jiraPriority) {
+		setPriority(jiraPriority);
+		return this;
+	}
 
 	public JiraResolution getResolution() {
 		return resolution;
@@ -105,13 +117,19 @@ public class JiraIssueFields extends JiraResource {
 	public void setResolution(JiraResolution resolution) {
 		this.resolution = resolution;
 	}
-
+	
 	public JiraIssueStatus getStatus() {
 		return status;
 	}
 
 	public void setStatus(JiraIssueStatus status) {
 		this.status = status;
+	}
+	
+	@JsonIgnore
+	public JiraIssueFields withStatus(JiraIssueStatus status) {
+		setStatus(status);
+		return this;
 	}
 
 	public void setVersions(Set<JiraVersion> versions) {
@@ -171,5 +189,4 @@ public class JiraIssueFields extends JiraResource {
 		}
 		return comment;
 	}
-
 }

@@ -42,12 +42,18 @@ public class JiraIssue extends JiraIdResource {
 		this.key = key;
 	}
 
+	public JiraIssueFields getFields() {
+		return fields;
+	}
+	
 	public void setFields(JiraIssueFields fields) {
 		this.fields = fields;
 	}
-
-	public JiraIssueFields getFields() {
-		return fields;
+	
+	@JsonIgnore
+	public JiraIssue withFields(JiraIssueFields fields) {
+		setFields(fields);
+		return this;
 	}
 	
 	public JiraChangeLog getChangelog() {
@@ -64,6 +70,14 @@ public class JiraIssue extends JiraIdResource {
 			fields = new JiraIssueFields();
 		}
 		return fields;
+	}
+	
+	@JsonIgnore
+	public JiraChangeLog getOrCreateChangeLog() {
+		if (changelog == null) {
+			changelog = new JiraChangeLog();
+		}
+		return changelog;
 	}
 
 	@Override

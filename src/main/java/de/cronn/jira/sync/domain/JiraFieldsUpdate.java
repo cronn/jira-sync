@@ -7,6 +7,7 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class JiraFieldsUpdate implements Serializable {
 
@@ -28,6 +29,12 @@ public class JiraFieldsUpdate implements Serializable {
 	public void setDescription(String description) {
 		this.description = description;
 	}
+	
+	@JsonIgnore
+	public JiraFieldsUpdate withDescription(String description) {
+		setDescription(description);
+		return this;
+	}
 
 	public JiraPriority getPriority() {
 		return priority;
@@ -43,6 +50,11 @@ public class JiraFieldsUpdate implements Serializable {
 
 	public void setResolution(JiraResolution resolution) {
 		this.resolution = resolution;
+	}
+	
+	public JiraFieldsUpdate withResolution(JiraResolution resolution) {
+		this.resolution = resolution;
+		return this;
 	}
 
 	public Set<String> getLabels() {
@@ -68,6 +80,12 @@ public class JiraFieldsUpdate implements Serializable {
 	public void setFixVersions(Set<JiraVersion> fixVersions) {
 		this.fixVersions = fixVersions;
 	}
+	
+	@JsonIgnore
+	public JiraFieldsUpdate withFixVersions(Set<JiraVersion> jiraVersions) {
+		setFixVersions(jiraVersions);
+		return this;
+	}
 
 	public JiraUser getAssignee() {
 		return assignee;
@@ -75,6 +93,12 @@ public class JiraFieldsUpdate implements Serializable {
 
 	public void setAssignee(JiraUser assignee) {
 		this.assignee = assignee;
+	}
+	
+	@JsonIgnore
+	public JiraFieldsUpdate withAssignee(JiraUser jiraUser) {
+		setAssignee(jiraUser);
+		return this;
 	}
 
 	@JsonAnyGetter
@@ -86,4 +110,5 @@ public class JiraFieldsUpdate implements Serializable {
 	public void setOther(String key, Object value) {
 		other.put(key, value);
 	}
+	
 }

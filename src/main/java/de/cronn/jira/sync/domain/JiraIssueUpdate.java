@@ -22,6 +22,12 @@ public class JiraIssueUpdate implements Serializable {
 	public void setFields(JiraFieldsUpdate fields) {
 		this.fields = fields;
 	}
+	
+	@JsonIgnore
+	public JiraIssueUpdate withFields(JiraFieldsUpdate fields) {
+		setFields(fields);
+		return this;
+	}
 
 	public JiraTransition getTransition() {
 		return transition;
@@ -29,6 +35,12 @@ public class JiraIssueUpdate implements Serializable {
 
 	public void setTransition(JiraTransition transition) {
 		this.transition = transition;
+	}
+	
+	@JsonIgnore
+	public JiraIssueUpdate withTransition(JiraTransition jiraTransition) {
+		setTransition(jiraTransition);
+		return this;
 	}
 
 	@JsonIgnore
