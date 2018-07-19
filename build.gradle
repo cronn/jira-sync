@@ -25,7 +25,9 @@ apply plugin: 'org.springframework.boot'
 
 group = 'de.cronn'
 
-if (System.env.BUILD_NUMBER) {
+if (project.hasProperty('projectVersion')) {
+	version = projectVersion
+} else if (System.env.BUILD_NUMBER) {
 	version = "1.0-SNAPSHOT-b" + System.env.BUILD_NUMBER
 } else {
 	version = "1.0"
