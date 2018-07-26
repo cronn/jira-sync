@@ -2,15 +2,21 @@ package de.cronn.jira.sync.dummy;
 
 import static de.cronn.jira.sync.dummy.JiraDummyService.Context.TARGET;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.CoreMatchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
 import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.List;
 
+import org.hamcrest.core.IsNull;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import de.cronn.jira.sync.TestClock;
 import de.cronn.jira.sync.domain.JiraFieldsUpdate;
@@ -49,14 +55,41 @@ public class JiraDummyServiceTest {
 	}
 	
 	@Test
+	public void testGetIssueByKey() throws Exception {
+		JiraIssue issue = createJiraIssue(jiraDummyService);
+		MockMvc mockMvc = standaloneSetup(jiraDummyService).build();
+		
+		mockMvc.perform(get("/TARGET/rest/api/2/issue/" + issue.getKey()))
+			.andExpect(MockMvcResultMatchers.status().isOk())
+			.andExpect(MockMvcResultMatchers.jsonPath("$.key", is(issue.getKey())))
+			.andExpect(MockMvcResultMatchers.jsonPath("$.changelog", is(IsNull.nullValue())));
+	}
+	
+	@Test
+	public void testGetIssueByKey_wichChangelog() throws Exception {
+		JiraIssue issue = createJiraIssue(jiraDummyService);
+		JiraIssueUpdate jiraIssueUpdate = new JiraIssueUpdate()
+			.withTransition(new JiraTransition("2", "In Progress", STATUS_IN_PROGRESS));
+		jiraDummyService.transitionIssue(TARGET, issue.getKey(), jiraIssueUpdate);
+		MockMvc mockMvc = standaloneSetup(jiraDummyService).build();
+
+		mockMvc.perform(get("/TARGET/rest/api/2/issue/" + issue.getKey() + "?expand=changelog"))
+			.andExpect(MockMvcResultMatchers.status().isOk())
+			.andExpect(MockMvcResultMatchers.jsonPath("$.key", is(issue.getKey())))
+			.andExpect(MockMvcResultMatchers.jsonPath("$.changelog", is(IsNull.notNullValue())));
+	}
+	
+	
+	@Test
 	public void testTransitionIssue() throws Exception {
 		JiraIssue issue = createJiraIssue(jiraDummyService);
 		JiraIssueUpdate jiraIssueUpdate = new JiraIssueUpdate()
 			.withTransition(new JiraTransition("2", "In Progress", STATUS_IN_PROGRESS));
 		
 		jiraDummyService.transitionIssue(TARGET, issue.getKey(), jiraIssueUpdate);
+		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), new String[] {"changelog"});
 		
-		assertThat(issue.getFields().getStatus()).isEqualTo(STATUS_IN_PROGRESS);		
+		assertThat(issue.getFields().getStatus().getName()).isEqualTo(STATUS_IN_PROGRESS.getName());		
 		assertLastHistoryEntryIs(issue, WellKnownJiraField.STATUS.getName(), STATUS_OPEN.getName(), STATUS_IN_PROGRESS.getName());
 	}
 
@@ -66,6 +99,7 @@ public class JiraDummyServiceTest {
 		JiraIssueUpdate jiraIssueUpdate = new JiraIssueUpdate();
 		
 		jiraDummyService.updateIssue(TARGET, issue.getKey(), jiraIssueUpdate);
+		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), new String[] {"changelog"});
 		
 		assertLastHistoryEntryIsEmpty(issue);
 	}
@@ -76,6 +110,7 @@ public class JiraDummyServiceTest {
 		JiraIssueUpdate jiraIssueUpdate = new JiraIssueUpdate().withFields(new JiraFieldsUpdate().withDescription("Some description"));
 		
 		jiraDummyService.updateIssue(TARGET, issue.getKey(), jiraIssueUpdate);
+		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), new String[] {"changelog"});
 		
 		assertThat(issue.getFields().getDescription()).isEqualTo("Some description");		
 		assertLastHistoryEntryIs(issue, WellKnownJiraField.DESCRIPTION.getName(), null, "Some description");
@@ -83,6 +118,7 @@ public class JiraDummyServiceTest {
 		jiraIssueUpdate = new JiraIssueUpdate().withFields(new JiraFieldsUpdate().withDescription("New description"));
 		
 		jiraDummyService.updateIssue(TARGET, issue.getKey(), jiraIssueUpdate);
+		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), new String[] {"changelog"});
 		
 		assertThat(issue.getFields().getDescription()).isEqualTo("New description");
 		assertLastHistoryEntryIs(issue, WellKnownJiraField.DESCRIPTION.getName(), "Some description", "New description");
@@ -94,6 +130,7 @@ public class JiraDummyServiceTest {
 		JiraIssueUpdate jiraIssueUpdate = new JiraIssueUpdate().withFields(new JiraFieldsUpdate().withResolution(RESOLUTION_DONE));
 		
 		jiraDummyService.updateIssue(TARGET, issue.getKey(), jiraIssueUpdate);
+		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), new String[] {"changelog"});
 		
 		assertThat(issue.getFields().getResolution().getName()).isEqualTo("Done");		
 		assertLastHistoryEntryIs(issue, WellKnownJiraField.RESOLUTION.getName(), null, "Done");
@@ -101,6 +138,7 @@ public class JiraDummyServiceTest {
 		jiraIssueUpdate = new JiraIssueUpdate().withFields(new JiraFieldsUpdate().withResolution(RESOLUTION_WONT_DO));
 		
 		jiraDummyService.updateIssue(TARGET, issue.getKey(), jiraIssueUpdate);
+		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), new String[] {"changelog"});
 		
 		assertThat(issue.getFields().getResolution().getName()).isEqualTo("Won't Do");	
 		assertLastHistoryEntryIs(issue, WellKnownJiraField.RESOLUTION.getName(), "Done", "Won't Do");
@@ -112,6 +150,7 @@ public class JiraDummyServiceTest {
 		JiraIssueUpdate jiraIssueUpdate = new JiraIssueUpdate().withFields(new JiraFieldsUpdate().withAssignee(new JiraUser("johnny", "1")));
 		
 		jiraDummyService.updateIssue(TARGET, issue.getKey(), jiraIssueUpdate);
+		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), new String[] {"changelog"});
 		
 		assertThat(issue.getFields().getAssignee().getName()).isEqualTo("johnny");		
 		assertLastHistoryEntryIs(issue, WellKnownJiraField.ASSIGNEE.getName(), null, "johnny");
@@ -119,6 +158,7 @@ public class JiraDummyServiceTest {
 		jiraIssueUpdate = new JiraIssueUpdate().withFields(new JiraFieldsUpdate().withAssignee(new JiraUser("tommy", "2")));
 		
 		jiraDummyService.updateIssue(TARGET, issue.getKey(), jiraIssueUpdate);
+		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), new String[] {"changelog"});
 		
 		assertThat(issue.getFields().getAssignee().getName()).isEqualTo("tommy");	
 		assertLastHistoryEntryIs(issue, WellKnownJiraField.ASSIGNEE.getName(), "johnny", "tommy");

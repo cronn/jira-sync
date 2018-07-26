@@ -14,6 +14,8 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.SerializationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -237,9 +239,21 @@ public class JiraDummyService {
 
 	@RequestMapping(path = "/api/2/issue/{issueKey}", method = RequestMethod.GET)
 	public JiraIssue getIssueByKey(@PathVariable(CONTEXT) Context context, @PathVariable("issueKey") String key) {
+		return getIssueByKey(context, key, null);
+	}
+	
+	@RequestMapping(value = "/api/2/issue/{issueKey}", params = "expand", method = RequestMethod.GET)
+	public JiraIssue getIssueByKey(@PathVariable(CONTEXT) Context context, @PathVariable("issueKey") String key, @RequestParam(name = "expand") String[] expandParams) {
 		JiraIssue issue = getIssueMap(context).get(key);
 		Assert.notNull(issue, "Issue " + key + " not found");
-		return issue;
+		
+		JiraIssue result = SerializationUtils.clone(issue);
+
+		if (!ArrayUtils.contains(expandParams, "changelog")){
+			result.setChangelog(null);	
+		}
+		
+		return result;
 	}
 
 	@RequestMapping(path = "/api/2/issue/createmeta", method = RequestMethod.GET)
@@ -332,7 +346,7 @@ public class JiraDummyService {
 
 	private List<JiraRemoteLink> getRemoteLinks(Context context, String issueKey) {
 		Assert.notNull(issueKey, "issueKey must be set");
-		JiraIssue issue = getIssueByKey(context, issueKey);
+		JiraIssue issue = getIssueMap(context).get(issueKey);
 		Map<String, JiraRemoteLinks> remoteLinksPerIssueId = getData(context).getRemoteLinks();
 		JiraRemoteLinks jiraRemoteLinks = remoteLinksPerIssueId.get(issue.getId());
 		if (jiraRemoteLinks == null) {
@@ -353,7 +367,7 @@ public class JiraDummyService {
 
 	@RequestMapping(path = "/api/2/issue/{issueKey}/remotelink", method = RequestMethod.POST)
 	public void addRemoteLink(@PathVariable(CONTEXT) Context context, @PathVariable("issueKey") String issueKey, @RequestBody JiraRemoteLink newRemoteLink) {
-		JiraIssue issue = getIssueByKey(context, issueKey);
+		JiraIssue issue = getIssueMap(context).get(issueKey);
 		JiraRemoteLinks remoteLinks = getData(context).getRemoteLinks().computeIfAbsent(issue.getId(), k -> new JiraRemoteLinks());
 		remoteLinks.add(newRemoteLink);
 		refreshUpdatedTimestamp(issue);
@@ -366,7 +380,7 @@ public class JiraDummyService {
 			return new ResponseEntity<>("body must not be empty", HttpStatus.BAD_REQUEST);
 		}
 
-		JiraIssue issue = getIssueByKey(context, issueKey);
+		JiraIssue issue = getIssueMap(context).get(issueKey);
 		JiraIssueFields fields = issue.getOrCreateFields();
 		JiraComments comments = fields.getOrCreateComment();
 
@@ -392,7 +406,7 @@ public class JiraDummyService {
 			return new ResponseEntity<>("body must not be empty", HttpStatus.BAD_REQUEST);
 		}
 
-		JiraIssue issue = getIssueByKey(context, issueKey);
+		JiraIssue issue = getIssueMap(context).get(issueKey);
 		JiraIssueFields fields = issue.getOrCreateFields();
 		JiraComments comments = fields.getOrCreateComment();
 
@@ -483,7 +497,7 @@ public class JiraDummyService {
 
 	@RequestMapping(path = "/api/2/issue/{issueKey}", method = RequestMethod.PUT)
 	public void updateIssue(@PathVariable(CONTEXT) Context context, @PathVariable("issueKey") String issueKey, @RequestBody JiraIssueUpdate jiraIssueUpdate) {
-		JiraIssue issueInSystem = getIssueByKey(context, issueKey);
+		JiraIssue issueInSystem = getIssueMap(context).get(issueKey);
 		Assert.isNull(jiraIssueUpdate.getTransition(), "jiraIssueUpdate.transition must not be null");
 		
 		JiraIssueHistoryEntry historyEntry = createJiraIssueHistoryEntry();
@@ -599,7 +613,7 @@ public class JiraDummyService {
 
 	@RequestMapping(path = "/api/2/issue/{issueKey}/transitions", method = RequestMethod.POST)
 	public void transitionIssue(@PathVariable(CONTEXT) Context context, @PathVariable("issueKey") String issueKey, @RequestBody JiraIssueUpdate jiraIssueUpdate) {
-		JiraIssue issueInSystem = getIssueByKey(context, issueKey);
+		JiraIssue issueInSystem = getIssueMap(context).get(issueKey);
 		Assert.notNull(jiraIssueUpdate.getTransition(), "transition must not be null");
 
 		JiraIssueStatus targetStatus = jiraIssueUpdate.getTransition().getTo();
@@ -625,7 +639,7 @@ public class JiraDummyService {
 	}
 
 	public void moveIssue(Context context, String issueKey, String projectKey) {
-		JiraIssue issue = getIssueByKey(context, issueKey);
+		JiraIssue issue = getIssueMap(context).get(issueKey);
 		JiraProject project = getProjectByKey(context, projectKey);
 		issue.getFields().setProject(project);
 		issue.setKey(generateKey(context, project));
