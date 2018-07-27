@@ -1,14 +1,12 @@
 package de.cronn.jira.sync.config;
 
-import java.net.URL;
-
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.springframework.core.io.Resource;
 
 public class JiraConnectionProperties {
 
-	private URL url;
+	private String url;
 	private String sshJumpHost;
 	private String username;
 	private String password;
@@ -24,11 +22,11 @@ public class JiraConnectionProperties {
 			.toString();
 	}
 
-	public URL getUrl() {
+	public String getUrl() {
 		return url;
 	}
 
-	public void setUrl(URL url) {
+	public void setUrl(String url) {
 		this.url = url;
 	}
 

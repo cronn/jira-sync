@@ -170,8 +170,8 @@ public class JiraSyncApplicationTests {
 		sourceBaseUrl = commonBaseUrl + Context.SOURCE + "/";
 		targetBaseUrl = commonBaseUrl + Context.TARGET + "/";
 
-		syncConfig.getSource().setUrl(new URL(sourceBaseUrl));
-		syncConfig.getTarget().setUrl(new URL(targetBaseUrl));
+		syncConfig.getSource().setUrl(sourceBaseUrl);
+		syncConfig.getTarget().setUrl(targetBaseUrl);
 
 		jiraDummyService.reset();
 

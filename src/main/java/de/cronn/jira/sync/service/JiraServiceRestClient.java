@@ -3,6 +3,7 @@ package de.cronn.jira.sync.service;
 import static de.cronn.jira.sync.service.JiraServiceCacheConfig.*;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.time.Instant;
@@ -145,7 +146,7 @@ public class JiraServiceRestClient implements JiraService {
 		this.jiraConnectionProperties = jiraConnectionProperties;
 		this.source = source;
 		validate(jiraConnectionProperties);
-		this.url = jiraConnectionProperties.getUrl();
+		this.url = toUrl(jiraConnectionProperties.getUrl());
 		this.restTemplate = createRestTemplate(jiraConnectionProperties);
 		JiraLoginRequest loginRequest = new JiraLoginRequest(jiraConnectionProperties.getUsername(), jiraConnectionProperties.getPassword());
 		restTemplate.postForObject(restUrl("/rest/auth/1/session"), loginRequest, JiraLoginResponse.class);
@@ -421,6 +422,14 @@ public class JiraServiceRestClient implements JiraService {
 			}
 		}
 		throw new JiraSyncException("Field '" + id + "' not found in " + this);
+	}
+
+	private static URL toUrl(String url) {
+		try {
+			return new URL(url);
+		} catch (MalformedURLException e) {
+			throw new IllegalArgumentException("Illegal URL: '" + url + "'", e);
+		}
 	}
 
 	@Override
