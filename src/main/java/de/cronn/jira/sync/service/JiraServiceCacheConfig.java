@@ -3,7 +3,6 @@ package de.cronn.jira.sync.service;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import javax.cache.CacheManager;
@@ -12,10 +11,11 @@ import javax.cache.spi.CachingProvider;
 
 import org.ehcache.config.CacheConfiguration;
 import org.ehcache.config.builders.CacheConfigurationBuilder;
-import org.ehcache.config.builders.ExpiryPolicyBuilder;
 import org.ehcache.config.builders.ResourcePoolsBuilder;
 import org.ehcache.config.units.MemoryUnit;
 import org.ehcache.core.config.DefaultConfiguration;
+import org.ehcache.expiry.Duration;
+import org.ehcache.expiry.Expirations;
 import org.ehcache.impl.config.persistence.DefaultPersistenceConfiguration;
 import org.ehcache.jsr107.Eh107Configuration;
 import org.ehcache.jsr107.EhcacheCachingProvider;
@@ -44,8 +44,8 @@ public class JiraServiceCacheConfig {
 	static final String CACHE_NAME_REMOTE_LINKS = "remoteLinks";
 	static final String CACHE_NAME_FIELD_ALLOWED_VALUES = "fieldAllowedValues";
 
-	private static final Duration ONE_HOUR = Duration.ofHours(1);
-	private static final Duration THIRTY_SECONDS = Duration.ofSeconds(30);
+	private static final Duration ONE_HOUR = Duration.of(1, TimeUnit.HOURS);
+	private static final Duration THIRTY_SECONDS = Duration.of(30, TimeUnit.SECONDS);
 
 	@Bean
 	@Primary
@@ -93,7 +93,7 @@ public class JiraServiceCacheConfig {
 		}
 		CacheConfiguration<Object, Object> cacheConfiguration = CacheConfigurationBuilder.newCacheConfigurationBuilder(Object.class, Object.class,
 			resourcePoolsBuilder)
-			.withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(timeToLive))
+			.withExpiry(Expirations.timeToLiveExpiration(timeToLive))
 			.build();
 
 		for (String cache : cacheManager.getCacheNames()) {

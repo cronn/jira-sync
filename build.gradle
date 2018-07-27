@@ -72,7 +72,7 @@ dependencies {
 	compile('org.springframework.boot:spring-boot-starter')
 	compile('org.springframework.boot:spring-boot-starter-cache')
 	compile('javax.cache:cache-api')
-	compile('org.ehcache:ehcache:3.5.2')
+	compile('org.ehcache:ehcache')
 
 	compile 'org.apache.httpcomponents:httpclient:4.5.6'
 	compile 'org.apache.commons:commons-lang3:3.7'
