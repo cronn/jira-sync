@@ -22,7 +22,7 @@ import de.cronn.jira.sync.domain.JiraVersion;
 
 public interface JiraService extends AutoCloseable {
 
-	URL getUrl();
+	String getUrl();
 
 	void login(JiraConnectionProperties connectionProperties, boolean source);
 

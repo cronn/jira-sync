@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import javax.annotation.PreDestroy;
 import javax.net.ssl.HostnameVerifier;
@@ -80,7 +79,7 @@ public class JiraServiceRestClient implements JiraService {
 	private RestTemplate restTemplate;
 	private JiraConnectionProperties jiraConnectionProperties;
 	private SshProxy sshProxy;
-	private URL url;
+	private String url;
 	private boolean source;
 
 	public JiraServiceRestClient(RestTemplateBuilder restTemplateBuilder) {
@@ -146,7 +145,7 @@ public class JiraServiceRestClient implements JiraService {
 		this.jiraConnectionProperties = jiraConnectionProperties;
 		this.source = source;
 		validate(jiraConnectionProperties);
-		this.url = toUrl(jiraConnectionProperties.getUrl());
+		this.url = jiraConnectionProperties.getUrl();
 		this.restTemplate = createRestTemplate(jiraConnectionProperties);
 		JiraLoginRequest loginRequest = new JiraLoginRequest(jiraConnectionProperties.getUsername(), jiraConnectionProperties.getPassword());
 		restTemplate.postForObject(restUrl("/rest/auth/1/session"), loginRequest, JiraLoginResponse.class);
@@ -299,7 +298,7 @@ public class JiraServiceRestClient implements JiraService {
 		for (String field : customFields) {
 			fieldsToFetch.add(findFieldId(fields, field));
 		}
-		return fieldsToFetch.stream().collect(Collectors.joining(","));
+		return String.join(",", fieldsToFetch);
 	}
 
 	private String findFieldId(List<JiraField> fields, String fieldName) {
@@ -384,12 +383,12 @@ public class JiraServiceRestClient implements JiraService {
 	}
 
 	@Override
-	public URL getUrl() {
+	public String getUrl() {
 		return url;
 	}
 
 	private void validate(JiraConnectionProperties jiraConnectionProperties) {
-		Assert.notNull(jiraConnectionProperties.getUrl(), "url is missing");
+		validateUrl(jiraConnectionProperties.getUrl());
 		Assert.notNull(jiraConnectionProperties.getUsername(), "username is missing");
 		Assert.notNull(jiraConnectionProperties.getPassword(), "password is missing");
 	}
@@ -424,9 +423,10 @@ public class JiraServiceRestClient implements JiraService {
 		throw new JiraSyncException("Field '" + id + "' not found in " + this);
 	}
 
-	private static URL toUrl(String url) {
+	private static void validateUrl(String url) {
+		Assert.notNull(url, "url is missing");
 		try {
-			return new URL(url);
+			new URL(url);
 		} catch (MalformedURLException e) {
 			throw new IllegalArgumentException("Illegal URL: '" + url + "'", e);
 		}

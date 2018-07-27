@@ -1,7 +1,6 @@
 package de.cronn.jira.sync.service;
 
 import java.io.IOException;
-import java.net.URL;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpResponse;
@@ -13,9 +12,9 @@ import de.cronn.jira.sync.JiraSyncException;
 
 public class JiraRestResponseErrorHandler extends DefaultResponseErrorHandler {
 
-	private final URL jiraUrl;
+	private final String jiraUrl;
 
-	public JiraRestResponseErrorHandler(URL jiraUrl) {
+	public JiraRestResponseErrorHandler(String jiraUrl) {
 		this.jiraUrl = jiraUrl;
 	}
 

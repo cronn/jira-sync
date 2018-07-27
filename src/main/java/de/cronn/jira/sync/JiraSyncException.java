@@ -1,16 +1,14 @@
 package de.cronn.jira.sync;
 
-import java.net.URL;
-
 public class JiraSyncException extends RuntimeException {
 
 	private static final long serialVersionUID = 1L;
 
-	public JiraSyncException(URL jiraUrl, String message) {
+	public JiraSyncException(String jiraUrl, String message) {
 		this(buildMessage(jiraUrl, message));
 	}
 
-	private static String buildMessage(URL jiraUrl, String message) {
+	private static String buildMessage(String jiraUrl, String message) {
 		return String.format("[%s] %s", jiraUrl, message);
 	}
 
