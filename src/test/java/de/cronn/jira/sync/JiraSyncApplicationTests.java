@@ -1,10 +1,7 @@
 package de.cronn.jira.sync;
 
-import static de.cronn.jira.sync.dummy.JiraDummyService.Context.SOURCE;
-import static de.cronn.jira.sync.dummy.JiraDummyService.Context.TARGET;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
-import static org.assertj.core.api.Assertions.fail;
+import static de.cronn.jira.sync.dummy.JiraDummyService.Context.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.net.URL;
 import java.time.Instant;
@@ -231,7 +228,7 @@ public class JiraSyncApplicationTests {
 		jiraDummyService.addField(TARGET, TARGET_CUSTOM_FIELD_FIXED_IN_VERSION, Collections.singletonMap("1.0", 100L));
 
 		jiraDummyService.setDefaultStatus(TARGET, TARGET_STATUS_OPEN);
-		
+
 		TARGET_PROJECT.setIssueTypes(Arrays.asList(TARGET_TYPE_BUG, TARGET_TYPE_IMPROVEMENT, TARGET_TYPE_TASK));
 		TARGET_PROJECT_2.setIssueTypes(Arrays.asList(TARGET_TYPE_BUG, TARGET_TYPE_IMPROVEMENT, TARGET_TYPE_TASK));
 
@@ -1115,5 +1112,5 @@ public class JiraSyncApplicationTests {
 		assertThat(fields).isNotNull();
 		assertThat(fields.values().size()).isGreaterThanOrEqualTo(1);
 	}
-	
+
 }

@@ -211,13 +211,13 @@ public class JiraServiceRestClient implements JiraService {
 		log.debug("[{}], fetching allowed values for custom field {}", getUrl(), customFieldId);
 		Map<String, Object> createMeta = getForObject("/rest/api/2/issue/createmeta?projectKeys={projectKey}&expand=projects.issuetypes.fields", Map.class, projectKey);
 		Map<String, Object> project = ((List<Map<String, Object>>) createMeta.get("projects")).get(0);
-		
+
 		List<Map<String, Object>> issueTypes = (List<Map<String, Object>>) project.get("issuetypes");
 		for (Map<String, Object> issueType : issueTypes) {
 			Map<String, Map<String, Object>> fields = ((Map<String, Map<String, Object>>) issueType.get("fields"));
-			if(fields != null && fields.containsKey(customFieldId)) {
+			if (fields != null && fields.containsKey(customFieldId)) {
 				Map<String, Object> customField = fields.get(customFieldId);
-				if(customField != null && customField.containsKey("allowedValues")) {
+				if (customField != null && customField.containsKey("allowedValues")) {
 					List<Map<String, Object>> allowedValues = (List<Map<String, Object>>) customField.get("allowedValues");
 					Map<String, Object> allowedValuesByValue = new LinkedHashMap<>();
 					for (Map<String, Object> allowedValue : allowedValues) {
@@ -228,7 +228,7 @@ public class JiraServiceRestClient implements JiraService {
 				}
 			}
 		}
-		throw new JiraSyncException("customFieldId '"+customFieldId+"' not found in project '"+projectKey+"'´s issueTypes"); 
+		throw new JiraSyncException("customFieldId '" + customFieldId + "' not found in issueTypes of project '" + projectKey + "'");
 	}
 
 	@Override
