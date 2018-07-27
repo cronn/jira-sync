@@ -76,8 +76,7 @@ public class JiraServiceRestClientTest {
 			.isThrownBy(() -> jiraServiceRestClient.login(connectionProperties, true))
 			.withMessage("Illegal URL: 'http://foo:bar'")
 			.withCauseExactlyInstanceOf(MalformedURLException.class)
-			.withRootCauseExactlyInstanceOf(NumberFormatException.class)
-			.withStackTraceContaining("For input string: \"bar\"");
+			.withRootCauseExactlyInstanceOf(NumberFormatException.class);
 	}
 
 	@Test
