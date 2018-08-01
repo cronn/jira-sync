@@ -63,8 +63,8 @@ public class JiraDummyService {
 
 	private static final Logger log = LoggerFactory.getLogger(JiraDummyService.class);
 
-	public static final String CONTEXT = "context";
-	public static final String AUTHORIZATION = "Authorization";
+	static final String CONTEXT = "context";
+	private static final String AUTHORIZATION = "Authorization";
 
 	private final Map<Context, JiraDummyData> data = new EnumMap<>(Context.class);
 
@@ -283,8 +283,6 @@ public class JiraDummyService {
 				fieldsMeta.put(customField.getId(), customFieldMeta);
 			}
 			List<Map<String, Map<String, Object>>> issueTypes = new ArrayList<Map<String, Map<String, Object>>>();
-			Map<String, Object> unknownIssueType = new LinkedHashMap<>();
-			unknownIssueType.put("name", "unknown issueType");
 			issueTypes.add(Collections.singletonMap("fields", null));
 			issueTypes.add(Collections.singletonMap("fields", fieldsMeta));
 			projectMeta.put("issuetypes", issueTypes);
