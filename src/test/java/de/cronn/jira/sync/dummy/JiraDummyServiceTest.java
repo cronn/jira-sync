@@ -44,6 +44,8 @@ public class JiraDummyServiceTest {
 	private static final JiraIssueStatus STATUS_IN_PROGRESS = new JiraIssueStatus("2", "In Progress");
 	private static final JiraProject PROJECT = new JiraProject("1", "TST");
 
+	private static final String CHANGELOG = JiraDummyService.CHANGELOG;
+
 	private TestClock clock;
 
 	private JiraDummyService jiraDummyService;
@@ -87,7 +89,7 @@ public class JiraDummyServiceTest {
 			.withTransition(new JiraTransition("2", "In Progress", STATUS_IN_PROGRESS));
 
 		jiraDummyService.transitionIssue(TARGET, issue.getKey(), jiraIssueUpdate);
-		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), new String[] { "changelog" });
+		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), CHANGELOG);
 
 		assertThat(issue.getFields().getStatus().getName()).isEqualTo(STATUS_IN_PROGRESS.getName());
 		assertLastHistoryEntryIs(issue, WellKnownJiraField.STATUS, STATUS_OPEN.getName(), STATUS_IN_PROGRESS.getName());
@@ -99,7 +101,7 @@ public class JiraDummyServiceTest {
 		JiraIssueUpdate jiraIssueUpdate = new JiraIssueUpdate();
 
 		jiraDummyService.updateIssue(TARGET, issue.getKey(), jiraIssueUpdate);
-		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), new String[] { "changelog" });
+		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), CHANGELOG);
 
 		assertLastHistoryEntryIsEmpty(issue);
 	}
@@ -110,7 +112,7 @@ public class JiraDummyServiceTest {
 		JiraIssueUpdate jiraIssueUpdate = new JiraIssueUpdate().withFields(new JiraFieldsUpdate().withDescription("Some description"));
 
 		jiraDummyService.updateIssue(TARGET, issue.getKey(), jiraIssueUpdate);
-		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), new String[] { "changelog" });
+		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), CHANGELOG);
 
 		assertThat(issue.getFields().getDescription()).isEqualTo("Some description");
 		assertLastHistoryEntryIs(issue, WellKnownJiraField.DESCRIPTION, null, "Some description");
@@ -118,7 +120,7 @@ public class JiraDummyServiceTest {
 		jiraIssueUpdate = new JiraIssueUpdate().withFields(new JiraFieldsUpdate().withDescription("New description"));
 
 		jiraDummyService.updateIssue(TARGET, issue.getKey(), jiraIssueUpdate);
-		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), new String[] { "changelog" });
+		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), CHANGELOG);
 
 		assertThat(issue.getFields().getDescription()).isEqualTo("New description");
 		assertLastHistoryEntryIs(issue, WellKnownJiraField.DESCRIPTION, "Some description", "New description");
@@ -130,7 +132,7 @@ public class JiraDummyServiceTest {
 		JiraIssueUpdate jiraIssueUpdate = new JiraIssueUpdate().withFields(new JiraFieldsUpdate().withResolution(RESOLUTION_DONE));
 
 		jiraDummyService.updateIssue(TARGET, issue.getKey(), jiraIssueUpdate);
-		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), new String[] { "changelog" });
+		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), CHANGELOG);
 
 		assertThat(issue.getFields().getResolution().getName()).isEqualTo("Done");
 		assertLastHistoryEntryIs(issue, WellKnownJiraField.RESOLUTION, null, "Done");
@@ -138,7 +140,7 @@ public class JiraDummyServiceTest {
 		jiraIssueUpdate = new JiraIssueUpdate().withFields(new JiraFieldsUpdate().withResolution(RESOLUTION_WONT_DO));
 
 		jiraDummyService.updateIssue(TARGET, issue.getKey(), jiraIssueUpdate);
-		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), new String[] { "changelog" });
+		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), CHANGELOG);
 
 		assertThat(issue.getFields().getResolution().getName()).isEqualTo("Won't Do");
 		assertLastHistoryEntryIs(issue, WellKnownJiraField.RESOLUTION, "Done", "Won't Do");
@@ -150,7 +152,7 @@ public class JiraDummyServiceTest {
 		JiraIssueUpdate jiraIssueUpdate = new JiraIssueUpdate().withFields(new JiraFieldsUpdate().withAssignee(new JiraUser("johnny", "1")));
 
 		jiraDummyService.updateIssue(TARGET, issue.getKey(), jiraIssueUpdate);
-		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), new String[] { "changelog" });
+		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), CHANGELOG);
 
 		assertThat(issue.getFields().getAssignee().getName()).isEqualTo("johnny");
 		assertLastHistoryEntryIs(issue, WellKnownJiraField.ASSIGNEE, null, "johnny");
@@ -158,7 +160,7 @@ public class JiraDummyServiceTest {
 		jiraIssueUpdate = new JiraIssueUpdate().withFields(new JiraFieldsUpdate().withAssignee(new JiraUser("tommy", "2")));
 
 		jiraDummyService.updateIssue(TARGET, issue.getKey(), jiraIssueUpdate);
-		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), new String[] { "changelog" });
+		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), CHANGELOG);
 
 		assertThat(issue.getFields().getAssignee().getName()).isEqualTo("tommy");
 		assertLastHistoryEntryIs(issue, WellKnownJiraField.ASSIGNEE, "johnny", "tommy");

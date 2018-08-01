@@ -71,6 +71,9 @@ public class JiraDummyService {
 	static final String CONTEXT = "context";
 	private static final String AUTHORIZATION = "Authorization";
 
+	private static final String PARAM_EXPAND = "expand";
+	static final String CHANGELOG = "changelog";
+
 	private final Map<Context, JiraDummyData> data = new EnumMap<>(Context.class);
 
 	private Clock clock;
@@ -244,17 +247,17 @@ public class JiraDummyService {
 
 	@RequestMapping(path = "/api/2/issue/{issueKey}", method = RequestMethod.GET)
 	public JiraIssue getIssueByKey(@PathVariable(CONTEXT) Context context, @PathVariable("issueKey") String key) {
-		return getIssueByKey(context, key, null);
+		return getIssueByKey(context, key, new String[0]);
 	}
 
-	@RequestMapping(value = "/api/2/issue/{issueKey}", params = "expand", method = RequestMethod.GET)
-	public JiraIssue getIssueByKey(@PathVariable(CONTEXT) Context context, @PathVariable("issueKey") String key, @RequestParam(name = "expand") String[] expandParams) {
+	@RequestMapping(value = "/api/2/issue/{issueKey}", params = PARAM_EXPAND, method = RequestMethod.GET)
+	public JiraIssue getIssueByKey(@PathVariable(CONTEXT) Context context, @PathVariable("issueKey") String key, @RequestParam(name = PARAM_EXPAND) String... expandParams) {
 		JiraIssue issue = getIssueMap(context).get(key);
 		Assert.notNull(issue, "Issue " + key + " not found");
 
 		JiraIssue result = SerializationUtils.clone(issue);
 
-		if (!ArrayUtils.contains(expandParams, "changelog")) {
+		if (!ArrayUtils.contains(expandParams, CHANGELOG)) {
 			result.setChangelog(null);
 		}
 
