@@ -335,8 +335,8 @@ public class JiraSyncApplicationTests {
 		assertThat(targetIssueFields.getIssuetype().getName()).isEqualTo(TARGET_TYPE_BUG.getName());
 		assertThat(targetIssueFields.getPriority().getName()).isEqualTo(TARGET_PRIORITY_CRITICAL.getName());
 		assertThat(targetIssueFields.getLabels()).containsExactly("label1", "label2");
-		assertThat(getNames(targetIssueFields.getVersions())).containsExactlyInAnyOrder("10", "11");
-		assertThat(getNames(targetIssueFields.getFixVersions())).containsExactly("11");
+		assertThat(targetIssueFields.getVersions()).extracting(JiraVersion::getName).containsExactlyInAnyOrder("10", "11");
+		assertThat(targetIssueFields.getFixVersions()).extracting(JiraVersion::getName).containsExactly("11");
 		assertThat(targetIssueFields.getUpdated().toInstant()).isEqualTo(Instant.now(clock));
 
 		JiraIssue updatedSourceIssue = getSingleIssue(SOURCE);
@@ -409,15 +409,6 @@ public class JiraSyncApplicationTests {
 		Set<JiraIssue> issues = jiraDummyService.getAllIssues(context);
 		assertThat(issues).hasSize(1);
 		return issues.iterator().next();
-	}
-
-	private static List<String> getNames(Set<JiraVersion> versions) {
-		if (versions == null) {
-			return null;
-		}
-		return versions.stream()
-			.map(JiraVersion::getName)
-			.collect(Collectors.toList());
 	}
 
 	@Test
@@ -528,7 +519,7 @@ public class JiraSyncApplicationTests {
 		JiraIssue updatedSourceIssue = getSingleIssue(SOURCE);
 		assertThat(updatedSourceIssue.getFields().getStatus().getName()).isEqualTo(SOURCE_STATUS_RESOLVED.getName());
 		assertThat(updatedSourceIssue.getFields().getResolution().getName()).isEqualTo(SOURCE_RESOLUTION_FIXED.getName());
-		assertThat(getNames(updatedSourceIssue.getFields().getFixVersions())).containsExactly(SOURCE_VERSION_10.getName());
+		assertThat(updatedSourceIssue.getFields().getFixVersions()).extracting(JiraVersion::getName).containsExactly(SOURCE_VERSION_10.getName());
 
 		syncAndAssertNoChanges();
 	}
@@ -895,9 +886,7 @@ public class JiraSyncApplicationTests {
 
 	private List<ProjectSyncResult> syncAndCheckResult() {
 		List<ProjectSyncResult> results = syncTask.sync();
-		assertThat(results).hasSize(2);
-		assertThat(results.get(0).hasFailed()).isFalse();
-		assertThat(results.get(1).hasFailed()).isFalse();
+		assertThat(results).extracting(ProjectSyncResult::hasFailed).containsExactly(false, false);
 		return results;
 	}
 
@@ -1107,7 +1096,7 @@ public class JiraSyncApplicationTests {
 	}
 
 	@Test
-	public void testgetAllowedValuesForCustomField() {
+	public void testGetAllowedValuesForCustomField() {
 		Map<String, Object> fields = jiraSource.getAllowedValuesForCustomField(SOURCE_PROJECT.getKey(), SOURCE_CUSTOM_FIELD_FIXED_IN_VERSION.getId());
 		assertThat(fields).isNotNull();
 		assertThat(fields.values().size()).isGreaterThanOrEqualTo(1);
