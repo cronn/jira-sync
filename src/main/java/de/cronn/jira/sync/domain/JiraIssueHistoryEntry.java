@@ -18,7 +18,6 @@ public class JiraIssueHistoryEntry extends JiraIdResource {
 	private List<JiraIssueHistoryItem> items = new ArrayList<>();
 
 	public JiraIssueHistoryEntry() {
-
 	}
 
 	public JiraIssueHistoryEntry(String id) {

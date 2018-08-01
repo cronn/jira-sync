@@ -14,27 +14,27 @@ public class JiraIssueHistoryItem implements Serializable {
 
 	private String field;
 
-    private String fromString;
+	private String fromString;
 
-    private String toString;
+	private String toString;
 
-    public JiraIssueHistoryItem() {
-    }
+	public JiraIssueHistoryItem() {
+	}
 
-    public JiraIssueHistoryItem(String field) {
-    	this.field = field;
-    }
+	public JiraIssueHistoryItem(String field) {
+		this.field = field;
+	}
 
-    public JiraIssueHistoryItem(WellKnownJiraField field) {
+	public JiraIssueHistoryItem(WellKnownJiraField field) {
 		this(field.getFieldName());
-    }
+	}
 
-    public static JiraIssueHistoryItem createStatusTransition(String from, String to) {
-    	JiraIssueHistoryItem statusTransition = new JiraIssueHistoryItem(WellKnownJiraField.STATUS);
-    	statusTransition.setFromString(from);
-    	statusTransition.setToString(to);
-    	return statusTransition;
-    }
+	public static JiraIssueHistoryItem createStatusTransition(String from, String to) {
+		JiraIssueHistoryItem statusTransition = new JiraIssueHistoryItem(WellKnownJiraField.STATUS);
+		statusTransition.setFromString(from);
+		statusTransition.setToString(to);
+		return statusTransition;
+	}
 
 	public String getField() {
 		return field;
