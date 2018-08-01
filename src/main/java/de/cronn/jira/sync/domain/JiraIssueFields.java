@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-public class JiraIssueFields extends JiraResource {
+public class JiraIssueFields extends JiraResource implements JiraFieldsBean {
 
 	private static final long serialVersionUID = 2L;
 
@@ -57,7 +57,7 @@ public class JiraIssueFields extends JiraResource {
 	public void setProject(JiraProject project) {
 		this.project = project;
 	}
-	
+
 	@JsonIgnore
 	public JiraIssueFields withProject(JiraProject project) {
 		this.setProject(project);
@@ -72,10 +72,12 @@ public class JiraIssueFields extends JiraResource {
 		this.summary = summary;
 	}
 
+	@Override
 	public String getDescription() {
 		return description;
 	}
 
+	@Override
 	public void setDescription(String description) {
 		this.description = description;
 	}
@@ -103,21 +105,23 @@ public class JiraIssueFields extends JiraResource {
 	public void setPriority(JiraPriority priority) {
 		this.priority = priority;
 	}
-	
+
 	@JsonIgnore
 	public JiraIssueFields withPriority(JiraPriority jiraPriority) {
 		setPriority(jiraPriority);
 		return this;
 	}
 
+	@Override
 	public JiraResolution getResolution() {
 		return resolution;
 	}
 
+	@Override
 	public void setResolution(JiraResolution resolution) {
 		this.resolution = resolution;
 	}
-	
+
 	public JiraIssueStatus getStatus() {
 		return status;
 	}
@@ -125,33 +129,39 @@ public class JiraIssueFields extends JiraResource {
 	public void setStatus(JiraIssueStatus status) {
 		this.status = status;
 	}
-	
+
 	@JsonIgnore
 	public JiraIssueFields withStatus(JiraIssueStatus status) {
 		setStatus(status);
 		return this;
 	}
 
+	@Override
 	public void setVersions(Set<JiraVersion> versions) {
 		this.versions = versions;
 	}
 
+	@Override
 	public Set<JiraVersion> getVersions() {
 		return versions;
 	}
 
+	@Override
 	public void setFixVersions(Set<JiraVersion> fixVersions) {
 		this.fixVersions = fixVersions;
 	}
 
+	@Override
 	public Set<JiraVersion> getFixVersions() {
 		return fixVersions;
 	}
 
+	@Override
 	public JiraUser getAssignee() {
 		return assignee;
 	}
 
+	@Override
 	public void setAssignee(JiraUser assignee) {
 		this.assignee = assignee;
 	}

@@ -3,7 +3,7 @@ package de.cronn.jira.sync.domain;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-public class JiraIssueType extends JiraIdResource {
+public class JiraIssueType extends JiraIdResource implements JiraNamedBean {
 
 	private static final long serialVersionUID = 1L;
 
@@ -17,6 +17,7 @@ public class JiraIssueType extends JiraIdResource {
 		this.name = name;
 	}
 
+	@Override
 	public String getName() {
 		return name;
 	}

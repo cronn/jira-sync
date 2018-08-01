@@ -5,7 +5,7 @@ import java.util.List;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-public class JiraProject extends JiraIdResource {
+public class JiraProject extends JiraIdResource implements JiraNamedBean {
 
 	private static final long serialVersionUID = 1L;
 
@@ -30,6 +30,7 @@ public class JiraProject extends JiraIdResource {
 		this.key = key;
 	}
 
+	@Override
 	public String getName() {
 		return name;
 	}

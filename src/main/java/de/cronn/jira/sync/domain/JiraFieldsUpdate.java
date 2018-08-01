@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-public class JiraFieldsUpdate implements Serializable {
+public class JiraFieldsUpdate implements Serializable, JiraFieldsBean {
 
 	private static final long serialVersionUID = 1L;
 
@@ -22,14 +22,16 @@ public class JiraFieldsUpdate implements Serializable {
 	private JiraUser assignee;
 	private Map<String, Object> other = new LinkedHashMap<>();
 
+	@Override
 	public String getDescription() {
 		return description;
 	}
 
+	@Override
 	public void setDescription(String description) {
 		this.description = description;
 	}
-	
+
 	@JsonIgnore
 	public JiraFieldsUpdate withDescription(String description) {
 		setDescription(description);
@@ -44,14 +46,16 @@ public class JiraFieldsUpdate implements Serializable {
 		this.priority = priority;
 	}
 
+	@Override
 	public JiraResolution getResolution() {
 		return resolution;
 	}
 
+	@Override
 	public void setResolution(JiraResolution resolution) {
 		this.resolution = resolution;
 	}
-	
+
 	public JiraFieldsUpdate withResolution(JiraResolution resolution) {
 		this.resolution = resolution;
 		return this;
@@ -65,36 +69,42 @@ public class JiraFieldsUpdate implements Serializable {
 		this.labels = labels;
 	}
 
+	@Override
 	public Set<JiraVersion> getVersions() {
 		return versions;
 	}
 
+	@Override
 	public void setVersions(Set<JiraVersion> versions) {
 		this.versions = versions;
 	}
 
+	@Override
 	public Set<JiraVersion> getFixVersions() {
 		return fixVersions;
 	}
 
+	@Override
 	public void setFixVersions(Set<JiraVersion> fixVersions) {
 		this.fixVersions = fixVersions;
 	}
-	
+
 	@JsonIgnore
 	public JiraFieldsUpdate withFixVersions(Set<JiraVersion> jiraVersions) {
 		setFixVersions(jiraVersions);
 		return this;
 	}
 
+	@Override
 	public JiraUser getAssignee() {
 		return assignee;
 	}
 
+	@Override
 	public void setAssignee(JiraUser assignee) {
 		this.assignee = assignee;
 	}
-	
+
 	@JsonIgnore
 	public JiraFieldsUpdate withAssignee(JiraUser jiraUser) {
 		setAssignee(jiraUser);
@@ -110,5 +120,5 @@ public class JiraFieldsUpdate implements Serializable {
 	public void setOther(String key, Object value) {
 		other.put(key, value);
 	}
-	
+
 }

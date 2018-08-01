@@ -1,11 +1,9 @@
 package de.cronn.jira.sync.domain;
 
-import java.io.Serializable;
-
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-public class JiraUser extends JiraResource implements Serializable {
+public class JiraUser extends JiraResource implements JiraNamedBean {
 
 	private static final long serialVersionUID = 2L;
 
@@ -31,6 +29,7 @@ public class JiraUser extends JiraResource implements Serializable {
 		this.name = name;
 	}
 
+	@Override
 	public String getName() {
 		return name;
 	}

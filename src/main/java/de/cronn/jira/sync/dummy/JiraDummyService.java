@@ -1,5 +1,6 @@
 package de.cronn.jira.sync.dummy;
 
+import java.beans.PropertyDescriptor;
 import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -33,6 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
 import de.cronn.jira.sync.domain.JiraComment;
 import de.cronn.jira.sync.domain.JiraComments;
 import de.cronn.jira.sync.domain.JiraField;
+import de.cronn.jira.sync.domain.JiraFieldsBean;
 import de.cronn.jira.sync.domain.JiraFieldsUpdate;
 import de.cronn.jira.sync.domain.JiraFilterResult;
 import de.cronn.jira.sync.domain.JiraIssue;
@@ -43,6 +46,7 @@ import de.cronn.jira.sync.domain.JiraIssueStatus;
 import de.cronn.jira.sync.domain.JiraIssueUpdate;
 import de.cronn.jira.sync.domain.JiraLoginRequest;
 import de.cronn.jira.sync.domain.JiraLoginResponse;
+import de.cronn.jira.sync.domain.JiraNamedBean;
 import de.cronn.jira.sync.domain.JiraPriority;
 import de.cronn.jira.sync.domain.JiraProject;
 import de.cronn.jira.sync.domain.JiraRemoteLink;
@@ -55,7 +59,8 @@ import de.cronn.jira.sync.domain.JiraTransition;
 import de.cronn.jira.sync.domain.JiraTransitions;
 import de.cronn.jira.sync.domain.JiraUser;
 import de.cronn.jira.sync.domain.JiraVersion;
-import de.cronn.jira.sync.domain.WellKnownJiraField;
+import de.cronn.reflection.util.PropertyUtils;
+import de.cronn.reflection.util.TypedPropertyGetter;
 
 @RestController
 @RequestMapping("/{" + JiraDummyService.CONTEXT + "}/rest")
@@ -249,7 +254,7 @@ public class JiraDummyService {
 
 		JiraIssue result = SerializationUtils.clone(issue);
 
-		if (!ArrayUtils.contains(expandParams, "changelog")){
+		if (!ArrayUtils.contains(expandParams, "changelog")) {
 			result.setChangelog(null);
 		}
 
@@ -554,38 +559,14 @@ public class JiraDummyService {
 			return;
 		}
 
-		if (fieldToUpdate.getDescription() != null) {
-			historyEntry.addItem(new JiraIssueHistoryItem(WellKnownJiraField.DESCRIPTION)
-				.withFromString(issueInSystem.getFields().getDescription())
-				.withToString(fieldToUpdate.getDescription()));
-			issueInSystem.getFields().setDescription(fieldToUpdate.getDescription());
-		}
-
-		if (fieldToUpdate.getResolution() != null) {
-			validateResolution(context, fieldToUpdate.getResolution());
-			historyEntry.addItem(new JiraIssueHistoryItem(WellKnownJiraField.RESOLUTION)
-				.withFromString(getResolutionNameOrNull(issueInSystem))
-				.withToString(fieldToUpdate.getResolution().getName()));
-			issueInSystem.getFields().setResolution(fieldToUpdate.getResolution());
-		}
-
-		if (fieldToUpdate.getAssignee() != null) {
-			historyEntry.addItem(new JiraIssueHistoryItem(WellKnownJiraField.ASSIGNEE)
-				.withFromString(getAssigneeNameOrNull(issueInSystem))
-				.withToString(fieldToUpdate.getAssignee().getName()));
-			issueInSystem.getFields().setAssignee(fieldToUpdate.getAssignee());
-		}
-
 		validateVersions(context, fieldToUpdate.getFixVersions());
 		validateVersions(context, fieldToUpdate.getVersions());
 
-		if (fieldToUpdate.getFixVersions() != null) {
-			issueInSystem.getFields().setFixVersions(fieldToUpdate.getFixVersions());
-		}
-
-		if (fieldToUpdate.getVersions() != null) {
-			issueInSystem.getFields().setVersions(fieldToUpdate.getVersions());
-		}
+		updateField(jiraIssueUpdate, issueInSystem, historyEntry, JiraFieldsBean::getDescription);
+		updateField(jiraIssueUpdate, issueInSystem, historyEntry, JiraFieldsBean::getResolution, JiraNamedBean::getNameOrNull);
+		updateField(jiraIssueUpdate, issueInSystem, historyEntry, JiraFieldsBean::getAssignee, JiraNamedBean::getNameOrNull);
+		updateField(jiraIssueUpdate, issueInSystem, historyEntry, JiraFieldsBean::getFixVersions, JiraNamedBean::join);
+		updateField(jiraIssueUpdate, issueInSystem, historyEntry, JiraFieldsBean::getVersions, JiraNamedBean::join);
 
 		for (Entry<String, Object> entry : fieldToUpdate.getOther().entrySet()) {
 			issueInSystem.getFields().setOther(entry.getKey(), entry.getValue());
@@ -597,12 +578,25 @@ public class JiraDummyService {
 		refreshUpdatedTimestamp(issueInSystem);
 	}
 
-	private String getAssigneeNameOrNull(JiraIssue issue) {
-		return issue.getFields().getAssignee() != null ? issue.getFields().getAssignee().getName() : null;
+	private static void updateField(JiraIssueUpdate jiraIssueUpdate, JiraIssue issueInSystem,
+									JiraIssueHistoryEntry historyEntry,
+									TypedPropertyGetter<JiraFieldsBean, String> propertyGetter) {
+		updateField(jiraIssueUpdate, issueInSystem, historyEntry, propertyGetter, Function.identity());
 	}
 
-	private String getResolutionNameOrNull(JiraIssue issue) {
-		return issue.getFields().getResolution() != null ? issue.getFields().getResolution().getName() : null;
+	private static <T> void updateField(JiraIssueUpdate jiraIssueUpdate, JiraIssue issueInSystem,
+										JiraIssueHistoryEntry historyEntry,
+										TypedPropertyGetter<JiraFieldsBean, T> propertyGetter,
+										Function<T, String> toStringMapper) {
+		PropertyDescriptor property = PropertyUtils.getPropertyDescriptor(JiraFieldsBean.class, propertyGetter);
+		T newValue = PropertyUtils.read(jiraIssueUpdate.getFields(), property);
+		if (newValue != null) {
+			T oldValue = PropertyUtils.read(issueInSystem.getFields(), property);
+			historyEntry.addItem(new JiraIssueHistoryItem(property.getName())
+				.withFromString(toStringMapper.apply(oldValue))
+				.withToString(toStringMapper.apply(newValue)));
+			PropertyUtils.write(issueInSystem.getFields(), property, newValue);
+		}
 	}
 
 	private void refreshUpdatedTimestamp(JiraIssue issue) {
