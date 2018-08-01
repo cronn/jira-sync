@@ -568,8 +568,8 @@ public class JiraDummyService {
 		updateField(jiraIssueUpdate, issueInSystem, historyEntry, JiraFieldsBean::getDescription);
 		updateField(jiraIssueUpdate, issueInSystem, historyEntry, JiraFieldsBean::getResolution, JiraNamedBean::getNameOrNull);
 		updateField(jiraIssueUpdate, issueInSystem, historyEntry, JiraFieldsBean::getAssignee, JiraNamedBean::getNameOrNull);
-		updateField(jiraIssueUpdate, issueInSystem, historyEntry, JiraFieldsBean::getFixVersions, JiraNamedBean::join);
-		updateField(jiraIssueUpdate, issueInSystem, historyEntry, JiraFieldsBean::getVersions, JiraNamedBean::join);
+		updateField(jiraIssueUpdate, issueInSystem, historyEntry, JiraFieldsBean::getFixVersions, new VersionChangeHistoryItemWriter());
+		updateField(jiraIssueUpdate, issueInSystem, historyEntry, JiraFieldsBean::getVersions, new VersionChangeHistoryItemWriter());
 
 		for (Entry<String, Object> entry : fieldToUpdate.getOther().entrySet()) {
 			issueInSystem.getFields().setOther(entry.getKey(), entry.getValue());
@@ -591,13 +591,18 @@ public class JiraDummyService {
 										JiraIssueHistoryEntry historyEntry,
 										TypedPropertyGetter<JiraFieldsBean, T> propertyGetter,
 										Function<T, String> toStringMapper) {
+		updateField(jiraIssueUpdate, issueInSystem, historyEntry, propertyGetter, new ToStringHistoryItemWriter<>(toStringMapper));
+	}
+
+	private static <T> void updateField(JiraIssueUpdate jiraIssueUpdate, JiraIssue issueInSystem,
+										JiraIssueHistoryEntry historyEntry,
+										TypedPropertyGetter<JiraFieldsBean, T> propertyGetter,
+										HistoryItemWriter<T> historyItemWriter) {
 		PropertyDescriptor property = PropertyUtils.getPropertyDescriptor(JiraFieldsBean.class, propertyGetter);
 		T newValue = PropertyUtils.read(jiraIssueUpdate.getFields(), property);
 		if (newValue != null) {
 			T oldValue = PropertyUtils.read(issueInSystem.getFields(), property);
-			historyEntry.addItem(new JiraIssueHistoryItem(property.getName())
-				.withFromString(toStringMapper.apply(oldValue))
-				.withToString(toStringMapper.apply(newValue)));
+			historyItemWriter.add(historyEntry, property, oldValue, newValue);
 			PropertyUtils.write(issueInSystem.getFields(), property, newValue);
 		}
 	}
@@ -643,4 +648,57 @@ public class JiraDummyService {
 		refreshUpdatedTimestamp(issue);
 	}
 
+	private interface HistoryItemWriter<T> {
+		void add(JiraIssueHistoryEntry historyEntry, PropertyDescriptor propertyDescriptor, T oldValue, T newValue);
+	}
+
+	private static class VersionChangeHistoryItemWriter implements HistoryItemWriter<Set<JiraVersion>> {
+		@Override
+		public void add(JiraIssueHistoryEntry historyEntry, PropertyDescriptor propertyDescriptor, Set<JiraVersion> oldValue, Set<JiraVersion> newValue) {
+			Set<JiraVersion> removedVersions = difference(oldValue, newValue);
+			Set<JiraVersion> addedVersions = difference(newValue, oldValue);
+
+			for (JiraVersion value : removedVersions) {
+				historyEntry.addItem(new JiraIssueHistoryItem(propertyDescriptor.getName())
+					.withFromString(value.getName())
+					.withToString(null)
+				);
+			}
+
+			for (JiraVersion value : addedVersions) {
+				historyEntry.addItem(new JiraIssueHistoryItem(propertyDescriptor.getName())
+					.withFromString(null)
+					.withToString(value.getName())
+				);
+			}
+		}
+
+		private static Set<JiraVersion> difference(Set<JiraVersion> universe, Set<JiraVersion> exclusions) {
+			if (universe == null) {
+				return Collections.emptySet();
+			}
+			if (exclusions == null) {
+				return universe;
+			}
+			return universe.stream()
+				.filter(v -> !exclusions.contains(v))
+				.collect(Collectors.toCollection(LinkedHashSet::new));
+		}
+
+	}
+
+	private static class ToStringHistoryItemWriter<T> implements HistoryItemWriter<T> {
+		private final Function<T, String> toStringMapper;
+
+		ToStringHistoryItemWriter(Function<T, String> toStringMapper) {
+			this.toStringMapper = toStringMapper;
+		}
+
+		@Override
+		public void add(JiraIssueHistoryEntry historyEntry, PropertyDescriptor propertyDescriptor, T oldValue, T newValue) {
+			historyEntry.addItem(new JiraIssueHistoryItem(propertyDescriptor.getName())
+				.withFromString(toStringMapper.apply(oldValue))
+				.withToString(toStringMapper.apply(newValue)));
+		}
+	}
 }

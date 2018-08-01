@@ -170,41 +170,66 @@ public class JiraDummyServiceTest {
 	@Test
 	public void testUpdateIssue_fixVersions() throws Exception {
 		JiraIssue issue = createJiraIssue(jiraDummyService);
-		JiraIssueUpdate jiraIssueUpdate = new JiraIssueUpdate().withFields(new JiraFieldsUpdate().withFixVersions(versions("1.0")));
 
-		jiraDummyService.updateIssue(TARGET, issue.getKey(), jiraIssueUpdate);
+		jiraDummyService.updateIssue(TARGET, issue.getKey(), createFixVersionUpdate("1.0"));
 		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), CHANGELOG);
 
 		assertThat(issue.getFields().getFixVersions()).extracting(JiraVersion::getName).containsExactly("1.0");
 		assertLastHistoryEntryIs(issue, WellKnownJiraField.FIX_VERSIONS, null, "1.0");
 
-		jiraIssueUpdate = new JiraIssueUpdate().withFields(new JiraFieldsUpdate().withFixVersions(versions("1.0", "2.0")));
-
-		jiraDummyService.updateIssue(TARGET, issue.getKey(), jiraIssueUpdate);
+		jiraDummyService.updateIssue(TARGET, issue.getKey(), createFixVersionUpdate("1.0", "2.0"));
 		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), CHANGELOG);
 
 		assertThat(issue.getFields().getFixVersions()).extracting(JiraVersion::getName).containsExactly("1.0", "2.0");
-		assertLastHistoryEntryIs(issue, WellKnownJiraField.FIX_VERSIONS, "1.0", "1.0, 2.0");
+		assertLastHistoryEntryIs(issue, WellKnownJiraField.FIX_VERSIONS, null, "2.0");
+	}
+
+	@Test
+	public void testUpdateIssue_fixVersions_multipleVersionChanges() throws Exception {
+		JiraIssue issue = createJiraIssue(jiraDummyService);
+
+		jiraDummyService.updateIssue(TARGET, issue.getKey(), createFixVersionUpdate("1.0", "2.0"));
+		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), CHANGELOG);
+
+		assertThat(issue.getFields().getFixVersions()).extracting(JiraVersion::getName).containsExactly("1.0", "2.0");
+		assertThat(getLastHistoryEntry(issue).getItems()).extracting(JiraIssueHistoryItem::getFromString).containsExactly(null, null);
+		assertThat(getLastHistoryEntry(issue).getItems()).extracting(JiraIssueHistoryItem::getToString).containsExactly("1.0", "2.0");
+
+		jiraDummyService.updateIssue(TARGET, issue.getKey(), createFixVersionUpdate());
+		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), CHANGELOG);
+
+		assertThat(issue.getFields().getFixVersions()).isEmpty();
+		assertThat(getLastHistoryEntry(issue).getItems()).extracting(JiraIssueHistoryItem::getToString).containsExactly(null, null);
+		assertThat(getLastHistoryEntry(issue).getItems()).extracting(JiraIssueHistoryItem::getFromString).containsExactly("1.0", "2.0");
 	}
 
 	@Test
 	public void testUpdateIssue_versions() throws Exception {
 		JiraIssue issue = createJiraIssue(jiraDummyService);
-		JiraIssueUpdate jiraIssueUpdate = new JiraIssueUpdate().withFields(new JiraFieldsUpdate().withVersions(versions("1.0")));
 
-		jiraDummyService.updateIssue(TARGET, issue.getKey(), jiraIssueUpdate);
+		jiraDummyService.updateIssue(TARGET, issue.getKey(), createVersionUpdate("1.0"));
 		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), CHANGELOG);
 
 		assertThat(issue.getFields().getVersions()).extracting(JiraVersion::getName).containsExactly("1.0");
 		assertLastHistoryEntryIs(issue, WellKnownJiraField.VERSIONS, null, "1.0");
 
-		jiraIssueUpdate = new JiraIssueUpdate().withFields(new JiraFieldsUpdate().withVersions(versions( "1.0", "2.0")));
-
-		jiraDummyService.updateIssue(TARGET, issue.getKey(), jiraIssueUpdate);
+		jiraDummyService.updateIssue(TARGET, issue.getKey(), createVersionUpdate("1.0", "2.0"));
 		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), CHANGELOG);
 
 		assertThat(issue.getFields().getVersions()).extracting(JiraVersion::getName).containsExactly("1.0", "2.0");
-		assertLastHistoryEntryIs(issue, WellKnownJiraField.VERSIONS, "1.0", "1.0, 2.0");
+		assertLastHistoryEntryIs(issue, WellKnownJiraField.VERSIONS, null, "2.0");
+	}
+
+	private static JiraIssueUpdate createFixVersionUpdate(String... newVersions) {
+		return new JiraIssueUpdate()
+			.withFields(new JiraFieldsUpdate()
+				.withFixVersions(versions(newVersions)));
+	}
+
+	private static JiraIssueUpdate createVersionUpdate(String... newVersions) {
+		return new JiraIssueUpdate()
+			.withFields(new JiraFieldsUpdate()
+				.withVersions(versions(newVersions)));
 	}
 
 	private static Set<JiraVersion> versions(String... versionNames) {
