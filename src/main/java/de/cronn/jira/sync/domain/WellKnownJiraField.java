@@ -17,14 +17,14 @@ public enum WellKnownJiraField {
 	COMMENT("comment"),
 	;
 
-	private final String name;
+	private final String fieldName;
 
-	WellKnownJiraField(String name) {
-		this.name = name;
+	WellKnownJiraField(String fieldName) {
+		this.fieldName = fieldName;
 	}
 
-	public String getName() {
-		return name;
+	public String getFieldName() {
+		return fieldName;
 	}
 
 }

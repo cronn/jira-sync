@@ -43,28 +43,28 @@ public class JiraDummyServiceTest {
 	private static final JiraIssueStatus STATUS_OPEN = new JiraIssueStatus("1", "Open");
 	private static final JiraIssueStatus STATUS_IN_PROGRESS = new JiraIssueStatus("2", "In Progress");
 	private static final JiraProject PROJECT = new JiraProject("1", "TST");
-	
+
 	private TestClock clock;
-	
+
 	private JiraDummyService jiraDummyService;
-	
+
 	@Before
 	public void setup() {
 		clock = new TestClock();
 		jiraDummyService = createAndSetUpJiraService(clock);
 	}
-	
+
 	@Test
 	public void testGetIssueByKey() throws Exception {
 		JiraIssue issue = createJiraIssue(jiraDummyService);
 		MockMvc mockMvc = standaloneSetup(jiraDummyService).build();
-		
+
 		mockMvc.perform(get("/TARGET/rest/api/2/issue/" + issue.getKey()))
 			.andExpect(MockMvcResultMatchers.status().isOk())
 			.andExpect(MockMvcResultMatchers.jsonPath("$.key", is(issue.getKey())))
 			.andExpect(MockMvcResultMatchers.jsonPath("$.changelog", is(IsNull.nullValue())));
 	}
-	
+
 	@Test
 	public void testGetIssueByKey_wichChangelog() throws Exception {
 		JiraIssue issue = createJiraIssue(jiraDummyService);
@@ -78,102 +78,102 @@ public class JiraDummyServiceTest {
 			.andExpect(MockMvcResultMatchers.jsonPath("$.key", is(issue.getKey())))
 			.andExpect(MockMvcResultMatchers.jsonPath("$.changelog", is(IsNull.notNullValue())));
 	}
-	
-	
+
+
 	@Test
 	public void testTransitionIssue() throws Exception {
 		JiraIssue issue = createJiraIssue(jiraDummyService);
 		JiraIssueUpdate jiraIssueUpdate = new JiraIssueUpdate()
 			.withTransition(new JiraTransition("2", "In Progress", STATUS_IN_PROGRESS));
-		
+
 		jiraDummyService.transitionIssue(TARGET, issue.getKey(), jiraIssueUpdate);
 		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), new String[] {"changelog"});
-		
-		assertThat(issue.getFields().getStatus().getName()).isEqualTo(STATUS_IN_PROGRESS.getName());		
-		assertLastHistoryEntryIs(issue, WellKnownJiraField.STATUS.getName(), STATUS_OPEN.getName(), STATUS_IN_PROGRESS.getName());
+
+		assertThat(issue.getFields().getStatus().getName()).isEqualTo(STATUS_IN_PROGRESS.getName());
+		assertLastHistoryEntryIs(issue, WellKnownJiraField.STATUS.getFieldName(), STATUS_OPEN.getName(), STATUS_IN_PROGRESS.getName());
 	}
 
 	@Test
 	public void testUpdateIssue_emptyUpdate() throws Exception {
 		JiraIssue issue = createJiraIssue(jiraDummyService);
 		JiraIssueUpdate jiraIssueUpdate = new JiraIssueUpdate();
-		
+
 		jiraDummyService.updateIssue(TARGET, issue.getKey(), jiraIssueUpdate);
 		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), new String[] {"changelog"});
-		
+
 		assertLastHistoryEntryIsEmpty(issue);
 	}
-	
+
 	@Test
 	public void testUpdateIssue_description() throws Exception {
 		JiraIssue issue = createJiraIssue(jiraDummyService);
 		JiraIssueUpdate jiraIssueUpdate = new JiraIssueUpdate().withFields(new JiraFieldsUpdate().withDescription("Some description"));
-		
+
 		jiraDummyService.updateIssue(TARGET, issue.getKey(), jiraIssueUpdate);
 		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), new String[] {"changelog"});
-		
-		assertThat(issue.getFields().getDescription()).isEqualTo("Some description");		
-		assertLastHistoryEntryIs(issue, WellKnownJiraField.DESCRIPTION.getName(), null, "Some description");
-		
+
+		assertThat(issue.getFields().getDescription()).isEqualTo("Some description");
+		assertLastHistoryEntryIs(issue, WellKnownJiraField.DESCRIPTION.getFieldName(), null, "Some description");
+
 		jiraIssueUpdate = new JiraIssueUpdate().withFields(new JiraFieldsUpdate().withDescription("New description"));
-		
+
 		jiraDummyService.updateIssue(TARGET, issue.getKey(), jiraIssueUpdate);
 		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), new String[] {"changelog"});
-		
+
 		assertThat(issue.getFields().getDescription()).isEqualTo("New description");
-		assertLastHistoryEntryIs(issue, WellKnownJiraField.DESCRIPTION.getName(), "Some description", "New description");
+		assertLastHistoryEntryIs(issue, WellKnownJiraField.DESCRIPTION.getFieldName(), "Some description", "New description");
 	}
-	
+
 	@Test
 	public void testUpdateIssue_resolution() throws Exception {
 		JiraIssue issue = createJiraIssue(jiraDummyService);
 		JiraIssueUpdate jiraIssueUpdate = new JiraIssueUpdate().withFields(new JiraFieldsUpdate().withResolution(RESOLUTION_DONE));
-		
+
 		jiraDummyService.updateIssue(TARGET, issue.getKey(), jiraIssueUpdate);
 		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), new String[] {"changelog"});
-		
-		assertThat(issue.getFields().getResolution().getName()).isEqualTo("Done");		
-		assertLastHistoryEntryIs(issue, WellKnownJiraField.RESOLUTION.getName(), null, "Done");
-		
+
+		assertThat(issue.getFields().getResolution().getName()).isEqualTo("Done");
+		assertLastHistoryEntryIs(issue, WellKnownJiraField.RESOLUTION.getFieldName(), null, "Done");
+
 		jiraIssueUpdate = new JiraIssueUpdate().withFields(new JiraFieldsUpdate().withResolution(RESOLUTION_WONT_DO));
-		
+
 		jiraDummyService.updateIssue(TARGET, issue.getKey(), jiraIssueUpdate);
 		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), new String[] {"changelog"});
-		
-		assertThat(issue.getFields().getResolution().getName()).isEqualTo("Won't Do");	
-		assertLastHistoryEntryIs(issue, WellKnownJiraField.RESOLUTION.getName(), "Done", "Won't Do");
+
+		assertThat(issue.getFields().getResolution().getName()).isEqualTo("Won't Do");
+		assertLastHistoryEntryIs(issue, WellKnownJiraField.RESOLUTION.getFieldName(), "Done", "Won't Do");
 	}
 
 	@Test
 	public void testUpdateIssue_assignee() throws Exception {
 		JiraIssue issue = createJiraIssue(jiraDummyService);
 		JiraIssueUpdate jiraIssueUpdate = new JiraIssueUpdate().withFields(new JiraFieldsUpdate().withAssignee(new JiraUser("johnny", "1")));
-		
+
 		jiraDummyService.updateIssue(TARGET, issue.getKey(), jiraIssueUpdate);
 		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), new String[] {"changelog"});
-		
-		assertThat(issue.getFields().getAssignee().getName()).isEqualTo("johnny");		
-		assertLastHistoryEntryIs(issue, WellKnownJiraField.ASSIGNEE.getName(), null, "johnny");
-		
+
+		assertThat(issue.getFields().getAssignee().getName()).isEqualTo("johnny");
+		assertLastHistoryEntryIs(issue, WellKnownJiraField.ASSIGNEE.getFieldName(), null, "johnny");
+
 		jiraIssueUpdate = new JiraIssueUpdate().withFields(new JiraFieldsUpdate().withAssignee(new JiraUser("tommy", "2")));
-		
+
 		jiraDummyService.updateIssue(TARGET, issue.getKey(), jiraIssueUpdate);
 		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), new String[] {"changelog"});
-		
-		assertThat(issue.getFields().getAssignee().getName()).isEqualTo("tommy");	
-		assertLastHistoryEntryIs(issue, WellKnownJiraField.ASSIGNEE.getName(), "johnny", "tommy");
+
+		assertThat(issue.getFields().getAssignee().getName()).isEqualTo("tommy");
+		assertLastHistoryEntryIs(issue, WellKnownJiraField.ASSIGNEE.getFieldName(), "johnny", "tommy");
 	}
 
 	private void assertLastHistoryEntryIsEmpty(JiraIssue issue) {
 		JiraIssueHistoryEntry lastHistoryEntry = getLastHistoryEntry(issue);
-		
+
 		assertThat(lastHistoryEntry.getCreated()).isEqualTo(ZonedDateTime.now(clock));
 		assertThat(lastHistoryEntry.getItems()).isEmpty();
 	}
 
 	private void assertLastHistoryEntryIs(JiraIssue issue, String field, String fromString, String toString) {
 		JiraIssueHistoryEntry lastHistoryEntry = getLastHistoryEntry(issue);
-		
+
 		assertThat(lastHistoryEntry.getCreated()).isEqualTo(ZonedDateTime.now(clock));
 		assertThat(lastHistoryEntry.getItems())
 			.containsExactly(new JiraIssueHistoryItem(field).withFromString(fromString).withToString(toString));
@@ -188,7 +188,7 @@ public class JiraDummyServiceTest {
 	private JiraIssue createJiraIssue(JiraDummyService jiraDummyService) {
 		JiraIssue issue = new JiraIssue()
 			.withFields(new JiraIssueFields().withProject(PROJECT).withStatus(STATUS_OPEN).withPriority(PRIORITY_DEFAULT));
-		
+
 		ResponseEntity<Object> response = jiraDummyService.createIssue(TARGET, issue);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 		return issue;

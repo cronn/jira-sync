@@ -292,7 +292,7 @@ public class JiraServiceRestClient implements JiraService {
 	private String getFieldsToFetch(Collection<String> customFields) {
 		List<String> fieldsToFetch = new ArrayList<>();
 		for (WellKnownJiraField knownJiraField : WellKnownJiraField.values()) {
-			fieldsToFetch.add(knownJiraField.getName());
+			fieldsToFetch.add(knownJiraField.getFieldName());
 		}
 		List<JiraField> fields = getFields();
 		for (String field : customFields) {

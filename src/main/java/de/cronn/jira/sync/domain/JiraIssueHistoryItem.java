@@ -10,27 +10,27 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 public class JiraIssueHistoryItem implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-	
+
 	private String field;
-	
+
     private String fromString;
-    
+
     private String toString;
-    
+
     public JiraIssueHistoryItem() {
-    	
+
     }
-    
+
     public JiraIssueHistoryItem(String field) {
     	this.field = field;
     }
-    
+
     public JiraIssueHistoryItem(WellKnownJiraField field) {
-    	this.field = field.getName();
+    	this.field = field.getFieldName();
     }
-    
+
     public static JiraIssueHistoryItem createStatusTransition(String from, String to) {
-    	JiraIssueHistoryItem statusTransition = new JiraIssueHistoryItem(WellKnownJiraField.STATUS.getName());
+    	JiraIssueHistoryItem statusTransition = new JiraIssueHistoryItem(WellKnownJiraField.STATUS.getFieldName());
     	statusTransition.setFromString(from);
     	statusTransition.setToString(to);
     	return statusTransition;
@@ -51,7 +51,7 @@ public class JiraIssueHistoryItem implements Serializable {
 	public void setFromString(String fromString) {
 		this.fromString = fromString;
 	}
-	
+
 	@JsonIgnore
 	public JiraIssueHistoryItem withFromString(String from) {
 		setFromString(from);
@@ -65,13 +65,13 @@ public class JiraIssueHistoryItem implements Serializable {
 	public void setToString(String toString) {
 		this.toString = toString;
 	}
-	
+
 	@JsonIgnore
 	public JiraIssueHistoryItem withToString(String to) {
 		setToString(to);
 		return this;
 	}
-	
+
 	@Override
 	public String toString() {
 		return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
