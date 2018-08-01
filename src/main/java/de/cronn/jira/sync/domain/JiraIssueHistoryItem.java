@@ -1,6 +1,7 @@
 package de.cronn.jira.sync.domain;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -82,39 +83,21 @@ public class JiraIssueHistoryItem implements Serializable {
 	}
 
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((field == null) ? 0 : field.hashCode());
-		result = prime * result + ((fromString == null) ? 0 : fromString.hashCode());
-		result = prime * result + ((toString == null) ? 0 : toString.hashCode());
-		return result;
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		JiraIssueHistoryItem that = (JiraIssueHistoryItem) o;
+		return Objects.equals(getField(), that.getField())
+			&& Objects.equals(getFromString(), that.getFromString())
+			&& Objects.equals(getToString(), that.getToString());
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		JiraIssueHistoryItem other = (JiraIssueHistoryItem) obj;
-		if (field == null) {
-			if (other.field != null)
-				return false;
-		} else if (!field.equals(other.field))
-			return false;
-		if (fromString == null) {
-			if (other.fromString != null)
-				return false;
-		} else if (!fromString.equals(other.fromString))
-			return false;
-		if (toString == null) {
-			if (other.toString != null)
-				return false;
-		} else if (!toString.equals(other.toString))
-			return false;
-		return true;
+	public int hashCode() {
+		return Objects.hash(getField(), getFromString(), getToString());
 	}
 }
