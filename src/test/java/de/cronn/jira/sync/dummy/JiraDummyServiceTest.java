@@ -8,7 +8,9 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.*;
 
 import java.time.Clock;
 import java.time.ZonedDateTime;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.hamcrest.core.IsNull;
 import org.junit.Before;
@@ -43,7 +45,6 @@ public class JiraDummyServiceTest {
 	private static final JiraIssueStatus STATUS_OPEN = new JiraIssueStatus("1", "Open");
 	private static final JiraIssueStatus STATUS_IN_PROGRESS = new JiraIssueStatus("2", "In Progress");
 	private static final JiraProject PROJECT = new JiraProject("1", "TST");
-
 	private static final String CHANGELOG = JiraDummyService.CHANGELOG;
 
 	private TestClock clock;
@@ -68,7 +69,7 @@ public class JiraDummyServiceTest {
 	}
 
 	@Test
-	public void testGetIssueByKey_wichChangelog() throws Exception {
+	public void testGetIssueByKey_withChangelog() throws Exception {
 		JiraIssue issue = createJiraIssue(jiraDummyService);
 		JiraIssueUpdate jiraIssueUpdate = new JiraIssueUpdate()
 			.withTransition(new JiraTransition("2", "In Progress", STATUS_IN_PROGRESS));
@@ -164,6 +165,55 @@ public class JiraDummyServiceTest {
 
 		assertThat(issue.getFields().getAssignee().getName()).isEqualTo("tommy");
 		assertLastHistoryEntryIs(issue, WellKnownJiraField.ASSIGNEE, "johnny", "tommy");
+	}
+
+	@Test
+	public void testUpdateIssue_fixVersions() throws Exception {
+		JiraIssue issue = createJiraIssue(jiraDummyService);
+		JiraIssueUpdate jiraIssueUpdate = new JiraIssueUpdate().withFields(new JiraFieldsUpdate().withFixVersions(versions("1.0")));
+
+		jiraDummyService.updateIssue(TARGET, issue.getKey(), jiraIssueUpdate);
+		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), CHANGELOG);
+
+		assertThat(issue.getFields().getFixVersions()).extracting(JiraVersion::getName).containsExactly("1.0");
+		assertLastHistoryEntryIs(issue, WellKnownJiraField.FIX_VERSIONS, null, "1.0");
+
+		jiraIssueUpdate = new JiraIssueUpdate().withFields(new JiraFieldsUpdate().withFixVersions(versions("1.0", "2.0")));
+
+		jiraDummyService.updateIssue(TARGET, issue.getKey(), jiraIssueUpdate);
+		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), CHANGELOG);
+
+		assertThat(issue.getFields().getFixVersions()).extracting(JiraVersion::getName).containsExactly("1.0", "2.0");
+		assertLastHistoryEntryIs(issue, WellKnownJiraField.FIX_VERSIONS, "1.0", "1.0, 2.0");
+	}
+
+	@Test
+	public void testUpdateIssue_versions() throws Exception {
+		JiraIssue issue = createJiraIssue(jiraDummyService);
+		JiraIssueUpdate jiraIssueUpdate = new JiraIssueUpdate().withFields(new JiraFieldsUpdate().withVersions(versions("1.0")));
+
+		jiraDummyService.updateIssue(TARGET, issue.getKey(), jiraIssueUpdate);
+		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), CHANGELOG);
+
+		assertThat(issue.getFields().getVersions()).extracting(JiraVersion::getName).containsExactly("1.0");
+		assertLastHistoryEntryIs(issue, WellKnownJiraField.VERSIONS, null, "1.0");
+
+		jiraIssueUpdate = new JiraIssueUpdate().withFields(new JiraFieldsUpdate().withVersions(versions( "1.0", "2.0")));
+
+		jiraDummyService.updateIssue(TARGET, issue.getKey(), jiraIssueUpdate);
+		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), CHANGELOG);
+
+		assertThat(issue.getFields().getVersions()).extracting(JiraVersion::getName).containsExactly("1.0", "2.0");
+		assertLastHistoryEntryIs(issue, WellKnownJiraField.VERSIONS, "1.0", "1.0, 2.0");
+	}
+
+	private static Set<JiraVersion> versions(String... versionNames) {
+		Set<JiraVersion> versions = new LinkedHashSet<>();
+		for (String versionName : versionNames) {
+			String id = String.valueOf(versions.size() + 1);
+			versions.add(new JiraVersion(id, versionName));
+		}
+		return versions;
 	}
 
 	private void assertLastHistoryEntryIsEmpty(JiraIssue issue) {

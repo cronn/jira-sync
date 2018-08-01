@@ -95,6 +95,12 @@ public class JiraFieldsUpdate implements Serializable, JiraFieldsBean {
 		return this;
 	}
 
+	@JsonIgnore
+	public JiraFieldsUpdate withVersions(Set<JiraVersion> jiraVersions) {
+		setVersions(jiraVersions);
+		return this;
+	}
+
 	@Override
 	public JiraUser getAssignee() {
 		return assignee;
