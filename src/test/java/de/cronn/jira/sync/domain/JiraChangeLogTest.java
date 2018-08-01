@@ -1,8 +1,9 @@
 package de.cronn.jira.sync.domain;
 
+import static org.assertj.core.api.Assertions.*;
+
 import java.time.ZonedDateTime;
 
-import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
 public class JiraChangeLogTest {
@@ -10,7 +11,7 @@ public class JiraChangeLogTest {
 	@Test
 	public void testGetLatestStatusTransition_Null() throws Exception {
 		JiraChangeLog changelog = new JiraChangeLog();
-		Assertions.assertThat(changelog.getLatestStatusTransition()).isNull();
+		assertThat(changelog.getLatestStatusTransition()).isNull();
 	}
 
 	@Test
@@ -31,7 +32,7 @@ public class JiraChangeLogTest {
 			.addHistoryEntry(latestStatusTransition)
 			.addHistoryEntry(notAStatusTransition);
 
-		Assertions.assertThat(changelog.getLatestStatusTransition()).isEqualTo(latestStatusTransition);
+		assertThat(changelog.getLatestStatusTransition()).isEqualTo(latestStatusTransition);
 	}
 
 }
