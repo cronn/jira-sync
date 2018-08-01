@@ -19,7 +19,6 @@ public class JiraIssueHistoryItem implements Serializable {
     private String toString;
 
     public JiraIssueHistoryItem() {
-
     }
 
     public JiraIssueHistoryItem(String field) {
@@ -27,11 +26,11 @@ public class JiraIssueHistoryItem implements Serializable {
     }
 
     public JiraIssueHistoryItem(WellKnownJiraField field) {
-    	this.field = field.getFieldName();
+		this(field.getFieldName());
     }
 
     public static JiraIssueHistoryItem createStatusTransition(String from, String to) {
-    	JiraIssueHistoryItem statusTransition = new JiraIssueHistoryItem(WellKnownJiraField.STATUS.getFieldName());
+    	JiraIssueHistoryItem statusTransition = new JiraIssueHistoryItem(WellKnownJiraField.STATUS);
     	statusTransition.setFromString(from);
     	statusTransition.setToString(to);
     	return statusTransition;

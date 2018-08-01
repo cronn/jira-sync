@@ -11,16 +11,16 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 public class JiraIssueHistoryEntry extends JiraIdResource {
 
 	private static final long serialVersionUID = 1L;
-	
+
 	@JsonFormat(pattern = JIRA_DATE_FORMAT)
 	private ZonedDateTime created;
-	
+
 	private List<JiraIssueHistoryItem> items = new ArrayList<>();
-	
+
 	public JiraIssueHistoryEntry() {
 
 	}
-	
+
 	public JiraIssueHistoryEntry(String id) {
 		super(id);
 	}
@@ -32,7 +32,7 @@ public class JiraIssueHistoryEntry extends JiraIdResource {
 	public void setCreated(ZonedDateTime created) {
 		this.created = created;
 	}
-	
+
 	@JsonIgnore
 	public JiraIssueHistoryEntry withCreated(ZonedDateTime created) {
 		this.created = created;
@@ -46,13 +46,18 @@ public class JiraIssueHistoryEntry extends JiraIdResource {
 	public void setItems(List<JiraIssueHistoryItem> items) {
 		this.items = items;
 	}
-	
+
 	@JsonIgnore
 	public JiraIssueHistoryEntry addItem(JiraIssueHistoryItem item) {
 		this.items.add(item);
 		return this;
 	}
-	
+
+	@JsonIgnore
+	public boolean hasItemWithField(WellKnownJiraField field) {
+		return hasItemWithField(field.getFieldName());
+	}
+
 	@JsonIgnore
 	public boolean hasItemWithField(String fieldName) {
 		return items.stream().anyMatch(item -> Objects.equals(item.getField(), fieldName));

@@ -18,19 +18,19 @@ public class JiraChangeLogTest {
 		JiraIssueHistoryEntry oldStatusTransition = new JiraIssueHistoryEntry("1")
 			.withCreated(ZonedDateTime.parse("2016-09-13T02:00:00+02:00"))
 			.addItem(JiraIssueHistoryItem.createStatusTransition("In Progress", "Resolved"));
-		
+
 		JiraIssueHistoryEntry latestStatusTransition = new JiraIssueHistoryEntry("1")
 			.withCreated(ZonedDateTime.parse("2016-10-13T02:00:00+02:00"))
 			.addItem(JiraIssueHistoryItem.createStatusTransition("In Progress", "Resolved"));
-		
+
 		JiraIssueHistoryEntry notAStatusTransition = new JiraIssueHistoryEntry("1")
 			.withCreated(ZonedDateTime.parse("2015-10-13T02:00:00+02:00"))
-			.addItem(new JiraIssueHistoryItem("comment"));
+			.addItem(new JiraIssueHistoryItem(WellKnownJiraField.COMMENT));
 
 		JiraChangeLog changelog = new JiraChangeLog().addHistoryEntry(oldStatusTransition)
 			.addHistoryEntry(latestStatusTransition)
 			.addHistoryEntry(notAStatusTransition);
-		
+
 		Assertions.assertThat(changelog.getLatestStatusTransition()).isEqualTo(latestStatusTransition);
 	}
 

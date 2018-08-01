@@ -18,7 +18,7 @@ public class JiraIssueHistoryEntryTest {
 			.addItem(JiraIssueHistoryItem.createStatusTransition("Open", "Closed"))
 			.addItem(new JiraIssueHistoryItem("custom"));
 
-		assertThat(statusTransition.hasItemWithField(WellKnownJiraField.STATUS.getFieldName())).isTrue();
+		assertThat(statusTransition.hasItemWithField(WellKnownJiraField.STATUS)).isTrue();
 		assertThat(statusTransition.hasItemWithField("custom")).isTrue();
 		assertThat(statusTransition.hasItemWithField("not present")).isFalse();
 	}

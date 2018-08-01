@@ -241,18 +241,18 @@ public class JiraDummyService {
 	public JiraIssue getIssueByKey(@PathVariable(CONTEXT) Context context, @PathVariable("issueKey") String key) {
 		return getIssueByKey(context, key, null);
 	}
-	
+
 	@RequestMapping(value = "/api/2/issue/{issueKey}", params = "expand", method = RequestMethod.GET)
 	public JiraIssue getIssueByKey(@PathVariable(CONTEXT) Context context, @PathVariable("issueKey") String key, @RequestParam(name = "expand") String[] expandParams) {
 		JiraIssue issue = getIssueMap(context).get(key);
 		Assert.notNull(issue, "Issue " + key + " not found");
-		
+
 		JiraIssue result = SerializationUtils.clone(issue);
 
 		if (!ArrayUtils.contains(expandParams, "changelog")){
-			result.setChangelog(null);	
+			result.setChangelog(null);
 		}
-		
+
 		return result;
 	}
 
@@ -499,10 +499,10 @@ public class JiraDummyService {
 	public void updateIssue(@PathVariable(CONTEXT) Context context, @PathVariable("issueKey") String issueKey, @RequestBody JiraIssueUpdate jiraIssueUpdate) {
 		JiraIssue issueInSystem = getIssueMap(context).get(issueKey);
 		Assert.isNull(jiraIssueUpdate.getTransition(), "jiraIssueUpdate.transition must not be null");
-		
+
 		JiraIssueHistoryEntry historyEntry = createJiraIssueHistoryEntry();
 		issueInSystem.getOrCreateChangeLog().addHistoryEntry(historyEntry);
-		
+
 		updateFields(context, jiraIssueUpdate, issueInSystem, historyEntry);
 	}
 
@@ -629,7 +629,7 @@ public class JiraDummyService {
 	private JiraIssueHistoryEntry createHistoryEntryForTransition(JiraIssueStatus from, JiraIssueStatus to) {
 		JiraIssueHistoryEntry historyEntry = createJiraIssueHistoryEntry();
 		historyEntry.addItem(JiraIssueHistoryItem.createStatusTransition(from.getName(), to.getName()));
-		
+
 		return historyEntry;
 	}
 

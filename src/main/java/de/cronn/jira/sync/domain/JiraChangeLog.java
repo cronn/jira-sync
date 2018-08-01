@@ -12,16 +12,16 @@ public class JiraChangeLog implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private int total;
-	
+
 	private List<JiraIssueHistoryEntry> history;
-	
+
 	public JiraChangeLog() {
 		this.history = new ArrayList<>();
 	}
-	
+
 	public JiraChangeLog(List<JiraIssueHistoryEntry> history) {
 		this.history = history;
-	}	
+	}
 
 	public int getTotal() {
 		return total;
@@ -34,21 +34,21 @@ public class JiraChangeLog implements Serializable {
 	public List<JiraIssueHistoryEntry> getHistory() {
 		return history;
 	}
-	
+
 	public void setHistory(List<JiraIssueHistoryEntry> history) {
 		this.history = history;
 	}
-	
+
 	@JsonIgnore
 	public JiraChangeLog addHistoryEntry(JiraIssueHistoryEntry historyEntry) {
 		getHistory().add(historyEntry);
 		return this;
 	}
-	
+
 	@JsonIgnore
 	public JiraIssueHistoryEntry getLatestStatusTransition() {
 		return history.stream()
-			.filter(historyEntry -> historyEntry.hasItemWithField("status"))
+			.filter(historyEntry -> historyEntry.hasItemWithField(WellKnownJiraField.STATUS))
 			.sorted(Comparator.comparing(JiraIssueHistoryEntry::getCreated).reversed())
 			.findFirst().orElse(null);
 	}
