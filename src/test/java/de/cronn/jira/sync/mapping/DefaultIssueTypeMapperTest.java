@@ -71,12 +71,10 @@ public class DefaultIssueTypeMapperTest {
 	@Test
 	public void testMap_NoConfiguration_NoFallbackIssueTypeConfigured() throws Exception {
 		projectSync.setTargetIssueTypeFallback(null);
-		try {
-			issueTypeMapper.mapIssueType(sourceIssue, syncConfig, projectSync, targetProject);
-			fail("JiraSyncException expected");
-		} catch (JiraSyncException e) {
-			assertThat(e).hasMessage("targetIssueTypeFallback must be configured");
-		}
+
+		assertThatExceptionOfType(JiraSyncException.class)
+			.isThrownBy(() -> issueTypeMapper.mapIssueType(sourceIssue, syncConfig, projectSync, targetProject))
+			.withMessage("targetIssueTypeFallback must be configured");
 	}
 
 	@Test
@@ -94,12 +92,9 @@ public class DefaultIssueTypeMapperTest {
 	public void testMap_NoConfiguration_UnknownFallbackIssueType() throws Exception {
 		projectSync.setTargetIssueTypeFallback("Unknown");
 
-		try {
-			issueTypeMapper.mapIssueType(sourceIssue, syncConfig, projectSync, targetProject);
-			fail("JiraSyncException expected");
-		} catch (JiraSyncException e) {
-			assertThat(e).hasMessage("targetIssueTypeFallback Unknown not found");
-		}
+		assertThatExceptionOfType(JiraSyncException.class)
+			.isThrownBy(() -> issueTypeMapper.mapIssueType(sourceIssue, syncConfig, projectSync, targetProject))
+			.withMessage("targetIssueTypeFallback Unknown not found");
 	}
 
 }

@@ -128,12 +128,9 @@ public class JiraIssueWebLinkerTest {
 		remoteLinks.add(new JiraRemoteLink(JIRA_TARGET_URL + "/browse/" + targetIssue.getKey()));
 		when(jiraSource.getRemoteLinks(sourceIssue.getKey(), UPDATED)).thenReturn(remoteLinks);
 
-		try {
-			resolver.resolveIssue(sourceIssue, jiraSource, jiraTarget);
-			fail("JiraSyncException expected");
-		} catch (JiraSyncException e) {
-			assertThat(e).hasMessage("Failed to resolve 'TARGET-123' in jiraTarget");
-		}
+		assertThatExceptionOfType(JiraSyncException.class)
+			.isThrownBy(() -> resolver.resolveIssue(sourceIssue, jiraSource, jiraTarget))
+			.withMessage("Failed to resolve 'TARGET-123' in jiraTarget");
 
 		verify(jiraTarget).getIssueByKey(targetIssue.getKey());
 	}
@@ -151,12 +148,9 @@ public class JiraIssueWebLinkerTest {
 		remoteLinks.add(new JiraRemoteLink(JIRA_TARGET_URL + "/browse/" + targetIssue2.getKey()));
 		when(jiraSource.getRemoteLinks(sourceIssue.getKey(), UPDATED)).thenReturn(remoteLinks);
 
-		try {
-			resolver.resolveIssue(sourceIssue, jiraSource, jiraTarget);
-			fail("JiraSyncException expected");
-		} catch (JiraSyncException e) {
-			assertThat(e).hasMessage("Illegal number of linked issues for JiraIssue[id=1,key=SOURCE-123]: [TARGET-123, TARGET-456]");
-		}
+		assertThatExceptionOfType(JiraSyncException.class)
+			.isThrownBy(() -> resolver.resolveIssue(sourceIssue, jiraSource, jiraTarget))
+			.withMessage("Illegal number of linked issues for JiraIssue[id=1,key=SOURCE-123]: [TARGET-123, TARGET-456]");
 	}
 
 }

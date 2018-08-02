@@ -34,12 +34,9 @@ public class MapUtilsTest {
 		sourceMap.put("key2", "value");
 		sourceMap.put("key3", "value");
 
-		try {
-			MapUtils.calculateInverseMapping(sourceMap);
-			fail("IllegalArgumentException expected");
-		} catch (IllegalArgumentException e) {
-			assertThat(e).hasMessage("Non-unique mapping. Duplicate values for key 'key3' and 'key2'");
-		}
+		assertThatExceptionOfType(IllegalArgumentException.class)
+			.isThrownBy(() -> MapUtils.calculateInverseMapping(sourceMap))
+			.withMessage("Non-unique mapping. Duplicate values for key 'key3' and 'key2'");
 	}
 
 }

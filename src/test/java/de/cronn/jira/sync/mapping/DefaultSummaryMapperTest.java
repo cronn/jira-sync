@@ -47,24 +47,18 @@ public class DefaultSummaryMapperTest {
 	public void testMapSummary_NullKey() throws Exception {
 		JiraIssue issue = new JiraIssue("0", null, "Some Summary", OPEN);
 
-		try {
-			summaryMapper.mapSummary(issue);
-			fail("IllegalArgumentException expected");
-		} catch (IllegalArgumentException e) {
-			assertThat(e).hasMessage("key must not be null");
-		}
+		assertThatExceptionOfType(IllegalArgumentException.class)
+			.isThrownBy(() -> summaryMapper.mapSummary(issue))
+			.withMessage("key must not be null");
 	}
 
 	@Test
 	public void testMapSummary_NullSummary() throws Exception {
 		JiraIssue issue = new JiraIssue("0", "TEST-123", null, OPEN);
 
-		try {
-			summaryMapper.mapSummary(issue);
-			fail("IllegalArgumentException expected");
-		} catch (IllegalArgumentException e) {
-			assertThat(e).hasMessage("summary must not be null");
-		}
+		assertThatExceptionOfType(IllegalArgumentException.class)
+			.isThrownBy(() -> summaryMapper.mapSummary(issue))
+			.withMessage("summary must not be null");
 	}
 
 }

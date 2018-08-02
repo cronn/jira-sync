@@ -62,12 +62,9 @@ public class DefaultDescriptionMapperTest {
 	public void testMapSourceDescription_NullFields() throws Exception {
 		JiraIssue jiraIssue = new JiraIssue();
 
-		try {
-			descriptionMapper.mapSourceDescription(jiraIssue, jiraSource);
-			fail("IllegalArgumentException expected");
-		} catch (IllegalArgumentException e) {
-			assertThat(e.getMessage()).isEqualTo("fields must not be null");
-		}
+		assertThatExceptionOfType(IllegalArgumentException.class)
+			.isThrownBy(() -> descriptionMapper.mapSourceDescription(jiraIssue, jiraSource))
+			.withMessage("fields must not be null");
 	}
 
 	@Test

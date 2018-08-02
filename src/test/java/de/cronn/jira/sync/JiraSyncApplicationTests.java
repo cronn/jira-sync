@@ -413,12 +413,9 @@ public class JiraSyncApplicationTests {
 
 	@Test
 	public void testErrorHandling() throws Exception {
-		try {
-			jiraSource.createIssue(new JiraIssue());
-			fail("JiraSyncException expected");
-		} catch (JiraSyncException e) {
-			assertThat(e).hasMessage("[https://localhost:" + port + "/SOURCE/] Bad Request: fields are missing");
-		}
+		assertThatExceptionOfType(JiraSyncException.class)
+			.isThrownBy(() -> jiraSource.createIssue(new JiraIssue()))
+			.withMessage("[https://localhost:" + port + "/SOURCE/] Bad Request: fields are missing");
 	}
 
 	@Test
