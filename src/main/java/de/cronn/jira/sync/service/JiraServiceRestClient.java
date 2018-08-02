@@ -307,7 +307,7 @@ public class JiraServiceRestClient implements JiraService {
 				return field.getId();
 			}
 		}
-		throw new JiraSyncException("Field " + fieldName + " not found in " + this);
+		throw new JiraSyncException("Field '" + fieldName + "' not found in " + this);
 	}
 
 	private <T> T getForObject(String url, Class<T> responseType, Object... urlVariables) {
