@@ -447,20 +447,24 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		ZonedDateTime latestStatusTransitionRight = getLatestStatusTransitionDate(rightIssue, rightJiraService);
 
 		if (latestStatusTransitionLeft == null) {
-			log.debug("Status transition of {} is not newer than {}. Skipping {}.", leftIssue, rightIssue, transition);
+			log.debug("Status transition of {} at {} is not newer than {} at {}. Skipping {}.", leftIssue,
+				latestStatusTransitionLeft, rightIssue, latestStatusTransitionRight, transition);
 			return false;
 		}
 
 		if (latestStatusTransitionRight == null) {
-			log.debug("Status transition of {} is newer than {}. Not skipping {}.", leftIssue, rightIssue, transition);
+			log.debug("Status transition of {} at {} is newer than {} at {}. Not skipping {}.", leftIssue,
+				latestStatusTransitionLeft, rightIssue, latestStatusTransitionRight, transition);
 			return true;
 		}
 
 		if (latestStatusTransitionLeft.isAfter(latestStatusTransitionRight)) {
-			log.debug("Status transition of {} is newer than {}. Not skipping {}.", leftIssue, rightIssue, transition);
+			log.debug("Status transition of {} at {} is newer than {} at {}. Not skipping {}.", leftIssue,
+				latestStatusTransitionLeft, rightIssue, latestStatusTransitionRight, transition);
 			return true;
 		} else {
-			log.debug("Status transition of {} is not newer than {}. Skipping {}.", leftIssue, rightIssue, transition);
+			log.debug("Status transition of {} at {} is not newer than {} at {}. Skipping {}.", leftIssue,
+				latestStatusTransitionLeft, rightIssue, latestStatusTransitionRight, transition);
 			return false;
 		}
 	}
