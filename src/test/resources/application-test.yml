@@ -73,6 +73,7 @@ de.cronn.jira.sync.projects[PRJ_ONE]:
         sourceStatusToSet: Resolved
         copyResolutionToSource: true
         copyFixVersionsToSource: true
+        onlyIfStatusTransitionNewerIn: TARGET
         customFieldsToCopyFromTargetToSource:
           Fixed in version: Fixed in software version
 

@@ -1,7 +1,7 @@
 package de.cronn.jira.sync;
 
 import static de.cronn.jira.sync.SetUtils.*;
-import static de.cronn.jira.sync.dummy.JiraDummyService.Context.*;
+import static de.cronn.jira.sync.domain.Context.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.net.URL;
@@ -32,6 +32,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.filter.CommonsRequestLoggingFilter;
 
 import de.cronn.jira.sync.config.JiraSyncConfig;
+import de.cronn.jira.sync.domain.Context;
 import de.cronn.jira.sync.domain.JiraComment;
 import de.cronn.jira.sync.domain.JiraField;
 import de.cronn.jira.sync.domain.JiraFieldSchema;
@@ -49,7 +50,6 @@ import de.cronn.jira.sync.domain.JiraTransition;
 import de.cronn.jira.sync.domain.JiraUser;
 import de.cronn.jira.sync.domain.JiraVersion;
 import de.cronn.jira.sync.dummy.JiraDummyService;
-import de.cronn.jira.sync.dummy.JiraDummyService.Context;
 import de.cronn.jira.sync.service.JiraService;
 import de.cronn.jira.sync.strategy.SyncResult;
 
@@ -1097,6 +1097,28 @@ public class JiraSyncApplicationTests {
 		Map<String, Object> fields = jiraSource.getAllowedValuesForCustomField(SOURCE_PROJECT.getKey(), SOURCE_CUSTOM_FIELD_FIXED_IN_VERSION.getId());
 		assertThat(fields).isNotNull();
 		assertThat(fields.values().size()).isGreaterThanOrEqualTo(1);
+	}
+
+	@Test
+	public void testDoNotResolveTicketInSourceWhenReopened() throws Exception {
+		createIssueInSource();
+
+		syncAndCheckResult();
+
+		JiraIssue targetIssue = getSingleIssue(TARGET);
+		transitionIssue(TARGET, targetIssue, TARGET_STATUS_CLOSED);
+
+		syncAndCheckResult();
+
+		JiraIssue sourceIssue = getSingleIssue(SOURCE);
+		assertThat(sourceIssue.getFields().getStatus()).isEqualTo(SOURCE_STATUS_RESOLVED);
+
+		clock.windForwardSeconds(60);
+
+		transitionIssue(SOURCE, sourceIssue, SOURCE_STATUS_REOPENED);
+		transitionIssue(SOURCE, sourceIssue, SOURCE_STATUS_IN_PROGRESS);
+
+		syncAndAssertNoChanges();
 	}
 
 }

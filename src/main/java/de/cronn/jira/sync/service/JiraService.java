@@ -40,6 +40,8 @@ public interface JiraService extends AutoCloseable {
 	JiraUser getUserByName(String username);
 
 	JiraIssue getIssueByKey(String key);
+	
+	JiraIssue getIssueByKeyWithChangelog(String issueKey);
 
 	Map<String, Object> getAllowedValuesForCustomField(String projectKey, String customFieldId);
 

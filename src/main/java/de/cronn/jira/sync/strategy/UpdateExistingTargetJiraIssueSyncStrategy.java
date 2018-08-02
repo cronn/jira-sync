@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -26,12 +27,15 @@ import org.springframework.util.CollectionUtils;
 import de.cronn.jira.sync.JiraSyncException;
 import de.cronn.jira.sync.config.JiraProjectSync;
 import de.cronn.jira.sync.config.TransitionConfig;
+import de.cronn.jira.sync.domain.Context;
+import de.cronn.jira.sync.domain.JiraChangeLog;
 import de.cronn.jira.sync.domain.JiraComment;
 import de.cronn.jira.sync.domain.JiraComments;
 import de.cronn.jira.sync.domain.JiraField;
 import de.cronn.jira.sync.domain.JiraIdResource;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueFields;
+import de.cronn.jira.sync.domain.JiraIssueHistoryEntry;
 import de.cronn.jira.sync.domain.JiraIssueStatus;
 import de.cronn.jira.sync.domain.JiraIssueUpdate;
 import de.cronn.jira.sync.domain.JiraPriority;
@@ -396,6 +400,8 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 			.filter(transitionConfig -> transitionConfig.getTargetStatusIn().contains(targetIssueStatus))
 			.filter(transitionConfig -> filterOnlyIfAssignedInTarget(transitionConfig, targetIssue))
 			.filter(transitionConfig -> filterIssueWasMovedBetweenProjects(transitionConfig, sourceIssue, targetIssue, jiraTarget, jiraSource))
+			.filter(transitionConfig -> filterOnlyIfStatusTransitionNewerInSource(transitionConfig, sourceIssue, targetIssue, jiraTarget, jiraSource))
+			.filter(transitionConfig -> filterOnlyIfStatusTransitionNewerInTarget(transitionConfig, sourceIssue, targetIssue, jiraTarget, jiraSource))
 			.collect(Collectors.toList());
 
 		if (transitionConfigs.isEmpty()) {
@@ -412,6 +418,61 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		} else {
 			throw new JiraSyncException("Illegal number of matching transitions: " + transitionConfigs);
 		}
+	}
+
+	private boolean filterOnlyIfStatusTransitionNewerInTarget(TransitionConfig transitionConfig, JiraIssue sourceIssue,
+		JiraIssue targetIssue, JiraService jiraTarget, JiraService jiraSource) {
+
+		if (transitionConfig.getOnlyIfStatusTransitionNewerIn() != Context.TARGET) {
+			return true;
+		}
+
+		return isLeftStatusTransitionNewer(targetIssue, sourceIssue, jiraTarget, jiraSource, transitionConfig);
+	}
+
+	private boolean filterOnlyIfStatusTransitionNewerInSource(TransitionConfig transitionConfig, JiraIssue sourceIssue,
+		JiraIssue targetIssue, JiraService jiraTarget, JiraService jiraSource) {
+
+		if (transitionConfig.getOnlyIfStatusTransitionNewerIn() != Context.SOURCE) {
+			return true;
+		}
+
+		return isLeftStatusTransitionNewer(sourceIssue, targetIssue, jiraSource, jiraTarget, transitionConfig);
+	}
+
+	private boolean isLeftStatusTransitionNewer(JiraIssue leftIssue, JiraIssue rightIssue, JiraService leftJiraService,
+		JiraService rightJiraService, TransitionConfig transition) {
+		ZonedDateTime latestStatusTransitionLeft = getLatestStatusTransitionDate(leftIssue, leftJiraService);
+
+		ZonedDateTime latestStatusTransitionRight = getLatestStatusTransitionDate(rightIssue, rightJiraService);
+
+		if (latestStatusTransitionLeft == null) {
+			log.debug("Status transition of {} is not newer than {}. Skipping {}.", leftIssue, rightIssue, transition);
+			return false;
+		}
+
+		if (latestStatusTransitionRight == null) {
+			log.debug("Status transition of {} is newer than {}. Not skipping {}.", leftIssue, rightIssue, transition);
+			return true;
+		}
+
+		if (latestStatusTransitionLeft.isAfter(latestStatusTransitionRight)) {
+			log.debug("Status transition of {} is newer than {}. Not skipping {}.", leftIssue, rightIssue, transition);
+			return true;
+		} else {
+			log.debug("Status transition of {} is not newer than {}. Skipping {}.", leftIssue, rightIssue, transition);
+			return false;
+		}
+	}
+
+	private ZonedDateTime getLatestStatusTransitionDate(JiraIssue issue, JiraService jiraService) {
+		JiraIssue issueWithChangelog = jiraService.getIssueByKeyWithChangelog(issue.getKey());
+		ZonedDateTime latestStatusTransitionDate = Optional.ofNullable(issueWithChangelog.getChangelog())
+			.map(JiraChangeLog::getLatestStatusTransition)
+			.map(JiraIssueHistoryEntry::getCreated)
+			.orElse(null);
+
+		return latestStatusTransitionDate;
 	}
 
 	private boolean filterOnlyIfAssignedInTarget(TransitionConfig transitionConfig, JiraIssue targetIssue) {

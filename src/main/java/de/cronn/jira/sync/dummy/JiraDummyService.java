@@ -32,6 +32,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import de.cronn.jira.sync.domain.Context;
 import de.cronn.jira.sync.domain.JiraComment;
 import de.cronn.jira.sync.domain.JiraComments;
 import de.cronn.jira.sync.domain.JiraField;
@@ -88,10 +89,6 @@ public class JiraDummyService {
 
 	public void reset() {
 		data.clear();
-	}
-
-	public enum Context {
-		SOURCE, TARGET;
 	}
 
 	public void setBaseUrl(Context context, String baseUrl) {

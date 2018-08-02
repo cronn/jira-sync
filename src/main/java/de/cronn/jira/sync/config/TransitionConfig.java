@@ -8,6 +8,8 @@ import java.util.Set;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
+import de.cronn.jira.sync.domain.Context;
+
 public class TransitionConfig {
 
 	private Set<String> sourceStatusIn = new LinkedHashSet<>();
@@ -19,6 +21,8 @@ public class TransitionConfig {
 	private boolean onlyIfAssignedInTarget = false;
 	private boolean assignToMyselfInSource = false;
 	private boolean triggerIfIssueWasMovedBetweenProjects = false;
+	private Context onlyIfStatusTransitionNewerIn = null;
+
 	private Map<String, String> customFieldsToCopyFromTargetToSource = new LinkedHashMap<>();
 
 	public TransitionConfig() {
@@ -102,6 +106,14 @@ public class TransitionConfig {
 
 	public Map<String, String> getCustomFieldsToCopyFromTargetToSource() {
 		return customFieldsToCopyFromTargetToSource;
+	}
+	
+	public Context getOnlyIfStatusTransitionNewerIn() {
+		return onlyIfStatusTransitionNewerIn;
+	}
+
+	public void setOnlyIfStatusTransitionNewerIn(Context onlyIfStatusTransitionNewerIn) {
+		this.onlyIfStatusTransitionNewerIn = onlyIfStatusTransitionNewerIn;
 	}
 
 	@Override

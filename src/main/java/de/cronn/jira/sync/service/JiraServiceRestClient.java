@@ -204,6 +204,12 @@ public class JiraServiceRestClient implements JiraService {
 	}
 
 	@Override
+	public JiraIssue getIssueByKeyWithChangelog(String issueKey) {
+		validateIssueKey(issueKey);
+		return getForObject("/rest/api/2/issue/{key}?expand=changelog", JiraIssue.class, issueKey);
+	}
+
+	@Override
 	@Cacheable(value = CACHE_NAME_FIELD_ALLOWED_VALUES, key = "{ #root.target.url, #projectKey, #customFieldId }")
 	@SuppressWarnings("unchecked")
 	public Map<String, Object> getAllowedValuesForCustomField(String projectKey, String customFieldId) {
