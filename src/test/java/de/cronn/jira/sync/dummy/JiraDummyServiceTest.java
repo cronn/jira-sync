@@ -92,7 +92,7 @@ public class JiraDummyServiceTest {
 		jiraDummyService.transitionIssue(TARGET, issue.getKey(), jiraIssueUpdate);
 		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), CHANGELOG);
 
-		assertThat(issue.getFields().getStatus().getName()).isEqualTo(STATUS_IN_PROGRESS.getName());
+		assertThat(issue.getFields().getStatus()).isEqualTo(STATUS_IN_PROGRESS);
 		assertLastHistoryEntryIs(issue, WellKnownJiraField.STATUS, STATUS_OPEN.getName(), STATUS_IN_PROGRESS.getName());
 	}
 

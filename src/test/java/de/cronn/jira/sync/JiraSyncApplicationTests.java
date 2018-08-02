@@ -514,7 +514,7 @@ public class JiraSyncApplicationTests {
 
 		// then
 		JiraIssue updatedSourceIssue = getSingleIssue(SOURCE);
-		assertThat(updatedSourceIssue.getFields().getStatus().getName()).isEqualTo(SOURCE_STATUS_RESOLVED.getName());
+		assertThat(updatedSourceIssue.getFields().getStatus()).isEqualTo(SOURCE_STATUS_RESOLVED);
 		assertThat(updatedSourceIssue.getFields().getResolution().getName()).isEqualTo(SOURCE_RESOLUTION_FIXED.getName());
 		assertThat(updatedSourceIssue.getFields().getFixVersions()).extracting(JiraVersion::getName).containsExactly(SOURCE_VERSION_10.getName());
 
@@ -549,7 +549,7 @@ public class JiraSyncApplicationTests {
 
 		// then
 		JiraIssue updatedSourceIssue = getSingleIssue(SOURCE);
-		assertThat(updatedSourceIssue.getFields().getStatus().getName()).isEqualTo(SOURCE_STATUS_RESOLVED.getName());
+		assertThat(updatedSourceIssue.getFields().getStatus()).isEqualTo(SOURCE_STATUS_RESOLVED);
 		Map<String, Object> expectedCustomFieldValue = idValueMap(10, "v1");
 		assertThat(updatedSourceIssue.getFields().getOther()).containsExactly(entry(SOURCE_CUSTOM_FIELD_FIXED_IN_VERSION.getId(), expectedCustomFieldValue));
 
@@ -579,7 +579,7 @@ public class JiraSyncApplicationTests {
 
 		// then
 		JiraIssue updatedSourceIssue = getSingleIssue(SOURCE);
-		assertThat(updatedSourceIssue.getFields().getStatus().getName()).isEqualTo(SOURCE_STATUS_OPEN.getName());
+		assertThat(updatedSourceIssue.getFields().getStatus()).isEqualTo(SOURCE_STATUS_OPEN);
 
 		syncAndAssertNoChanges();
 	}
@@ -618,7 +618,7 @@ public class JiraSyncApplicationTests {
 
 		// then
 		JiraIssue updatedSourceIssue = getSingleIssue(SOURCE);
-		assertThat(updatedSourceIssue.getFields().getStatus().getName()).isEqualTo(SOURCE_STATUS_RESOLVED.getName());
+		assertThat(updatedSourceIssue.getFields().getStatus()).isEqualTo(SOURCE_STATUS_RESOLVED);
 
 		syncAndAssertNoChanges();
 	}
@@ -655,7 +655,7 @@ public class JiraSyncApplicationTests {
 
 		JiraIssue currentTargetIssue = getSingleIssue(TARGET);
 
-		assertThat(currentTargetIssue.getFields().getStatus().getName()).isEqualTo(SOURCE_STATUS_OPEN.getName());
+		assertThat(currentTargetIssue.getFields().getStatus()).isEqualTo(TARGET_STATUS_OPEN);
 
 		// when
 
@@ -667,7 +667,7 @@ public class JiraSyncApplicationTests {
 		// then
 		JiraIssue updatedSourceIssue = jiraDummyService.getIssueByKey(SOURCE, createdSourceIssue.getKey());
 
-		assertThat(updatedSourceIssue.getFields().getStatus().getName()).isEqualTo(SOURCE_STATUS_IN_PROGRESS.getName());
+		assertThat(updatedSourceIssue.getFields().getStatus()).isEqualTo(SOURCE_STATUS_IN_PROGRESS);
 		assertThat(updatedSourceIssue.getFields().getAssignee().getKey()).isEqualTo("myself");
 
 		syncAndAssertNoChanges();
@@ -693,7 +693,7 @@ public class JiraSyncApplicationTests {
 		// then
 		JiraIssue updatedTargetIssue = getSingleIssue(TARGET);
 
-		assertThat(updatedTargetIssue.getFields().getStatus().getName()).isEqualTo(SOURCE_STATUS_REOPENED.getName());
+		assertThat(updatedTargetIssue.getFields().getStatus()).isEqualTo(TARGET_STATUS_REOPENED);
 
 		syncAndAssertNoChanges();
 	}
