@@ -1,9 +1,8 @@
 package de.cronn.jira.sync.mapping;
 
+import static de.cronn.jira.sync.SetUtils.*;
 import static org.assertj.core.api.Assertions.*;
 
-import java.util.Arrays;
-import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.junit.Before;
@@ -26,7 +25,7 @@ public class DefaultLabelMapperTest {
 		// given
 		JiraIssue jiraIssue = new JiraIssue();
 		jiraIssue.setFields(new JiraIssueFields());
-		jiraIssue.getFields().setLabels(new LinkedHashSet<>(Arrays.asList("label1", "label2", "label3")));
+		jiraIssue.getFields().setLabels(newLinkedHashSet("label1", "label2", "label3"));
 
 		// when
 		Set<String> labels = labelMapper.mapLabels(jiraIssue);

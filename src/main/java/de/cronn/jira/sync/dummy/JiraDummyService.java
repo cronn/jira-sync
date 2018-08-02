@@ -32,6 +32,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import de.cronn.jira.sync.SetUtils;
 import de.cronn.jira.sync.domain.JiraComment;
 import de.cronn.jira.sync.domain.JiraComments;
 import de.cronn.jira.sync.domain.JiraField;
@@ -652,11 +653,11 @@ public class JiraDummyService {
 		void add(JiraIssueHistoryEntry historyEntry, PropertyDescriptor propertyDescriptor, T oldValue, T newValue);
 	}
 
-	private static class VersionChangeHistoryItemWriter implements HistoryItemWriter<Set<JiraVersion>> {
+	private static class VersionChangeHistoryItemWriter implements HistoryItemWriter<Set<? extends JiraVersion>> {
 		@Override
-		public void add(JiraIssueHistoryEntry historyEntry, PropertyDescriptor propertyDescriptor, Set<JiraVersion> oldValue, Set<JiraVersion> newValue) {
-			Set<JiraVersion> removedVersions = difference(oldValue, newValue);
-			Set<JiraVersion> addedVersions = difference(newValue, oldValue);
+		public void add(JiraIssueHistoryEntry historyEntry, PropertyDescriptor propertyDescriptor, Set<? extends JiraVersion> oldValue, Set<? extends JiraVersion> newValue) {
+			Set<? extends JiraVersion> removedVersions = SetUtils.difference(oldValue, newValue);
+			Set<? extends JiraVersion> addedVersions = SetUtils.difference(newValue, oldValue);
 
 			for (JiraVersion value : removedVersions) {
 				historyEntry.addItem(new JiraIssueHistoryItem(propertyDescriptor.getName())
@@ -671,18 +672,6 @@ public class JiraDummyService {
 					.withToString(value.getName())
 				);
 			}
-		}
-
-		private static Set<JiraVersion> difference(Set<JiraVersion> universe, Set<JiraVersion> exclusions) {
-			if (universe == null) {
-				return Collections.emptySet();
-			}
-			if (exclusions == null) {
-				return universe;
-			}
-			return universe.stream()
-				.filter(v -> !exclusions.contains(v))
-				.collect(Collectors.toCollection(LinkedHashSet::new));
 		}
 
 	}

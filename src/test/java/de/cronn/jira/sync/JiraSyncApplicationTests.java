@@ -1,5 +1,6 @@
 package de.cronn.jira.sync;
 
+import static de.cronn.jira.sync.SetUtils.*;
 import static de.cronn.jira.sync.dummy.JiraDummyService.Context.*;
 import static org.assertj.core.api.Assertions.*;
 
@@ -9,7 +10,6 @@ import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -318,9 +318,9 @@ public class JiraSyncApplicationTests {
 		sourceIssue.getFields().setProject(SOURCE_PROJECT);
 		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_BUG);
 		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
-		sourceIssue.getFields().setLabels(new LinkedHashSet<>(Arrays.asList("label1", "label2")));
-		sourceIssue.getFields().setVersions(new LinkedHashSet<>(Arrays.asList(SOURCE_VERSION_10, SOURCE_VERSION_11, SOURCE_VERSION_UNDEFINED)));
-		sourceIssue.getFields().setFixVersions(Collections.singleton(SOURCE_VERSION_11));
+		sourceIssue.getFields().setLabels(newLinkedHashSet("label1", "label2"));
+		sourceIssue.getFields().setVersions(newLinkedHashSet(SOURCE_VERSION_10, SOURCE_VERSION_11, SOURCE_VERSION_UNDEFINED));
+		sourceIssue.getFields().setFixVersions(newLinkedHashSet(SOURCE_VERSION_11));
 		JiraIssue createdSourceIssue = jiraSource.createIssue(sourceIssue);
 
 		clock.windForwardSeconds(30);
@@ -365,7 +365,7 @@ public class JiraSyncApplicationTests {
 		sourceIssue.getFields().setProject(SOURCE_PROJECT);
 		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_BUG);
 		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_UNMAPPED);
-		sourceIssue.getFields().setVersions(Collections.singleton(SOURCE_VERSION_UNMAPPED));
+		sourceIssue.getFields().setVersions(newLinkedHashSet(SOURCE_VERSION_UNMAPPED));
 		jiraSource.createIssue(sourceIssue);
 
 		// when
@@ -510,7 +510,7 @@ public class JiraSyncApplicationTests {
 		JiraIssueUpdate update = new JiraIssueUpdate();
 		update.setTransition(transition);
 		update.getOrCreateFields().setResolution(TARGET_RESOLUTION_DONE);
-		update.getOrCreateFields().setFixVersions(Collections.singleton(TARGET_VERSION_10));
+		update.getOrCreateFields().setFixVersions(newLinkedHashSet(TARGET_VERSION_10));
 		jiraDummyService.transitionIssue(TARGET, targetIssue.getKey(), update);
 
 		syncAndCheckResult();
@@ -544,7 +544,7 @@ public class JiraSyncApplicationTests {
 		JiraIssueUpdate update = new JiraIssueUpdate();
 		update.setTransition(transition);
 		update.getOrCreateFields().setResolution(TARGET_RESOLUTION_DONE);
-		update.getOrCreateFields().setFixVersions(Collections.singleton(TARGET_VERSION_10));
+		update.getOrCreateFields().setFixVersions(newLinkedHashSet(TARGET_VERSION_10));
 		update.getOrCreateFields().setOther(TARGET_CUSTOM_FIELD_FIXED_IN_VERSION.getId(), Collections.singletonMap("value", "1.0"));
 		jiraDummyService.transitionIssue(TARGET, targetIssue.getKey(), update);
 
@@ -574,7 +574,7 @@ public class JiraSyncApplicationTests {
 		JiraIssueUpdate update = new JiraIssueUpdate();
 		update.setTransition(transition);
 		update.getOrCreateFields().setResolution(TARGET_RESOLUTION_DONE);
-		update.getOrCreateFields().setFixVersions(Collections.singleton(TARGET_VERSION_10));
+		update.getOrCreateFields().setFixVersions(newLinkedHashSet(TARGET_VERSION_10));
 		jiraDummyService.transitionIssue(TARGET, targetIssue.getKey(), update);
 
 		// when
@@ -611,7 +611,7 @@ public class JiraSyncApplicationTests {
 		JiraIssueUpdate update = new JiraIssueUpdate();
 		update.setTransition(transition);
 		update.getOrCreateFields().setResolution(TARGET_RESOLUTION_DONE);
-		update.getOrCreateFields().setFixVersions(Collections.singleton(TARGET_VERSION_10));
+		update.getOrCreateFields().setFixVersions(newLinkedHashSet(TARGET_VERSION_10));
 		jiraDummyService.transitionIssue(TARGET, targetIssue.getKey(), update);
 
 		syncConfig.getProjects().get("PRJ_ONE").getTransition("ResolveWhenClosed").setTriggerIfIssueWasMovedBetweenProjects(true);
@@ -1073,7 +1073,7 @@ public class JiraSyncApplicationTests {
 		JiraIssueUpdate update = new JiraIssueUpdate();
 		update.setTransition(transition);
 		update.getOrCreateFields().setResolution(TARGET_RESOLUTION_DONE);
-		update.getOrCreateFields().setFixVersions(Collections.singleton(TARGET_VERSION_10));
+		update.getOrCreateFields().setFixVersions(newLinkedHashSet(TARGET_VERSION_10));
 		jiraDummyService.transitionIssue(TARGET, targetIssue.getKey(), update);
 
 		jiraSource.updateComment(createdSourceIssue.getKey(), comment.getId(), "changed comment in source");
