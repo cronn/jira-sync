@@ -16,7 +16,7 @@ public class JiraVersionTest {
 	}
 
 	@Test
-	public void testEqualsHashCode() {
+	public void testEqualsAndHashCodeContract() {
 		EqualsVerifier.forClass(JiraVersion.class)
 			.withIgnoredFields("self")
 			.suppress(Warning.NONFINAL_FIELDS)

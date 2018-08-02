@@ -10,7 +10,7 @@ import nl.jqno.equalsverifier.Warning;
 public class JiraIssueStatusTest {
 
 	@Test
-	public void testEqualsAndHashCode() throws Exception {
+	public void testEqualsAndHashCodeContract() throws Exception {
 		EqualsVerifier.forClass(JiraIssueStatus.class)
 			.suppress(Warning.NONFINAL_FIELDS)
 			.withIgnoredFields("self")
