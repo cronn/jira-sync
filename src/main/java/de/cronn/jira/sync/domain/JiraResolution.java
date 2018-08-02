@@ -1,5 +1,7 @@
 package de.cronn.jira.sync.domain;
 
+import java.util.Objects;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
@@ -32,5 +34,23 @@ public class JiraResolution extends JiraIdResource implements JiraNamedBean {
 			.append("id", getId())
 			.append("name", name)
 			.toString();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		JiraResolution that = (JiraResolution) o;
+		return Objects.equals(getId(), that.getId())
+			&& Objects.equals(getName(), that.getName());
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(getId(), getName());
 	}
 }

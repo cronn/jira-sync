@@ -515,8 +515,8 @@ public class JiraSyncApplicationTests {
 		// then
 		JiraIssue updatedSourceIssue = getSingleIssue(SOURCE);
 		assertThat(updatedSourceIssue.getFields().getStatus()).isEqualTo(SOURCE_STATUS_RESOLVED);
-		assertThat(updatedSourceIssue.getFields().getResolution().getName()).isEqualTo(SOURCE_RESOLUTION_FIXED.getName());
-		assertThat(updatedSourceIssue.getFields().getFixVersions()).extracting(JiraVersion::getName).containsExactly(SOURCE_VERSION_10.getName());
+		assertThat(updatedSourceIssue.getFields().getResolution()).isEqualTo(SOURCE_RESOLUTION_FIXED);
+		assertThat(updatedSourceIssue.getFields().getFixVersions()).containsExactly(SOURCE_VERSION_10);
 
 		syncAndAssertNoChanges();
 	}
