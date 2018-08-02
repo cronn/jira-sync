@@ -1,7 +1,8 @@
 package de.cronn.jira.sync.domain;
 
+import java.util.Objects;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
@@ -50,15 +51,12 @@ public class JiraVersion extends JiraIdResource implements JiraNamedBean {
 
 		return new EqualsBuilder()
 			.append(getId(), that.getId())
-			.append(name, that.name)
+			.append(getName(), that.getName())
 			.isEquals();
 	}
 
 	@Override
 	public final int hashCode() {
-		return new HashCodeBuilder(17, 37)
-			.append(getId())
-			.append(name)
-			.toHashCode();
+		return Objects.hash(getId(), getName());
 	}
 }
