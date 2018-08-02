@@ -49,8 +49,8 @@ public class JiraChangeLog implements Serializable {
 	public JiraIssueHistoryEntry getLatestStatusTransition() {
 		return history.stream()
 			.filter(historyEntry -> historyEntry.hasItemWithField(WellKnownJiraField.STATUS))
-			.sorted(Comparator.comparing(JiraIssueHistoryEntry::getCreated).reversed())
-			.findFirst().orElse(null);
+			.max(Comparator.comparing(JiraIssueHistoryEntry::getCreated))
+			.orElse(null);
 	}
 
 }
