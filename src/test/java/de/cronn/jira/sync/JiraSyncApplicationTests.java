@@ -27,7 +27,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpMethod;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.filter.CommonsRequestLoggingFilter;
 
@@ -55,7 +55,7 @@ import de.cronn.jira.sync.strategy.SyncResult;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
-@TestPropertySource("/test.properties")
+@ActiveProfiles("test")
 public class JiraSyncApplicationTests {
 
 	private static final JiraProject SOURCE_PROJECT = new JiraProject("1", "PROJECT_ONE");

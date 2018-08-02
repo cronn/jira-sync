@@ -1,0 +1,123 @@
+server:
+  ssl:
+    key-store: classpath:keystore.jks
+    key-store-password: secret
+    key-password: another-secret
+
+
+de.cronn.jira.sync:
+
+  autostart: false
+
+  cache:
+    persistent: true
+
+  source:
+    url: https://jira-source
+    username: jira-sync
+    password: secret in source
+    sslTrustStore: classpath:truststore.jks
+    sslTrustStorePassphrase: secret
+
+  target:
+    url: https://jira-target
+    username: jira-sync
+    password: secret in target
+    sslTrustStore: classpath:truststore.jks
+    sslTrustStorePassphrase: secret
+
+    basicAuth:
+      username: basic-auth-user
+      password: secret
+
+  fieldMapping:
+    Found in version: Found in software version
+    Fixed in version: Fixed in software version
+
+  priorityMapping:
+    Highest: Blocker
+    High: Critical
+    Medium: Major
+    Low: Minor
+    Lowest: Trivial
+
+  issueTypeMapping:
+    Bug: Bug
+    Improvement: New Feature
+    New Feature: New Feature
+
+  resolutionMapping:
+    Fixed: Fixed
+    Won't Fix: Won't Fix
+    Duplicate: Duplicate
+    Incomplete: Incomplete
+    Cannot Reproduce: Cannot Reproduce
+    Done: Fixed
+    Won't Do: Rejected
+
+
+de.cronn.jira.sync.projects[PRJ_ONE]:
+    sourceProject: PROJECT_ONE
+    targetProject: PRJ_ONE
+    sourceFilterId: 12345
+    remoteLinkIconInSource: ${de.cronn.jira.sync.source.url}/favicon.ico
+    remoteLinkIconInTarget: ${de.cronn.jira.sync.target.url}/favicon.ico
+
+    labelsToKeepInTarget: internal
+    copyCommentsToTarget: true
+
+    transitions:
+      ResolveWhenClosed:
+        sourceStatusIn: Open,In Progress
+        targetStatusIn: Closed
+        sourceStatusToSet: Resolved
+        copyResolutionToSource: true
+        copyFixVersionsToSource: true
+        customFieldsToCopyFromTargetToSource:
+          Fixed in version: Fixed in software version
+
+      TakeInProgress:
+        sourceStatusIn: Open
+        targetStatusIn: Open,Blocked,In Progress,In Review
+        sourceStatusToSet: In Progress
+        onlyIfAssignedInTarget: true
+        assignToMyselfInSource: true
+
+      ReopenInTarget:
+        sourceStatusIn: Reopened
+        targetStatusIn: Closed
+        targetStatusToSet: Reopened
+
+    skipUpdateInTargetWhenStatusIn: Resolved,Closed
+
+    targetIssueTypeFallback: Task
+
+    versionMapping:
+      10.0: 10
+      11.0: 11
+      12.0: 12
+    versionsToIgnore: Undefined
+
+    fieldValueMappings:
+      Fixed in version:
+        v1: 1.0
+        v2: 2.0
+        v3: 3.0
+
+
+de.cronn.jira.sync.projects[PRJ_TWO]:
+    sourceProject: SRC_TWO
+    targetProject: TRG_TWO
+    sourceFilterId: 2222
+    remoteLinkIconInSource: ${de.cronn.jira.sync.source.url}/favicon.ico
+    remoteLinkIconInTarget: ${de.cronn.jira.sync.target.url}/favicon.ico
+
+
+logging.level:
+  # org.apache.http: DEBUG
+  org.springframework.web:
+    # client: DEBUG
+    client.RestTemplate: DEBUG
+    filter.CommonsRequestLoggingFilter: DEBUG
+
+# spring.jackson.serialization.indent_output: true
