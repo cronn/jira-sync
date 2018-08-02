@@ -400,8 +400,8 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 			.filter(transitionConfig -> transitionConfig.getTargetStatusIn().contains(targetIssueStatus))
 			.filter(transitionConfig -> filterOnlyIfAssignedInTarget(transitionConfig, targetIssue))
 			.filter(transitionConfig -> filterIssueWasMovedBetweenProjects(transitionConfig, sourceIssue, targetIssue, jiraTarget, jiraSource))
-			.filter(transitionConfig -> filterOnlyIfStatusTransitionNewerInSource(transitionConfig, sourceIssue, targetIssue, jiraTarget, jiraSource))
-			.filter(transitionConfig -> filterOnlyIfStatusTransitionNewerInTarget(transitionConfig, sourceIssue, targetIssue, jiraTarget, jiraSource))
+			.filter(transitionConfig -> filterOnlyIfStatusTransitionNewerInSource(transitionConfig, sourceIssue, targetIssue, jiraSource, jiraTarget))
+			.filter(transitionConfig -> filterOnlyIfStatusTransitionNewerInTarget(transitionConfig, sourceIssue, targetIssue, jiraSource, jiraTarget))
 			.collect(Collectors.toList());
 
 		if (transitionConfigs.isEmpty()) {
@@ -421,7 +421,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 	}
 
 	private boolean filterOnlyIfStatusTransitionNewerInTarget(TransitionConfig transitionConfig, JiraIssue sourceIssue,
-		JiraIssue targetIssue, JiraService jiraTarget, JiraService jiraSource) {
+															  JiraIssue targetIssue, JiraService jiraSource, JiraService jiraTarget) {
 
 		if (transitionConfig.getOnlyIfStatusTransitionNewerIn() != Context.TARGET) {
 			return true;
@@ -431,7 +431,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 	}
 
 	private boolean filterOnlyIfStatusTransitionNewerInSource(TransitionConfig transitionConfig, JiraIssue sourceIssue,
-		JiraIssue targetIssue, JiraService jiraTarget, JiraService jiraSource) {
+															  JiraIssue targetIssue, JiraService jiraSource, JiraService jiraTarget) {
 
 		if (transitionConfig.getOnlyIfStatusTransitionNewerIn() != Context.SOURCE) {
 			return true;
