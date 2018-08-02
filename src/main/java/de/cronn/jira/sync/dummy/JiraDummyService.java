@@ -32,7 +32,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import de.cronn.jira.sync.SetUtils;
 import de.cronn.jira.sync.domain.JiraComment;
 import de.cronn.jira.sync.domain.JiraComments;
 import de.cronn.jira.sync.domain.JiraField;
@@ -60,6 +59,9 @@ import de.cronn.jira.sync.domain.JiraTransition;
 import de.cronn.jira.sync.domain.JiraTransitions;
 import de.cronn.jira.sync.domain.JiraUser;
 import de.cronn.jira.sync.domain.JiraVersion;
+import de.cronn.jira.sync.dummy.changelog.CollectionChangeHistoryItemWriter;
+import de.cronn.jira.sync.dummy.changelog.HistoryItemWriter;
+import de.cronn.jira.sync.dummy.changelog.ToStringHistoryItemWriter;
 import de.cronn.reflection.util.PropertyUtils;
 import de.cronn.reflection.util.TypedPropertyGetter;
 
@@ -569,8 +571,8 @@ public class JiraDummyService {
 		updateField(jiraIssueUpdate, issueInSystem, historyEntry, JiraFieldsBean::getDescription);
 		updateField(jiraIssueUpdate, issueInSystem, historyEntry, JiraFieldsBean::getResolution, JiraNamedBean::getNameOrNull);
 		updateField(jiraIssueUpdate, issueInSystem, historyEntry, JiraFieldsBean::getAssignee, JiraNamedBean::getNameOrNull);
-		updateField(jiraIssueUpdate, issueInSystem, historyEntry, JiraFieldsBean::getFixVersions, new VersionChangeHistoryItemWriter());
-		updateField(jiraIssueUpdate, issueInSystem, historyEntry, JiraFieldsBean::getVersions, new VersionChangeHistoryItemWriter());
+		updateField(jiraIssueUpdate, issueInSystem, historyEntry, JiraFieldsBean::getFixVersions, new CollectionChangeHistoryItemWriter());
+		updateField(jiraIssueUpdate, issueInSystem, historyEntry, JiraFieldsBean::getVersions, new CollectionChangeHistoryItemWriter());
 
 		for (Entry<String, Object> entry : fieldToUpdate.getOther().entrySet()) {
 			issueInSystem.getFields().setOther(entry.getKey(), entry.getValue());
@@ -649,45 +651,4 @@ public class JiraDummyService {
 		refreshUpdatedTimestamp(issue);
 	}
 
-	private interface HistoryItemWriter<T> {
-		void add(JiraIssueHistoryEntry historyEntry, PropertyDescriptor propertyDescriptor, T oldValue, T newValue);
-	}
-
-	private static class VersionChangeHistoryItemWriter implements HistoryItemWriter<Set<? extends JiraVersion>> {
-		@Override
-		public void add(JiraIssueHistoryEntry historyEntry, PropertyDescriptor propertyDescriptor, Set<? extends JiraVersion> oldValue, Set<? extends JiraVersion> newValue) {
-			Set<? extends JiraVersion> removedVersions = SetUtils.difference(oldValue, newValue);
-			Set<? extends JiraVersion> addedVersions = SetUtils.difference(newValue, oldValue);
-
-			for (JiraVersion value : removedVersions) {
-				historyEntry.addItem(new JiraIssueHistoryItem(propertyDescriptor.getName())
-					.withFromString(value.getName())
-					.withToString(null)
-				);
-			}
-
-			for (JiraVersion value : addedVersions) {
-				historyEntry.addItem(new JiraIssueHistoryItem(propertyDescriptor.getName())
-					.withFromString(null)
-					.withToString(value.getName())
-				);
-			}
-		}
-
-	}
-
-	private static class ToStringHistoryItemWriter<T> implements HistoryItemWriter<T> {
-		private final Function<T, String> toStringMapper;
-
-		ToStringHistoryItemWriter(Function<T, String> toStringMapper) {
-			this.toStringMapper = toStringMapper;
-		}
-
-		@Override
-		public void add(JiraIssueHistoryEntry historyEntry, PropertyDescriptor propertyDescriptor, T oldValue, T newValue) {
-			historyEntry.addItem(new JiraIssueHistoryItem(propertyDescriptor.getName())
-				.withFromString(toStringMapper.apply(oldValue))
-				.withToString(toStringMapper.apply(newValue)));
-		}
-	}
 }
