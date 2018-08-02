@@ -68,7 +68,7 @@ de.cronn.jira.sync.projects[PRJ_ONE]:
 
     transitions:
       ResolveWhenClosed:
-        sourceStatusIn: Open,In Progress
+        sourceStatusIn: Open, In Progress
         targetStatusIn: Closed
         sourceStatusToSet: Resolved
         copyResolutionToSource: true
@@ -78,7 +78,7 @@ de.cronn.jira.sync.projects[PRJ_ONE]:
 
       TakeInProgress:
         sourceStatusIn: Open
-        targetStatusIn: Open,Blocked,In Progress,In Review
+        targetStatusIn: Open, Blocked, In Progress, In Review
         sourceStatusToSet: In Progress
         onlyIfAssignedInTarget: true
         assignToMyselfInSource: true
@@ -88,7 +88,7 @@ de.cronn.jira.sync.projects[PRJ_ONE]:
         targetStatusIn: Closed
         targetStatusToSet: Reopened
 
-    skipUpdateInTargetWhenStatusIn: Resolved,Closed
+    skipUpdateInTargetWhenStatusIn: Resolved, Closed
 
     targetIssueTypeFallback: Task
 
@@ -96,13 +96,13 @@ de.cronn.jira.sync.projects[PRJ_ONE]:
       10.0: 10
       11.0: 11
       12.0: 12
+
     versionsToIgnore: Undefined
 
-    fieldValueMappings:
-      Fixed in version:
-        v1: 1.0
-        v2: 2.0
-        v3: 3.0
+    fieldValueMappings[Fixed in version]:
+      v1: 1.0
+      v2: 2.0
+      v3: 3.0
 
 
 de.cronn.jira.sync.projects[PRJ_TWO]:
