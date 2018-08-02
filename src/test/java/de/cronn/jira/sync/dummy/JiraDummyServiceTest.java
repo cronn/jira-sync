@@ -257,8 +257,8 @@ public class JiraDummyServiceTest {
 	}
 
 	private JiraIssueHistoryEntry getLastHistoryEntry(JiraIssue issue) {
-		List<JiraIssueHistoryEntry> history = issue.getChangelog().getHistory();
-		JiraIssueHistoryEntry lastHistoryEntry = history.get(history.size() - 1);
+		List<JiraIssueHistoryEntry> histories = issue.getChangelog().getHistories();
+		JiraIssueHistoryEntry lastHistoryEntry = histories.get(histories.size() - 1);
 		return lastHistoryEntry;
 	}
 

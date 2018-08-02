@@ -13,14 +13,14 @@ public class JiraChangeLog implements Serializable {
 
 	private int total;
 
-	private List<JiraIssueHistoryEntry> history;
+	private List<JiraIssueHistoryEntry> histories;
 
 	public JiraChangeLog() {
-		this.history = new ArrayList<>();
+		this.histories = new ArrayList<>();
 	}
 
-	public JiraChangeLog(List<JiraIssueHistoryEntry> history) {
-		this.history = history;
+	public JiraChangeLog(List<JiraIssueHistoryEntry> histories) {
+		this.histories = histories;
 	}
 
 	public int getTotal() {
@@ -31,23 +31,23 @@ public class JiraChangeLog implements Serializable {
 		this.total = total;
 	}
 
-	public List<JiraIssueHistoryEntry> getHistory() {
-		return history;
+	public List<JiraIssueHistoryEntry> getHistories() {
+		return histories;
 	}
 
-	public void setHistory(List<JiraIssueHistoryEntry> history) {
-		this.history = history;
+	public void setHistories(List<JiraIssueHistoryEntry> histories) {
+		this.histories = histories;
 	}
 
 	@JsonIgnore
 	public JiraChangeLog addHistoryEntry(JiraIssueHistoryEntry historyEntry) {
-		getHistory().add(historyEntry);
+		getHistories().add(historyEntry);
 		return this;
 	}
 
 	@JsonIgnore
 	public JiraIssueHistoryEntry getLatestStatusTransition() {
-		return history.stream()
+		return histories.stream()
 			.filter(historyEntry -> historyEntry.hasItemWithField(WellKnownJiraField.STATUS))
 			.max(Comparator.comparing(JiraIssueHistoryEntry::getCreated))
 			.orElse(null);
