@@ -87,7 +87,6 @@ de.cronn.jira.sync.issueTypeMapping:
   Improvement: New Feature
   New Feature: New Feature
 
-
 # cf. https://jira-source/rest/api/2/resolution and https://jira-target/rest/api/2/resolution
 de.cronn.jira.sync.resolutionMapping:
   Fixed: Fixed
