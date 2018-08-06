@@ -16,12 +16,12 @@ public final class SetUtils {
 		return new LinkedHashSet<>(Arrays.asList(values));
 	}
 
-	public static <T> Set<? extends T> difference(Set<? extends T> universe, Set<? extends T> exclusions) {
+	public static <T> Set<T> difference(Set<? extends T> universe, Set<? extends T> exclusions) {
 		if (universe == null) {
 			return Collections.emptySet();
 		}
 		if (exclusions == null) {
-			return universe;
+			return new LinkedHashSet<>(universe);
 		}
 		return universe.stream()
 			.filter(v -> !exclusions.contains(v))

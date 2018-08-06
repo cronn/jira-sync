@@ -16,8 +16,8 @@ public class CollectionChangeHistoryItemWriter implements HistoryItemWriter<Set<
 	}
 
 	private void add(JiraIssueHistoryEntry historyEntry, String propertyName, Set<? extends JiraNamedBean> oldValue, Set<? extends JiraNamedBean> newValue) {
-		Set<? extends JiraNamedBean> removedValues = SetUtils.difference(oldValue, newValue);
-		Set<? extends JiraNamedBean> addedValues = SetUtils.difference(newValue, oldValue);
+		Set<JiraNamedBean> removedValues = SetUtils.difference(oldValue, newValue);
+		Set<JiraNamedBean> addedValues = SetUtils.difference(newValue, oldValue);
 
 		for (JiraNamedBean value : removedValues) {
 			historyEntry.addItem(new JiraIssueHistoryItem(propertyName)
