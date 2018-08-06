@@ -46,98 +46,110 @@ build/libs/jira-sync-1.0.jar --spring.config.location=file:/path/to/config/
 
 ### Configuration
 
-`config/application.properties`
+`config/application.yml`
 
-```properties
-de.cronn.jira.sync.source.url=https://jira.source/
-de.cronn.jira.sync.target.url=https://jira.target/
+```yaml
+de.cronn.jira.sync.source:
+  url: https://jira.source/
+  username: user
+  password: pass
+  # Optional
+  # sslTrustStore: file:/path/to/truststore.jks
+  # sslTrustStorePassphrase: secret
 
-de.cronn.jira.sync.source.username=user
-de.cronn.jira.sync.source.password=pass
-
-de.cronn.jira.sync.target.username=user
-de.cronn.jira.sync.target.password=pass
-
+de.cronn.jira.sync.target:
+  url: https://jira.target/
+  username: user
+  password: pass
+  # Optional
+  # basicAuth:
+  #   username: user
+  #   password: pass
 
 # Optional
-# de.cronn.jira.sync.source.sslTrustStore=file:/path/to/truststore.jks
-# de.cronn.jira.sync.source.sslTrustStorePassphrase=secret
-
-# Optional
-# de.cronn.jira.sync.target.basicAuth.username=user
-# de.cronn.jira.sync.target.basicAuth.password=pass
-
-# Optional
-# de.cronn.jira.sync.cache.persistent=true
-# de.cronn.jira.sync.cache.directory=cache
+# de.cronn.jira.sync.cache:
+#   persistent: true
+#   directory: cache
 
 ### General Jira Mappings ###
 
 # cf. https://jira-source/rest/api/2/priority and https://jira-target/rest/api/2/priority
-de.cronn.jira.sync.priorityMapping[Highest]=Blocker
-de.cronn.jira.sync.priorityMapping[High]=Critical
-de.cronn.jira.sync.priorityMapping[Medium]=Major
-de.cronn.jira.sync.priorityMapping[Low]=Minor
-de.cronn.jira.sync.priorityMapping[Lowest]=Trivial
+de.cronn.jira.sync.priorityMapping:
+  Highest: Blocker
+  High: Critical
+  Medium: Major
+  Low: Minor
+  Lowest: Trivial
 
 # cf. https://jira-source/rest/api/2/issue/createmeta and https://jira-target/rest/api/2/issue/createmeta
-de.cronn.jira.sync.issueTypeMapping[Bug]=Bug
-de.cronn.jira.sync.issueTypeMapping[Improvement]=New Feature
-de.cronn.jira.sync.issueTypeMapping[New\ Feature]=New Feature
+de.cronn.jira.sync.issueTypeMapping:
+  Bug: Bug
+  Improvement: New Feature
+  New Feature: New Feature
 
 
 # cf. https://jira-source/rest/api/2/resolution and https://jira-target/rest/api/2/resolution
-de.cronn.jira.sync.resolutionMapping[Fixed]=Fixed
-de.cronn.jira.sync.resolutionMapping[Won't\ Fix]=Won't Fix
-de.cronn.jira.sync.resolutionMapping[Duplicate]=Duplicate
-de.cronn.jira.sync.resolutionMapping[Incomplete]=Incomplete
-de.cronn.jira.sync.resolutionMapping[Cannot\ Reproduce]=Cannot Reproduce
+de.cronn.jira.sync.resolutionMapping:
+  Fixed: Fixed
+  Won't Fix: Won't Fix
+  Duplicate: Duplicate
+  Incomplete: Incomplete
+  Cannot Reproduce: Cannot Reproduce
+
+# cf. https://jira-source/rest/api/2/field and https://jira.target/rest/api/2/field
+de.cronn.jira.sync.fieldMapping:
+  Found in version: Found in software version
 
 ### Project Configuration ###
 
-de.cronn.jira.sync.projects[EX].sourceProject=EXAMPLE
-de.cronn.jira.sync.projects[EX].targetProject=EX
-de.cronn.jira.sync.projects[EX].sourceFilterId=12345
-de.cronn.jira.sync.projects[EX].remoteLinkIconInSource=${de.cronn.jira.sync.source.url}/favicon.ico
-de.cronn.jira.sync.projects[EX].remoteLinkIconInTarget=${de.cronn.jira.sync.target.url}/favicon.ico
+de.cronn.jira.sync.projects[EX]:
+  sourceProject: EXAMPLE
+  targetProject: EX
+  sourceFilterId: 12345
+  remoteLinkIconInSource: ${de.cronn.jira.sync.source.url}/favicon.ico
+  remoteLinkIconInTarget: ${de.cronn.jira.sync.target.url}/favicon.ico
 
-# Optional
-# de.cronn.jira.sync.projects[EX].labelsToKeepInTarget=internal,readyToAssign
+  # Optional
+  # labelsToKeepInTarget=internal, readyToAssign
 
-de.cronn.jira.sync.projects[EX].transitions[ResolveWhenClosed].sourceStatusIn=Open,In Progress
-de.cronn.jira.sync.projects[EX].transitions[ResolveWhenClosed].targetStatusIn=Closed
-de.cronn.jira.sync.projects[EX].transitions[ResolveWhenClosed].sourceStatusToSet=Resolved
-de.cronn.jira.sync.projects[EX].transitions[ResolveWhenClosed].copyResolutionToSource=true
-de.cronn.jira.sync.projects[EX].transitions[ResolveWhenClosed].copyFixVersionsToSource=true
-de.cronn.jira.sync.projects[EX].transitions[ResolveWhenClosed].customFieldsToCopyFromTargetToSource[field-name-in-source]=field-name-in-target
+  transitions:
+    ResolveInSourceWhenClosedInTarget:
+      sourceStatusIn: Open, In Progress
+      targetStatusIn: Closed
+      sourceStatusToSet: Resolved
+      copyResolutionToSource: true
+      copyFixVersionsToSource: true
+      customFieldsToCopyFromTargetToSource[field-name-in-source]: field-name-in-target
 
-de.cronn.jira.sync.projects[EX].transitions[TakeInProgress].sourceStatusIn=Open
-de.cronn.jira.sync.projects[EX].transitions[TakeInProgress].targetStatusIn=Open,Blocked,In Progress,In Review
-de.cronn.jira.sync.projects[EX].transitions[TakeInProgress].sourceStatusToSet=In Progress
-de.cronn.jira.sync.projects[EX].transitions[TakeInProgress].onlyIfAssignedInTarget=true
-de.cronn.jira.sync.projects[EX].transitions[TakeInProgress].assignToMyselfInSource=true
+    TakeInProgressInSource:
+      sourceStatusIn: Open
+      targetStatusIn: Open, Blocked, In Progress, In Review
+      sourceStatusToSet: In Progress
+      onlyIfAssignedInTarget: true
+      assignToMyselfInSource: true
 
-de.cronn.jira.sync.projects[EX].transitions[Reopen].sourceStatusIn=Reopened
-de.cronn.jira.sync.projects[EX].transitions[Reopen].targetStatusIn=Resolved,Closed
-de.cronn.jira.sync.projects[EX].transitions[Reopen].targetStatusToSet=Reopened
+    ReopenInTarget:
+      sourceStatusIn: Reopened
+      targetStatusIn: Resolved, Closed
+      targetStatusToSet: Reopened
 
-# Optional mapping of (custom) field values
-de.cronn.jira.sync.projects[EX].fieldValueMappings[field-name-in-source][source-value-1]=target_value_1
-de.cronn.jira.sync.projects[EX].fieldValueMappings[field-name-in-source][source-value-2]=target_value_2
-de.cronn.jira.sync.projects[EX].fieldValueMappings[field-name-in-source][source-value-3]=target_value_3
+  # Optional mapping of (custom) field values
+  fieldValueMappings[field-name-in-source]:
+    source-value-1: target_value_1
+    source-value-2: target_value_2
+    source-value-3: target_value_3
 
-de.cronn.jira.sync.projects[EX].skipUpdateInTargetWhenStatusIn=Resolved,Closed
+  skipUpdateInTargetWhenStatusIn: Resolved, Closed
 
-de.cronn.jira.sync.projects[EX].targetIssueTypeFallback=Task
+  targetIssueTypeFallback: Task
 
-# cf. https://jira-source/rest/api/2/field and https://jira.target/rest/api/2/field
-de.cronn.jira.sync.fieldMapping[Found\ in\ version]=Found in software version
+  # cf. https://jira-source/rest/api/2/project/EXAMPLE/versions and https://jira.target/rest/api/2/project/EX/versions
+  versionMapping:
+    10.0: 10
+    11.0: 11
+    12.0: 12
 
-# cf. https://jira-source/rest/api/2/project/EXAMPLE/versions and https://jira.target/rest/api/2/project/EX/versions
-de.cronn.jira.sync.projects[EX].versionMapping[10.0]=10
-de.cronn.jira.sync.projects[EX].versionMapping[11.0]=11
-de.cronn.jira.sync.projects[EX].versionMapping[12.0]=12
-de.cronn.jira.sync.projects[EX].versionsToIgnore=Undefined
+  versionsToIgnore: Undefined
 ```
 
 
@@ -150,7 +162,6 @@ On Unix:
 ```
 
 On Windows:
-
 
 ```
 gradlew.bat build
