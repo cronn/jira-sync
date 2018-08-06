@@ -132,6 +132,7 @@ de.cronn.jira.sync.projects[EX]:
       sourceStatusIn: Reopened
       targetStatusIn: Resolved, Closed
       targetStatusToSet: Reopened
+      onlyIfStatusTransitionNewerIn: SOURCE
 
   # Optional mapping of (custom) field values
   fieldValueMappings[field-name-in-source]:
