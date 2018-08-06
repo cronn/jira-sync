@@ -1,7 +1,7 @@
 package de.cronn.jira.sync;
 
 import static de.cronn.jira.sync.SetUtils.*;
-import static de.cronn.jira.sync.domain.Context.*;
+import static de.cronn.jira.sync.config.Context.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.net.URL;
@@ -31,8 +31,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.filter.CommonsRequestLoggingFilter;
 
+import de.cronn.jira.sync.config.Context;
 import de.cronn.jira.sync.config.JiraSyncConfig;
-import de.cronn.jira.sync.domain.Context;
 import de.cronn.jira.sync.domain.JiraComment;
 import de.cronn.jira.sync.domain.JiraField;
 import de.cronn.jira.sync.domain.JiraFieldSchema;
@@ -167,8 +167,8 @@ public class JiraSyncApplicationTests {
 	public void setUp() throws Exception {
 
 		String commonBaseUrl = "https://localhost:" + port + "/";
-		sourceBaseUrl = commonBaseUrl + Context.SOURCE + "/";
-		targetBaseUrl = commonBaseUrl + Context.TARGET + "/";
+		sourceBaseUrl = commonBaseUrl + SOURCE + "/";
+		targetBaseUrl = commonBaseUrl + TARGET + "/";
 
 		syncConfig.getSource().setUrl(sourceBaseUrl);
 		syncConfig.getTarget().setUrl(targetBaseUrl);
@@ -403,7 +403,6 @@ public class JiraSyncApplicationTests {
 
 		syncAndAssertNoChanges();
 	}
-
 
 	private JiraIssue getSingleIssue(Context context) {
 		Set<JiraIssue> issues = jiraDummyService.getAllIssues(context);

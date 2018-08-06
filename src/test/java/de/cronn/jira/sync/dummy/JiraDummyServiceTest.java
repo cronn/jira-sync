@@ -1,6 +1,6 @@
 package de.cronn.jira.sync.dummy;
 
-import static de.cronn.jira.sync.domain.Context.*;
+import static de.cronn.jira.sync.config.Context.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;

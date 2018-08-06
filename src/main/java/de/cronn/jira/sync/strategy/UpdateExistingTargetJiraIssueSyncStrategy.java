@@ -25,9 +25,9 @@ import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
 import de.cronn.jira.sync.JiraSyncException;
+import de.cronn.jira.sync.config.Context;
 import de.cronn.jira.sync.config.JiraProjectSync;
 import de.cronn.jira.sync.config.TransitionConfig;
-import de.cronn.jira.sync.domain.Context;
 import de.cronn.jira.sync.domain.JiraChangeLog;
 import de.cronn.jira.sync.domain.JiraComment;
 import de.cronn.jira.sync.domain.JiraComments;
