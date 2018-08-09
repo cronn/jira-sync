@@ -91,6 +91,11 @@ public class JiraDummyService {
 		data.clear();
 	}
 
+	public void clearIssues() {
+		data.values().forEach(data -> data.getIssues().clear());
+
+	}
+
 	public void setBaseUrl(Context context, String baseUrl) {
 		getData(context).setBaseUrl(baseUrl);
 	}
