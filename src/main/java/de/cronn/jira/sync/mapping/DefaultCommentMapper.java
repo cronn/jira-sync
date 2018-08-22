@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
+import de.cronn.jira.sync.config.CommentMappingConfig;
+import de.cronn.jira.sync.config.JiraSyncConfig;
 import de.cronn.jira.sync.domain.JiraComment;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.service.JiraService;
@@ -28,6 +30,8 @@ public class DefaultCommentMapper implements CommentMapper {
 
 	private TicketReferenceReplacer ticketReferenceReplacer;
 
+	private JiraSyncConfig jiraSyncConfig;
+
 	@Autowired
 	public void setClock(Clock clock) {
 		this.clock = clock;
@@ -36,6 +40,11 @@ public class DefaultCommentMapper implements CommentMapper {
 	@Autowired
 	public void setUsernameReplacer(UsernameReplacer usernameReplacer) {
 		this.usernameReplacer = usernameReplacer;
+	}
+
+	@Autowired
+	public void setJiraSyncConfig(JiraSyncConfig jiraSyncConfig) {
+		this.jiraSyncConfig = jiraSyncConfig;
 	}
 
 	@Autowired
@@ -65,11 +74,18 @@ public class DefaultCommentMapper implements CommentMapper {
 	}
 
 	private String getPanelColors(boolean outOfOrder) {
+		CommentMappingConfig config = jiraSyncConfig.getCommentMapping();
+
+		final String titleBackgroundColor;
+		final String backgroundColor;
 		if (outOfOrder) {
-			return "titleBGColor=#CCC|bgColor=#DDD";
+			titleBackgroundColor = config.getOutOfOrderTitleBackgroundColor();
+			backgroundColor = config.getOutOfOrderBackgroundColor();
 		} else {
-			return "titleBGColor=#DDD|bgColor=#EEE";
+			titleBackgroundColor = config.getTitleBackgroundColor();
+			backgroundColor = config.getBackgroundColor();
 		}
+		return "titleBGColor=" + titleBackgroundColor + "|bgColor=" + backgroundColor;
 	}
 
 	@Override

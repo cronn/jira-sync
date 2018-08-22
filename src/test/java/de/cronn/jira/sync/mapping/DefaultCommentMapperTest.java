@@ -15,6 +15,7 @@ import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import de.cronn.jira.sync.TestClock;
+import de.cronn.jira.sync.config.JiraSyncConfig;
 import de.cronn.jira.sync.domain.JiraComment;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraServerInfo;
@@ -32,6 +33,9 @@ public class DefaultCommentMapperTest {
 
 	@Spy
 	private TicketReferenceReplacer ticketReferenceReplacer = new DefaultTicketReferenceReplacer();
+
+	@Spy
+	private JiraSyncConfig jiraSyncConfig = new JiraSyncConfig();
 
 	@InjectMocks
 	private DefaultCommentMapper commentMapper;
@@ -63,7 +67,25 @@ public class DefaultCommentMapperTest {
 		String body = commentMapper.map(sourceIssue, comment, jiraSource, false);
 
 		// then
-		assertThat(body).isEqualTo("{panel:title=Some User - 2014-05-09 15:48:52 CEST|titleBGColor=#DDD|bgColor=#EEE}\n" +
+		assertThat(body).isEqualTo("{panel:title=Some User - 2014-05-09 15:48:52 CEST|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
+			"some text\n" +
+			"~??[comment 12345|https://jira.source/browse/KEY-1?focusedCommentId=12345&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-12345]??~\n" +
+			"{panel}");
+	}
+
+	@Test
+	public void testMap_DifferentColors() throws Exception {
+		// given
+		jiraSyncConfig.getCommentMapping().setTitleBackgroundColor("#eeeeee");
+		jiraSyncConfig.getCommentMapping().setBackgroundColor("#cccccc");
+		JiraIssue sourceIssue = new JiraIssue("1", "KEY-1");
+		JiraComment comment = createSomeComment("12345");
+
+		// when
+		String body = commentMapper.map(sourceIssue, comment, jiraSource, false);
+
+		// then
+		assertThat(body).isEqualTo("{panel:title=Some User - 2014-05-09 15:48:52 CEST|titleBGColor=#eeeeee|bgColor=#cccccc}\n" +
 			"some text\n" +
 			"~??[comment 12345|https://jira.source/browse/KEY-1?focusedCommentId=12345&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-12345]??~\n" +
 			"{panel}");
@@ -80,7 +102,7 @@ public class DefaultCommentMapperTest {
 		String body = commentMapper.map(sourceIssue, comment, jiraSource, false);
 
 		// then
-		assertThat(body).isEqualTo("{panel:title=Some User - 2014-05-09 15:48:52 CEST (Updated: 2014-05-10 15:41:32 CEST)|titleBGColor=#DDD|bgColor=#EEE}\n" +
+		assertThat(body).isEqualTo("{panel:title=Some User - 2014-05-09 15:48:52 CEST (Updated: 2014-05-10 15:41:32 CEST)|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
 			"some text\n" +
 			"~??[comment 12345|https://jira.source/browse/KEY-1?focusedCommentId=12345&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-12345]??~\n" +
 			"{panel}");
@@ -96,7 +118,27 @@ public class DefaultCommentMapperTest {
 		String body = commentMapper.map(sourceIssue, comment, jiraSource, true);
 
 		// then
-		assertThat(body).isEqualTo("{panel:title=Some User - 2014-05-09 15:48:52 CEST|titleBGColor=#CCC|bgColor=#DDD}\n" +
+		assertThat(body).isEqualTo("{panel:title=Some User - 2014-05-09 15:48:52 CEST|titleBGColor=#cccccc|bgColor=#dddddd}\n" +
+			"some text\n" +
+			"~??[comment 12345|https://jira.source/browse/KEY-1?focusedCommentId=12345&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-12345]??~\n" +
+			"~(!) This comment was added behind time. The order of comments might not represent the real order.~\n" +
+			"{panel}");
+	}
+
+	@Test
+	public void testMap_outOfOrder_differentColors() throws Exception {
+		// given
+		jiraSyncConfig.getCommentMapping().setOutOfOrderTitleBackgroundColor("#ff0000");
+		jiraSyncConfig.getCommentMapping().setOutOfOrderBackgroundColor("#f0f0f0");
+
+		JiraIssue sourceIssue = new JiraIssue("1", "KEY-1");
+		JiraComment comment = createSomeComment("12345");
+
+		// when
+		String body = commentMapper.map(sourceIssue, comment, jiraSource, true);
+
+		// then
+		assertThat(body).isEqualTo("{panel:title=Some User - 2014-05-09 15:48:52 CEST|titleBGColor=#ff0000|bgColor=#f0f0f0}\n" +
 			"some text\n" +
 			"~??[comment 12345|https://jira.source/browse/KEY-1?focusedCommentId=12345&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-12345]??~\n" +
 			"~(!) This comment was added behind time. The order of comments might not represent the real order.~\n" +
@@ -116,7 +158,7 @@ public class DefaultCommentMapperTest {
 		String body = commentMapper.map(sourceIssue, comment, jiraSource, false);
 
 		// then
-		assertThat(body).isEqualTo("{panel:title=Some User - 2014-05-09 15:48:52 CEST|titleBGColor=#DDD|bgColor=#EEE}\n" +
+		assertThat(body).isEqualTo("{panel:title=Some User - 2014-05-09 15:48:52 CEST|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
 			"some text\n" +
 			"~??[comment 12345|https://jira.source/foo/browse/KEY-1?focusedCommentId=12345&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-12345]??~\n" +
 			"{panel}");

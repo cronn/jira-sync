@@ -482,7 +482,7 @@ public class JiraSyncApplicationTests {
 
 		// then
 		targetIssue = getSingleIssue(TARGET);
-		assertThat(targetIssue.getFields().getDescription()).isEqualTo("{panel:title=Original description|titleBGColor=#DDD|bgColor=#EEE}\nchanged description\n{panel}");
+		assertThat(targetIssue.getFields().getDescription()).isEqualTo("{panel:title=Original description|titleBGColor=#dddddd|bgColor=#eeeeee}\nchanged description\n{panel}");
 		assertThat(targetIssue.getFields().getUpdated().toInstant()).isEqualTo(Instant.now(clock));
 
 		JiraIssue sourceIssue = getSingleIssue(SOURCE);
@@ -722,12 +722,12 @@ public class JiraSyncApplicationTests {
 		List<JiraComment> comments = targetIssue.getFields().getComment().getComments();
 		assertThat(comments).hasSize(2);
 
-		assertThat(comments.iterator().next().getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:00 CEST|titleBGColor=#DDD|bgColor=#EEE}\n" +
+		assertThat(comments.iterator().next().getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:00 CEST|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
 			"some comment\n" +
 			"~??[comment 1_1|https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-1?focusedCommentId=1_1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_1]??~\n" +
 			"{panel}");
 
-		assertThat(comments.get(1).getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:02:00 CEST|titleBGColor=#DDD|bgColor=#EEE}\n" +
+		assertThat(comments.get(1).getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:02:00 CEST|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
 			"some other comment\n" +
 			"~??[comment 1_2|https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-1?focusedCommentId=1_2&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_2]??~\n" +
 			"{panel}");
@@ -753,18 +753,18 @@ public class JiraSyncApplicationTests {
 
 		// then
 		JiraIssue targetIssue = getSingleIssue(TARGET);
-		assertThat(targetIssue.getFields().getDescription()).isEqualTo("{panel:title=Original description|titleBGColor=#DDD|bgColor=#EEE}\n" +
+		assertThat(targetIssue.getFields().getDescription()).isEqualTo("{panel:title=Original description|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
 			"mentioning [Some User|https://localhost:" + port + "/SOURCE/secure/ViewProfile.jspa?name=some.user] in description\n" +
 			"{panel}\n\n");
 		List<JiraComment> comments = targetIssue.getFields().getComment().getComments();
 		assertThat(comments).hasSize(2);
 
-		assertThat(comments.get(0).getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:00 CEST|titleBGColor=#DDD|bgColor=#EEE}\n" +
+		assertThat(comments.get(0).getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:00 CEST|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
 			"[Another User|https://localhost:" + port + "/SOURCE/secure/ViewProfile.jspa?name=anotheruser]: some comment\n" +
 			"~??[comment 1_1|https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-1?focusedCommentId=1_1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_1]??~\n" +
 			"{panel}");
 
-		assertThat(comments.get(1).getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:00 CEST|titleBGColor=#DDD|bgColor=#EEE}\n" +
+		assertThat(comments.get(1).getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:00 CEST|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
 			"[~yetanotheruser]: some comment\n" +
 			"~??[comment 1_2|https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-1?focusedCommentId=1_2&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_2]??~\n" +
 			"{panel}");
@@ -789,14 +789,14 @@ public class JiraSyncApplicationTests {
 
 		// then
 		JiraIssue targetIssue = getSingleIssue(TARGET);
-		assertThat(targetIssue.getFields().getDescription()).isEqualTo("{panel:title=Original description|titleBGColor=#DDD|bgColor=#EEE}\n" +
+		assertThat(targetIssue.getFields().getDescription()).isEqualTo("{panel:title=Original description|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
 			"mentioning [PROJECT_ONE-123|https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-123] in description\n" +
 			"{panel}\n\n");
 
 		List<JiraComment> comments = targetIssue.getFields().getComment().getComments();
 		assertThat(comments).hasSize(1);
 
-		assertThat(comments.get(0).getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:00 CEST|titleBGColor=#DDD|bgColor=#EEE}\n" +
+		assertThat(comments.get(0).getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:00 CEST|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
 			"see ticket [PROJECT_ONE-456|https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-456]\n" +
 			"~??[comment 1_1|https://localhost:" + this.port + "/SOURCE/browse/PROJECT_ONE-1?focusedCommentId=1_1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_1]??~\n" +
 			"{panel}");
@@ -827,7 +827,7 @@ public class JiraSyncApplicationTests {
 		targetIssue = getSingleIssue(TARGET);
 		List<JiraComment> comments = targetIssue.getFields().getComment().getComments();
 		assertThat(comments).hasSize(1);
-		assertThat(comments.get(0).getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:30 CEST|titleBGColor=#DDD|bgColor=#EEE}\n" +
+		assertThat(comments.get(0).getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:30 CEST|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
 			"some comment\n" +
 			"~??[comment 1_1|https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-1?focusedCommentId=1_1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_1]??~\n" +
 			"{panel}");
@@ -971,7 +971,7 @@ public class JiraSyncApplicationTests {
 		JiraComment comment = targetIssue.getFields().getComment().getComments().get(1);
 		assertThat(comment.getCreated()).isEqualTo(firstSyncTime);
 		assertThat(comment.getUpdated()).isEqualTo(secondSyncTime);
-		assertThat(comment.getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:00 CEST (Updated: 2016-05-23 20:01:00 CEST)|titleBGColor=#DDD|bgColor=#EEE}\n" +
+		assertThat(comment.getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:00 CEST (Updated: 2016-05-23 20:01:00 CEST)|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
 			"updated second comment\n" +
 			"~??[comment 1_2|https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-1?focusedCommentId=1_2&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_2]??~\n" +
 			"{panel}");
@@ -1034,17 +1034,17 @@ public class JiraSyncApplicationTests {
 		targetIssue = getSingleIssue(TARGET);
 		List<JiraComment> comments = targetIssue.getFields().getComment().getComments();
 		assertThat(comments).hasSize(4);
-		assertThat(comments.get(0).getBody()).contains("first comment in source").contains("2016-05-23 20:00:00 CEST|titleBGColor=#DDD|bgColor=#EEE");
+		assertThat(comments.get(0).getBody()).contains("first comment in source").contains("2016-05-23 20:00:00 CEST|titleBGColor=#dddddd|bgColor=#eeeeee");
 		assertThat(comments.get(1).getBody()).contains("some comment in target");
 
 		assertThat(comments.get(2).getBody())
 			.contains("second comment in source")
-			.contains("2016-05-23 20:00:30 CEST|titleBGColor=#CCC|bgColor=#DDD")
+			.contains("2016-05-23 20:00:30 CEST|titleBGColor=#cccccc|bgColor=#dddddd")
 			.contains("This comment was added behind time. The order of comments might not represent the real order.");
 
 		assertThat(comments.get(3).getBody())
 			.contains("third comment in source")
-			.contains("2016-05-23 20:01:00 CEST|titleBGColor=#CCC|bgColor=#DDD")
+			.contains("2016-05-23 20:01:00 CEST|titleBGColor=#cccccc|bgColor=#dddddd")
 			.contains("This comment was added behind time. The order of comments might not represent the real order.");
 
 		syncAndAssertNoChanges();

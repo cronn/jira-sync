@@ -8,6 +8,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import de.cronn.jira.sync.config.DescriptionMappingConfig;
+import de.cronn.jira.sync.config.JiraSyncConfig;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueFields;
 import de.cronn.jira.sync.service.JiraService;
@@ -20,6 +22,7 @@ public class DefaultDescriptionMapper implements DescriptionMapper {
 
 	private UsernameReplacer usernameReplacer;
 	private TicketReferenceReplacer ticketReferenceReplacer;
+	private JiraSyncConfig jiraSyncConfig;
 
 	@Autowired
 	public void setUsernameReplacer(UsernameReplacer usernameReplacer) {
@@ -29,6 +32,11 @@ public class DefaultDescriptionMapper implements DescriptionMapper {
 	@Autowired
 	public void setTicketReferenceReplacer(TicketReferenceReplacer ticketReferenceReplacer) {
 		this.ticketReferenceReplacer = ticketReferenceReplacer;
+	}
+
+	@Autowired
+	public void setJiraSyncConfig(JiraSyncConfig jiraSyncConfig) {
+		this.jiraSyncConfig = jiraSyncConfig;
 	}
 
 	@Override
@@ -66,7 +74,12 @@ public class DefaultDescriptionMapper implements DescriptionMapper {
 			description = ticketReferenceReplacer.replaceTicketReferences(description, jiraSource);
 			String normalizedSourceDescription = normalizeDescription(description);
 			String escapedSourceDescription = PANEL_START_PATTERN.matcher(normalizedSourceDescription).replaceAll("\\\\{$1\\\\}");
-			return "{panel:title=Original description|titleBGColor=#DDD|bgColor=#EEE}\n" + escapedSourceDescription + "\n{panel}\n\n";
+			DescriptionMappingConfig descriptionMapping = jiraSyncConfig.getDescriptionMapping();
+			String titleBackgroundColor = descriptionMapping.getPanelTitleBackgroundColor();
+			String backgroundColor = descriptionMapping.getPanelBackgroundColor();
+			return "{panel:title=Original description|titleBGColor=" + titleBackgroundColor + "|bgColor=" + backgroundColor + "}\n"
+				+ escapedSourceDescription
+				+ "\n{panel}\n\n";
 		}
 	}
 

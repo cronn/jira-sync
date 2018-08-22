@@ -20,6 +20,8 @@ public class JiraSyncConfig {
 	private Map<String, String> issueTypeMapping = new LinkedHashMap<>();
 	private Map<String, String> resolutionMapping = new LinkedHashMap<>();
 	private Map<String, String> fieldMapping = new LinkedHashMap<>();
+	private DescriptionMappingConfig descriptionMapping = new DescriptionMappingConfig();
+	private CommentMappingConfig commentMapping = new CommentMappingConfig();
 
 	public JiraConnectionProperties getSource() {
 		return source;
@@ -91,6 +93,22 @@ public class JiraSyncConfig {
 
 	public Map<String, String> getFieldMapping() {
 		return fieldMapping;
+	}
+
+	public DescriptionMappingConfig getDescriptionMapping() {
+		return descriptionMapping;
+	}
+
+	public void setDescriptionMapping(DescriptionMappingConfig descriptionMapping) {
+		this.descriptionMapping = descriptionMapping;
+	}
+
+	public CommentMappingConfig getCommentMapping() {
+		return commentMapping;
+	}
+
+	public void setCommentMapping(CommentMappingConfig commentMapping) {
+		this.commentMapping = commentMapping;
 	}
 
 	public JiraProjectSync getProjectConfigBySourceProject(JiraProject sourceProject) {
