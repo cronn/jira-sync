@@ -1,0 +1,9 @@
+spring.application.name: jira-sync
+
+#de.cronn.jira.sync.cache:
+#  persistent: true
+#  directory: cache
+
+logging.level:
+  de.cronn: DEBUG
+  org.ehcache: WARN
