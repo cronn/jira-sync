@@ -73,6 +73,8 @@ repositories {
 }
 
 dependencies {
+	compile 'javax.annotation:javax.annotation-api:1.2'
+
 	compile('org.springframework.boot:spring-boot-starter')
 	compile('org.springframework.boot:spring-boot-starter-cache')
 	compile('javax.cache:cache-api')
