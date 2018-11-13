@@ -488,12 +488,15 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 	}
 
 	private boolean filterIssueWasMovedBetweenProjects(TransitionConfig transitionConfig, JiraIssue sourceIssue, JiraIssue targetIssue, JiraService jiraTarget, JiraService jiraSource) {
-		if (!transitionConfig.isTriggerIfIssueWasMovedBetweenProjects()) {
-			String key = issueLinker.resolveKey(targetIssue, jiraTarget, jiraSource);
-			return Objects.equals(key, sourceIssue.getKey());
-		} else {
+		if (transitionConfig.isTriggerIfIssueWasMovedBetweenProjects()) {
 			return true;
 		}
+		String key = issueLinker.resolveKey(targetIssue, jiraTarget, jiraSource);
+		boolean sameKey = Objects.equals(key, sourceIssue.getKey());
+		if (!sameKey) {
+			log.debug("Skipping updates of {} since the key of the source issue changed: {} vs. {}", targetIssue, key, sourceIssue.getKey());
+		}
+		return sameKey;
 	}
 
 	private JiraTransition findIssueTransition(JiraService jiraService, JiraIssue issue, String statusToTransitionTo) {
