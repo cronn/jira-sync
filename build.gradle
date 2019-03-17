@@ -20,10 +20,6 @@ plugins {
 	id 'com.github.kt3k.coveralls' version '2.6.3'
 }
 
-jacoco {
-    toolVersion = "0.8.2"
-}
-
 apply plugin: 'org.sonarqube'
 apply plugin: 'org.springframework.boot'
 
@@ -98,6 +94,6 @@ dependencies {
 }
 
 wrapper {
-	gradleVersion = "4.10"
+	gradleVersion = "5.2.1"
 	distributionType = Wrapper.DistributionType.ALL
 }
