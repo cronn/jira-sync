@@ -82,7 +82,6 @@ public class JiraDummyServiceTest {
 			.andExpect(MockMvcResultMatchers.jsonPath("$.changelog", is(IsNull.notNullValue())));
 	}
 
-
 	@Test
 	public void testTransitionIssue() throws Exception {
 		JiraIssue issue = createJiraIssue(jiraDummyService);

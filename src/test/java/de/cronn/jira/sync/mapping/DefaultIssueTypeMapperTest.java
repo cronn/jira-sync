@@ -67,7 +67,6 @@ public class DefaultIssueTypeMapperTest {
 		assertThat(mappedIssueType).isSameAs(TARGET_ISSUE_TYPE_NEW_FEATURE);
 	}
 
-
 	@Test
 	public void testMap_NoConfiguration_NoFallbackIssueTypeConfigured() throws Exception {
 		projectSync.setTargetIssueTypeFallback(null);

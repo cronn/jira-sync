@@ -13,5 +13,4 @@ public class JiraRemoteLinkTest {
 			.withMessage("Illegal url: wrong-url");
 	}
 
-
 }

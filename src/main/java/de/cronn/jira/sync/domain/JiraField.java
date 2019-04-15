@@ -54,5 +54,4 @@ public class JiraField extends JiraIdResource implements JiraNamedBean {
 			.toString();
 	}
 
-
 }

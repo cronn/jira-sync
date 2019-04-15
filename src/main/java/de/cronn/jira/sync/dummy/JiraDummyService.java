@@ -535,7 +535,6 @@ public class JiraDummyService {
 		throw new IllegalArgumentException("Unknown priority: " + priority);
 	}
 
-
 	private void validateProject(Context context, JiraProject project) {
 		Assert.notNull(project, "project must not be null");
 		for (JiraProject jiraProject : getProjects(context).values()) {

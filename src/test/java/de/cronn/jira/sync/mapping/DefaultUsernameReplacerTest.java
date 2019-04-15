@@ -104,5 +104,4 @@ public class DefaultUsernameReplacerTest {
 		return usernameReplacer.replaceUsernames(inputText, jiraService);
 	}
 
-
 }

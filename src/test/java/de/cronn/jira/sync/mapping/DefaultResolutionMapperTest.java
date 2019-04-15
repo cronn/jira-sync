@@ -16,7 +16,6 @@ import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraResolution;
 import de.cronn.jira.sync.service.JiraService;
 
-
 @RunWith(MockitoJUnitRunner.class)
 public class DefaultResolutionMapperTest {
 

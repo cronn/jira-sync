@@ -160,5 +160,4 @@ public class JiraSyncTask implements CommandLineRunner {
 		}
 	}
 
-
 }

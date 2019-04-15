@@ -164,5 +164,4 @@ public class DefaultTicketReferenceReplacerTest {
 		return ticketReferenceReplacer.replaceTicketReferences(inputText, jiraService);
 	}
 
-
 }
