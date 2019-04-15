@@ -16,7 +16,7 @@ public class SshTunnelSslSocketFactory implements LayeredConnectionSocketFactory
 	private final LayeredConnectionSocketFactory connectionSocketFactory;
 	private final String sshJumpHost;
 
-	public SshTunnelSslSocketFactory(SshProxy sshProxy, LayeredConnectionSocketFactory connectionSocketFactory, String sshJumpHost) {
+	SshTunnelSslSocketFactory(SshProxy sshProxy, LayeredConnectionSocketFactory connectionSocketFactory, String sshJumpHost) {
 		this.sshProxy = sshProxy;
 		this.connectionSocketFactory = connectionSocketFactory;
 		this.sshJumpHost = sshJumpHost;

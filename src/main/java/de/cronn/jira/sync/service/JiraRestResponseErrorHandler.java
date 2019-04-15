@@ -14,7 +14,7 @@ public class JiraRestResponseErrorHandler extends DefaultResponseErrorHandler {
 
 	private final String jiraUrl;
 
-	public JiraRestResponseErrorHandler(String jiraUrl) {
+	JiraRestResponseErrorHandler(String jiraUrl) {
 		this.jiraUrl = jiraUrl;
 	}
 
