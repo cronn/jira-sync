@@ -21,6 +21,7 @@ import javax.net.ssl.SSLSocketFactory;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.http.client.HttpClient;
+import org.apache.http.conn.DnsResolver;
 import org.apache.http.conn.socket.LayeredConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -119,9 +120,18 @@ public class JiraServiceRestClient implements JiraService {
 
 			return HttpClientBuilder.create()
 				.setSSLSocketFactory(sslSocketFactory)
+				.setDnsResolver(determineDnsResolver(jiraConnectionProperties))
 				.build();
 		} catch (GeneralSecurityException | IOException e) {
 			throw new JiraSyncException("Failed to build custom http client", e);
+		}
+	}
+
+	private static DnsResolver determineDnsResolver(JiraConnectionProperties jiraConnectionProperties) {
+		if (jiraConnectionProperties.getSshJumpHost() != null) {
+			return new NoopDnsResolver();
+		} else {
+			return null;
 		}
 	}
 
