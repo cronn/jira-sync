@@ -347,13 +347,13 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 
 				Assert.isTrue(!transition.isCopyFixVersionsToSource(), "Unexpected property set for " + transition + ": copyFixVersionsToSource");
 				Assert.isTrue(!transition.isCopyResolutionToSource(), "Unexpected property set for " + transition + ": copyResolutionToSource");
-				Assert.isTrue(transition.getCustomFieldsToCopyFromTargetToSource().isEmpty(), "Unexpected properties set for " + transition + ": customFieldsToCopyFromTargetToSource");
+				Assert.isTrue(transition.getCustomFieldsToCopyFromTargetToSource(sourceIssue).isEmpty(), "Unexpected properties set for " + transition + ": customFieldsToCopyFromTargetToSource");
 			}
 		}
 	}
 
 	private void copyCustomFields(JiraService jiraSource, JiraIssue sourceIssue, JiraIssue targetIssue, JiraService jiraTarget, JiraIssueUpdate sourceIssueUpdate, TransitionConfig transition) {
-		Map<String, String> customFieldsToCopyFromSourceToTarget = transition.getCustomFieldsToCopyFromTargetToSource();
+		Map<String, String> customFieldsToCopyFromSourceToTarget = transition.getCustomFieldsToCopyFromTargetToSource(sourceIssue);
 		for (Entry<String, String> entry : customFieldsToCopyFromSourceToTarget.entrySet()) {
 			String customFieldNameInSource = entry.getKey();
 			String customFieldNameInTarget = entry.getValue();

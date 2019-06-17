@@ -588,6 +588,35 @@ public class JiraSyncApplicationTests {
 	}
 
 	@Test
+	public void testCopyCustomFieldsWhenIssueIsClosed_Feature() throws Exception {
+		// given
+		createIssueInSource(SOURCE_TYPE_UNKNOWN);
+
+		syncAndCheckResult();
+
+		JiraIssue targetIssue = getSingleIssue(TARGET);
+
+		// when
+		JiraTransition transition = findTransition(TARGET, targetIssue.getKey(), TARGET_STATUS_CLOSED);
+
+		JiraIssueUpdate update = new JiraIssueUpdate();
+		update.setTransition(transition);
+		update.getOrCreateFields().setResolution(TARGET_RESOLUTION_DONE);
+		update.getOrCreateFields().setFixVersions(newLinkedHashSet(TARGET_VERSION_10));
+		update.getOrCreateFields().setOther(TARGET_CUSTOM_FIELD_FIXED_IN_VERSION.getId(), Collections.singletonMap("value", "1.0"));
+		jiraDummyService.transitionIssue(TARGET, targetIssue.getKey(), update);
+
+		syncAndCheckResult();
+
+		// then
+		JiraIssue updatedSourceIssue = getSingleIssue(SOURCE);
+		assertThat(updatedSourceIssue.getFields().getStatus()).isEqualTo(SOURCE_STATUS_RESOLVED);
+		assertThat(updatedSourceIssue.getFields().getOther()).isEmpty();
+
+		syncAndAssertNoChanges();
+	}
+
+	@Test
 	public void testDoNotTriggerTransitionAfterTicketWasMovedBetweenProjects() throws Exception {
 		// given
 		JiraIssue createdSourceIssue = createIssueInSource();

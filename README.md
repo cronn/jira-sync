@@ -118,7 +118,8 @@ de.cronn.jira.sync.projects[EX]:
       sourceStatusToSet: Resolved
       copyResolutionToSource: true
       copyFixVersionsToSource: true
-      customFieldsToCopyFromTargetToSource[field-name-in-source]: field-name-in-target
+      customFieldsToCopyFromTargetToSource[Bug]:
+        - field-name-in-source: field-name-in-target
 
     TakeInProgressInSource:
       sourceStatusIn: Open

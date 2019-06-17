@@ -1,12 +1,18 @@
 package de.cronn.jira.sync.config;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.Nonnull;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+
+import de.cronn.jira.sync.domain.JiraIssue;
+import de.cronn.jira.sync.domain.JiraIssueType;
 
 public class TransitionConfig {
 
@@ -21,7 +27,7 @@ public class TransitionConfig {
 	private boolean triggerIfIssueWasMovedBetweenProjects = false;
 	private Context onlyIfStatusTransitionNewerIn = null;
 
-	private Map<String, String> customFieldsToCopyFromTargetToSource = new LinkedHashMap<>();
+	private Map<String, Map<String, String>> customFieldsToCopyFromTargetToSource = new LinkedHashMap<>();
 
 	public TransitionConfig() {
 	}
@@ -98,12 +104,21 @@ public class TransitionConfig {
 		this.triggerIfIssueWasMovedBetweenProjects = triggerIfIssueWasMovedBetweenProjects;
 	}
 
-	public void setCustomFieldsToCopyFromTargetToSource(Map<String, String> customFieldsToCopyFromTargetToSource) {
+	public void setCustomFieldsToCopyFromTargetToSource(Map<String, Map<String, String>> customFieldsToCopyFromTargetToSource) {
 		this.customFieldsToCopyFromTargetToSource = customFieldsToCopyFromTargetToSource;
 	}
 
-	public Map<String, String> getCustomFieldsToCopyFromTargetToSource() {
+	public Map<String, Map<String, String>> getCustomFieldsToCopyFromTargetToSource() {
 		return customFieldsToCopyFromTargetToSource;
+	}
+
+	@Nonnull
+	public Map<String, String> getCustomFieldsToCopyFromTargetToSource(JiraIssue issue) {
+		return getCustomFieldsToCopyFromTargetToSource(issue.getFields().getIssuetype());
+	}
+
+	private Map<String, String> getCustomFieldsToCopyFromTargetToSource(JiraIssueType issueType) {
+		return getCustomFieldsToCopyFromTargetToSource().getOrDefault(issueType.getName(), Collections.emptyMap());
 	}
 
 	public Context getOnlyIfStatusTransitionNewerIn() {
