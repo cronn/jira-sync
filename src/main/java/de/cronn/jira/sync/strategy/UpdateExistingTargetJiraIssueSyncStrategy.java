@@ -25,6 +25,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
 import de.cronn.jira.sync.JiraSyncException;
+import de.cronn.jira.sync.SetUtils;
 import de.cronn.jira.sync.config.Context;
 import de.cronn.jira.sync.config.JiraProjectSync;
 import de.cronn.jira.sync.config.TransitionConfig;
@@ -377,10 +378,25 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		}
 
 		Set<JiraVersion> mappedVersions = versionMapper.mapTargetToSource(jiraSource, targetFixVersions, projectSync);
+
+		for (JiraVersion unmappedVersion : collectUnmappedVersions(projectSync, sourceFixVersions)) {
+			log.warn("Keeping unmapped version in source: {}", unmappedVersion);
+			mappedVersions.add(unmappedVersion);
+		}
+
 		if (!Objects.equals(mappedVersions, sourceFixVersions)) {
 			sourceIssueUpdate.getOrCreateFields().setFixVersions(mappedVersions);
 			sourceIssue.getFields().setFixVersions(mappedVersions);
 		}
+	}
+
+	private static Set<JiraVersion> collectUnmappedVersions(JiraProjectSync projectSync, Set<JiraVersion> sourceVersions) {
+		if (CollectionUtils.isEmpty(sourceVersions)) {
+			return Collections.emptySet();
+		}
+		return sourceVersions.stream()
+			.filter(version -> !projectSync.getVersionMapping().containsKey(version.getName()))
+			.collect(SetUtils.toLinkedHashSet());
 	}
 
 	private boolean isEqual(JiraIssue issue, JiraUser jiraUser) {

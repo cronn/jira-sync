@@ -521,6 +521,38 @@ public class JiraSyncApplicationTests {
 	}
 
 	@Test
+	public void testSetTicketToResolvedInSourceWhenTargetTicketIsClosed_KeepUnmappedVersionInSource() throws Exception {
+		// given
+		JiraIssue issueInSource = createIssueInSource();
+		JiraIssueUpdate updateSourceVersion = new JiraIssueUpdate();
+		updateSourceVersion.getOrCreateFields().setFixVersions(newLinkedHashSet(SOURCE_VERSION_UNMAPPED));
+		jiraDummyService.updateIssue(SOURCE, issueInSource.getKey(), updateSourceVersion);
+
+		syncAndCheckResult();
+
+		JiraIssue targetIssue = getSingleIssue(TARGET);
+
+		// when
+		JiraTransition transition = findTransition(TARGET, targetIssue.getKey(), TARGET_STATUS_CLOSED);
+
+		JiraIssueUpdate update = new JiraIssueUpdate();
+		update.setTransition(transition);
+		update.getOrCreateFields().setResolution(TARGET_RESOLUTION_DONE);
+		update.getOrCreateFields().setFixVersions(newLinkedHashSet(TARGET_VERSION_10));
+		jiraDummyService.transitionIssue(TARGET, targetIssue.getKey(), update);
+
+		syncAndCheckResult();
+
+		// then
+		JiraIssue updatedSourceIssue = getSingleIssue(SOURCE);
+		assertThat(updatedSourceIssue.getFields().getStatus()).isEqualTo(SOURCE_STATUS_RESOLVED);
+		assertThat(updatedSourceIssue.getFields().getResolution()).isEqualTo(SOURCE_RESOLUTION_FIXED);
+		assertThat(updatedSourceIssue.getFields().getFixVersions()).containsExactly(SOURCE_VERSION_UNMAPPED, SOURCE_VERSION_10);
+
+		syncAndAssertNoChanges();
+	}
+
+	@Test
 	public void testCopyCustomFieldsWhenIssueIsClosed() throws Exception {
 		// given
 		JiraIssue sourceIssue = new JiraIssue(null, null, "My first bug", SOURCE_STATUS_OPEN);
