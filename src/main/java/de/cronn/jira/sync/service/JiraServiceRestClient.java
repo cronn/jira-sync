@@ -75,6 +75,9 @@ public class JiraServiceRestClient implements JiraService {
 
 	private static final Logger log = LoggerFactory.getLogger(JiraServiceRestClient.class);
 
+	static final long DEFAULT_PAGE_SIZE = 100;
+	private static final int MAX_PAGES = 10;
+
 	private final RestTemplateBuilder restTemplateBuilder;
 
 	private RestTemplate restTemplate;
@@ -293,16 +296,30 @@ public class JiraServiceRestClient implements JiraService {
 
 	@Override
 	public List<JiraIssue> getIssuesByFilterId(String filterId, Collection<String> customFields) {
+		return getIssuesByFilterId(filterId, customFields, DEFAULT_PAGE_SIZE);
+	}
+
+	List<JiraIssue> getIssuesByFilterId(String filterId, Collection<String> customFields, long pageSize) {
 		log.debug("fetching filter {}", filterId);
 		JiraFilterResult filter = getForObject("/rest/api/2/filter/{id}", JiraFilterResult.class, filterId);
 		log.debug("fetching issues by JQL '{}'", filter.getJql());
 		String fieldsToFetch = getFieldsToFetch(customFields);
-		JiraSearchResult searchResult = getForObject("/rest/api/2/search?jql={jql}&maxResults=100&fields=" + fieldsToFetch, JiraSearchResult.class, filter.getJql());
-		log.info("got {} issues", searchResult.getTotal());
-		if (searchResult.getTotal() > searchResult.getMaxResults()) {
-			throw new IllegalStateException("Paging not yet implemented");
-		}
-		return searchResult.getIssues();
+
+		List<JiraIssue> allIssues = new ArrayList<>();
+
+		int pageNumber = 0;
+		long totalResults;
+		do {
+			Assert.isTrue(pageNumber < MAX_PAGES, "Unexpected high page number: " + pageNumber);
+			JiraSearchResult searchResult = getForObject("/rest/api/2/search?jql={jql}&fields={fieldsToFetch}&startAt={startAt}&maxResults={pageSize}",
+				JiraSearchResult.class, filter.getJql(), fieldsToFetch, pageNumber * pageSize, pageSize);
+			allIssues.addAll(searchResult.getIssues());
+			totalResults = searchResult.getTotal();
+			pageNumber++;
+			int numPages = (int) Math.ceil(totalResults / (double) pageSize);
+			log.info("got {}/{} issues (page {}/{})", allIssues.size(), totalResults, pageNumber, numPages);
+		} while (pageNumber * pageSize < totalResults);
+		return allIssues;
 	}
 
 	private String getFieldsToFetch(Collection<String> customFields) {
