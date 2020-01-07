@@ -80,7 +80,7 @@ public class JiraIssueWebLinker implements JiraIssueLinker {
 		final JiraIssue issue;
 		try {
 			issue = toJiraService.getIssueByKey(key);
-		} catch (Exception e) {
+		} catch (RuntimeException e) {
 			throw new JiraSyncException("Failed to resolve '" + key + "' in " + toJiraService, e);
 		}
 		if (issue == null) {
