@@ -45,22 +45,26 @@ public class JiraIssueWebLinker implements JiraIssueLinker {
 	}
 
 	private List<String> resolveKeys(JiraIssue fromIssue, JiraService fromJiraService, JiraService toJiraService) {
-		Instant issueUpdated = fromIssue.getFields().getUpdated().toInstant();
-		List<JiraRemoteLink> remoteLinks = fromJiraService.getRemoteLinks(fromIssue.getKey(), issueUpdated);
-		Pattern pattern = createPattern(toJiraService);
-		List<String> resolvedKeys = new ArrayList<>();
-		for (JiraRemoteLink remoteLink : remoteLinks) {
-			URL remoteLinkUrl = remoteLink.getObject().getUrl();
-			Matcher matcher = pattern.matcher(remoteLinkUrl.toString());
-			if (matcher.matches()) {
-				String key = matcher.group(1);
-				log.debug("{}: found remote link: {} with key {}", fromIssue, remoteLinkUrl, key);
-				resolvedKeys.add(key);
-			} else {
-				log.debug("{}: ignoring remote link: {}", fromIssue, remoteLinkUrl);
+		try {
+			Instant issueUpdated = fromIssue.getFields().getUpdated().toInstant();
+			List<JiraRemoteLink> remoteLinks = fromJiraService.getRemoteLinks(fromIssue.getKey(), issueUpdated);
+			Pattern pattern = createPattern(toJiraService);
+			List<String> resolvedKeys = new ArrayList<>();
+			for (JiraRemoteLink remoteLink : remoteLinks) {
+				URL remoteLinkUrl = remoteLink.getObject().getUrl();
+				Matcher matcher = pattern.matcher(remoteLinkUrl.toString());
+				if (matcher.matches()) {
+					String key = matcher.group(1);
+					log.debug("{}: found remote link: {} with key {}", fromIssue, remoteLinkUrl, key);
+					resolvedKeys.add(key);
+				} else {
+					log.debug("{}: ignoring remote link: {}", fromIssue, remoteLinkUrl);
+				}
 			}
+			return resolvedKeys;
+		} catch (RuntimeException e) {
+			throw new JiraSyncException("Failed to resolved keys for " + fromIssue, e);
 		}
-		return resolvedKeys;
 	}
 
 	private Pattern createPattern(JiraService jiraService) {

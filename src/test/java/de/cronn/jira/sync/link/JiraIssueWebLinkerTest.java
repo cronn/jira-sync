@@ -153,4 +153,18 @@ public class JiraIssueWebLinkerTest {
 			.withMessage("Illegal number of linked issues for JiraIssue[id=1,key=SOURCE-123]: [TARGET-123, TARGET-456]");
 	}
 
+	@Test
+	public void testResolve_FailedToGetRemoteLinks() throws Exception {
+		JiraIssueLinker resolver = new JiraIssueWebLinker();
+
+		JiraIssue sourceIssue = createJiraIssue("SOURCE-123", "1");
+
+		when(jiraSource.getRemoteLinks(sourceIssue.getKey(), UPDATED)).thenThrow(new JiraSyncException("You do not have the permission to see the specified issue."));
+
+		assertThatExceptionOfType(JiraSyncException.class)
+			.isThrownBy(() -> resolver.resolveIssue(sourceIssue, jiraSource, jiraTarget))
+			.withMessage("Failed to resolved keys for JiraIssue[id=1,key=SOURCE-123]")
+			.withStackTraceContaining("You do not have the permission to see the specified issue.");
+	}
+
 }
