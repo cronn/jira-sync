@@ -105,8 +105,8 @@ public class JiraSyncTask implements CommandLineRunner {
 
 	private List<JiraProjectSync> findFailedProjects(List<ProjectSyncResult> projectSyncResults) {
 		return projectSyncResults.stream().filter(ProjectSyncResult::hasFailed)
-				.map(ProjectSyncResult::getProjectSync)
-				.collect(Collectors.toList());
+			.map(ProjectSyncResult::getProjectSync)
+			.collect(Collectors.toList());
 	}
 
 	private String format(JiraProjectSync projectSync) {
