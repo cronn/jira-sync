@@ -159,11 +159,32 @@ public class JiraIssueWebLinkerTest {
 
 		JiraIssue sourceIssue = createJiraIssue("SOURCE-123", "1");
 
-		when(jiraSource.getRemoteLinks(sourceIssue.getKey(), UPDATED)).thenThrow(new JiraSyncException("You do not have the permission to see the specified issue."));
+		when(jiraSource.getRemoteLinks(sourceIssue.getKey(), UPDATED))
+			.thenThrow(new JiraSyncException("You do not have the permission to see the specified issue."));
 
 		assertThatExceptionOfType(JiraSyncException.class)
 			.isThrownBy(() -> resolver.resolveIssue(sourceIssue, jiraSource, jiraTarget))
 			.withMessage("Failed to resolved keys for JiraIssue[id=1,key=SOURCE-123]")
+			.withStackTraceContaining("You do not have the permission to see the specified issue.");
+	}
+
+	@Test
+	public void testResolve_FailedToGetIssueInTarget() throws Exception {
+		JiraIssueLinker resolver = new JiraIssueWebLinker();
+
+		JiraIssue sourceIssue = createJiraIssue("SOURCE-12", "1");
+		JiraIssue targetIssue = createJiraIssue("TARGET-123", "1");
+
+		when(jiraTarget.getIssueByKey(targetIssue.getKey()))
+			.thenThrow(new JiraSyncException("You do not have the permission to see the specified issue."));
+
+		List<JiraRemoteLink> remoteLinks = new ArrayList<>();
+		remoteLinks.add(new JiraRemoteLink(JIRA_TARGET_URL + "/browse/" + targetIssue.getKey()));
+		when(jiraSource.getRemoteLinks(sourceIssue.getKey(), UPDATED)).thenReturn(remoteLinks);
+
+		assertThatExceptionOfType(JiraSyncException.class)
+			.isThrownBy(() -> resolver.resolveIssue(sourceIssue, jiraSource, jiraTarget))
+			.withMessage("Failed to resolve 'TARGET-123' in jiraTarget")
 			.withStackTraceContaining("You do not have the permission to see the specified issue.");
 	}
 
