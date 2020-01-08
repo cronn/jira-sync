@@ -33,13 +33,14 @@ if (project.hasProperty('projectVersion')) {
 	version = "1.0"
 }
 
+plugins.withType(JacocoPlugin) {
+	tasks["test"].finalizedBy 'jacocoTestReport'
+}
+
 jacocoTestReport {
 	reports {
-		html.enabled = false
-		xml.enabled = true
-		csv.enabled = false
+		xml.enabled true
 	}
-	dependsOn test
 }
 
 springBoot {
