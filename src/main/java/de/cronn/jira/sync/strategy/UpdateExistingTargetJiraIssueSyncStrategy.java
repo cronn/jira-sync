@@ -318,9 +318,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 			if (transition.isAssignToMyselfInSource()) {
 				JiraUser myself = jiraSource.getMyself();
 				if (!isEqual(sourceIssue, myself)) {
-					JiraIssueUpdate jiraIssueUpdate = new JiraIssueUpdate();
-					jiraIssueUpdate.getOrCreateFields().setAssignee(myself);
-					jiraSource.updateIssue(sourceIssue.getKey(), jiraIssueUpdate);
+					jiraSource.updateIssue(sourceIssue.getKey(), fields -> fields.setAssignee(myself));
 				}
 			}
 
