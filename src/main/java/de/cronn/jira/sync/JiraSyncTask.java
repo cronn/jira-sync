@@ -2,11 +2,13 @@ package de.cronn.jira.sync;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -118,10 +120,12 @@ public class JiraSyncTask implements CommandLineRunner {
 		List<String> sourceFilterIds = projectSync.getSourceFilterIds();
 		Assert.notEmpty(sourceFilterIds, "sourceFilterIds must be configured");
 
-		List<JiraIssue> issues = new ArrayList<>();
-		for (String sourceFilterId : sourceFilterIds) {
-			issues.addAll(jiraSource.getIssuesByFilterId(sourceFilterId, jiraSyncConfig.getFieldMapping().keySet()));
-		}
+		Set<String> customFields = jiraSyncConfig.getFieldMapping().keySet();
+		List<JiraIssue> issues = sourceFilterIds.stream()
+			.map(sourceFilterId -> jiraSource.getIssuesByFilterId(sourceFilterId, customFields))
+			.flatMap(Collection::stream)
+			.filter(StreamUtils.distinctByKey(JiraIssue::getKey))
+			.collect(Collectors.toList());
 
 		Map<SyncResult, Long> resultCounts = new EnumMap<>(SyncResult.class);
 		for (SyncResult syncResult : SyncResult.values()) {
