@@ -151,9 +151,15 @@ public class JiraDummyService {
 
 	public void associateFilterIdToProject(Context context, String filterId, JiraProject project) {
 		validateProject(context, project);
-		Map<String, JiraProject> projectAssociatedToFilterId = getData(context).getProjectAssociatedToFilterId();
-		Object old = projectAssociatedToFilterId.putIfAbsent(filterId, project);
-		Assert.isNull(old, "project already associated to filter " + filterId);
+		setFilter(context, filterId, issue -> {
+			String issueProjectId = issue.getFields().getProject().getId();
+			return issueProjectId.equals(project.getId());
+		});
+	}
+
+	public void setFilter(Context context, String filterId, JiraFilter filter) {
+		Map<String, JiraFilter> filters = getData(context).getFilters();
+		filters.put(filterId, filter);
 	}
 
 	private Map<String, JiraProject> getProjects(Context context) {
@@ -179,12 +185,12 @@ public class JiraDummyService {
 	public JiraSearchResult search(@PathVariable(CONTEXT) Context context, @RequestParam("jql") String jql) {
 		JiraSearchResult result = new JiraSearchResult();
 
-		Map<String, JiraProject> projectAssociatedToFilterId = getData(context).getProjectAssociatedToFilterId();
-		JiraProject project = projectAssociatedToFilterId.get(jql);
-		Assert.notNull(project, "No project associated to filter " + jql);
+		Map<String, JiraFilter> filters = getData(context).getFilters();
+		JiraFilter filter = filters.get(jql);
+		Assert.notNull(filter, "Filter " + jql + " not found");
 
 		List<JiraIssue> allIssues = getAllIssues(context).stream()
-			.filter(issue -> issue.getFields().getProject().getKey().equals(project.getKey()))
+			.filter(filter::shouldInclude)
 			.collect(Collectors.toList());
 
 		result.setIssues(allIssues);

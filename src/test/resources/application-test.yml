@@ -59,7 +59,7 @@ de.cronn.jira.sync:
 de.cronn.jira.sync.projects[PRJ_ONE]:
     sourceProject: PROJECT_ONE
     targetProject: PRJ_ONE
-    sourceFilterId: 12345
+    sourceFilterIds: 12345, 56789
     remoteLinkIconInSource: ${de.cronn.jira.sync.source.url}/favicon.ico
     remoteLinkIconInTarget: ${de.cronn.jira.sync.target.url}/favicon.ico
 
@@ -109,7 +109,7 @@ de.cronn.jira.sync.projects[PRJ_ONE]:
 de.cronn.jira.sync.projects[PRJ_TWO]:
     sourceProject: SRC_TWO
     targetProject: TRG_TWO
-    sourceFilterId: 2222
+    sourceFilterIds: 2222
     remoteLinkIconInSource: ${de.cronn.jira.sync.source.url}/favicon.ico
     remoteLinkIconInTarget: ${de.cronn.jira.sync.target.url}/favicon.ico
 

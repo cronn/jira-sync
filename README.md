@@ -104,7 +104,7 @@ de.cronn.jira.sync.fieldMapping:
 de.cronn.jira.sync.projects[EX]:
   sourceProject: EXAMPLE
   targetProject: EX
-  sourceFilterId: 12345
+  sourceFilterIds: 12345
   remoteLinkIconInSource: ${de.cronn.jira.sync.source.url}/favicon.ico
   remoteLinkIconInTarget: ${de.cronn.jira.sync.target.url}/favicon.ico
 
