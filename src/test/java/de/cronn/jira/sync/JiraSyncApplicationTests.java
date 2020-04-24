@@ -377,7 +377,7 @@ public class JiraSyncApplicationTests {
 		sourceIssue1.getFields().setLabels(newLinkedHashSet("label1", "label2"));
 		sourceIssue1.getFields().setVersions(newLinkedHashSet(SOURCE_VERSION_10, SOURCE_VERSION_11, SOURCE_VERSION_UNDEFINED));
 		sourceIssue1.getFields().setFixVersions(newLinkedHashSet(SOURCE_VERSION_11));
-		jiraSource.createIssue(sourceIssue1);
+		JiraIssue createdSourceIssue1 = jiraSource.createIssue(sourceIssue1);
 
 		JiraIssue sourceIssue2 = new JiraIssue(null, null, "My second bug", SOURCE_STATUS_OPEN);
 		sourceIssue2.getFields().setProject(SOURCE_PROJECT);
@@ -402,6 +402,22 @@ public class JiraSyncApplicationTests {
 		JiraIssue targetIssue2 = jiraDummyService.getIssueByKey(TARGET, "PRJ_ONE-2");
 		JiraIssueFields targetIssueFields2 = targetIssue2.getFields();
 		assertThat(targetIssueFields2.getSummary()).isEqualTo("PROJECT_ONE-2: My second bug");
+
+		// Let the filters overlap
+		jiraDummyService.setFilter(SOURCE, "12345", filterByProjectAndTypes(SOURCE_PROJECT, SOURCE_TYPE_BUG));
+		jiraDummyService.setFilter(SOURCE, "56789", filterByProjectAndTypes(SOURCE_PROJECT, SOURCE_TYPE_BUG));
+
+		JiraIssueUpdate update = new JiraIssueUpdate();
+		update.getOrCreateFields().setDescription("changed description");
+		jiraSource.updateIssue(createdSourceIssue1.getKey(), update);
+
+		clock.windForwardSeconds(30);
+		syncAndCheckResult();
+
+		JiraIssue updatedTargetIssue1 = jiraDummyService.getIssueByKey(TARGET, targetIssue1.getKey());
+		assertThat(updatedTargetIssue1.getFields().getDescription()).isEqualTo("{panel:title=Original description|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
+			"changed description\n" +
+			"{panel}");
 
 		syncAndAssertNoChanges();
 	}
