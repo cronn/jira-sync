@@ -5,10 +5,12 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import de.cronn.jira.sync.config.JiraConnectionProperties;
 import de.cronn.jira.sync.domain.JiraComment;
 import de.cronn.jira.sync.domain.JiraField;
+import de.cronn.jira.sync.domain.JiraFieldsUpdate;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueUpdate;
 import de.cronn.jira.sync.domain.JiraPriority;
@@ -40,7 +42,7 @@ public interface JiraService extends AutoCloseable {
 	JiraUser getUserByName(String username);
 
 	JiraIssue getIssueByKey(String key);
-	
+
 	JiraIssue getIssueByKeyWithChangelog(String issueKey);
 
 	Map<String, Object> getAllowedValuesForCustomField(String projectKey, String customFieldId);
@@ -70,6 +72,12 @@ public interface JiraService extends AutoCloseable {
 	void updateComment(String issueKey, String commentId, String commentText);
 
 	JiraIssue createIssue(JiraIssue issue);
+
+	default void updateIssue(String issueKey, Consumer<JiraFieldsUpdate> fieldsUpdateConsumer) {
+		JiraIssueUpdate jiraIssueUpdate = new JiraIssueUpdate();
+		fieldsUpdateConsumer.accept(jiraIssueUpdate.getOrCreateFields());
+		updateIssue(issueKey, jiraIssueUpdate);
+	}
 
 	void updateIssue(String issueKey, JiraIssueUpdate issueUpdate);
 

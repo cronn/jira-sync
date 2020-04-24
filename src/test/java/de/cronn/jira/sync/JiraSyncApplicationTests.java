@@ -407,9 +407,7 @@ public class JiraSyncApplicationTests {
 		jiraDummyService.setFilter(SOURCE, "12345", filterByProjectAndTypes(SOURCE_PROJECT, SOURCE_TYPE_BUG));
 		jiraDummyService.setFilter(SOURCE, "56789", filterByProjectAndTypes(SOURCE_PROJECT, SOURCE_TYPE_BUG));
 
-		JiraIssueUpdate update = new JiraIssueUpdate();
-		update.getOrCreateFields().setDescription("changed description");
-		jiraSource.updateIssue(createdSourceIssue1.getKey(), update);
+		jiraSource.updateIssue(createdSourceIssue1.getKey(), fields -> fields.setDescription("changed description"));
 
 		clock.windForwardSeconds(30);
 		syncAndCheckResult();
@@ -535,9 +533,7 @@ public class JiraSyncApplicationTests {
 		assertThat(targetIssue.getFields().getDescription()).isEqualTo("");
 
 		// when
-		JiraIssueUpdate update = new JiraIssueUpdate();
-		update.getOrCreateFields().setDescription("changed description");
-		jiraSource.updateIssue(createdSourceIssue.getKey(), update);
+		jiraSource.updateIssue(createdSourceIssue.getKey(), fields -> fields.setDescription("changed description"));
 
 		Instant beforeSecondUpdate = Instant.now(clock);
 		clock.windForwardSeconds(30);
@@ -1051,9 +1047,9 @@ public class JiraSyncApplicationTests {
 		// when
 		clock.windForwardSeconds(30);
 
-		JiraIssueUpdate update = new JiraIssueUpdate();
-		update.getOrCreateFields().setOther(SOURCE_CUSTOM_FIELD_FOUND_IN_VERSION.getId(), Arrays.asList("1.0", "1.1"));
-		jiraSource.updateIssue(createdSourceIssue.getKey(), update);
+		jiraSource.updateIssue(createdSourceIssue.getKey(), fields -> {
+			fields.setOther(SOURCE_CUSTOM_FIELD_FOUND_IN_VERSION.getId(), Arrays.asList("1.0", "1.1"));
+		});
 
 		clock.windForwardSeconds(30);
 
