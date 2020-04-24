@@ -115,9 +115,13 @@ public class JiraSyncTask implements CommandLineRunner {
 
 	private ProjectSyncResult syncProject(JiraService jiraSource, JiraService jiraTarget, JiraProjectSync projectSync) {
 		log.info("syncing project {}", format(projectSync));
-		String sourceFilterId = projectSync.getSourceFilterId();
-		Assert.notNull(sourceFilterId, "sourceFilterId must be configured");
-		List<JiraIssue> issues = jiraSource.getIssuesByFilterId(sourceFilterId, jiraSyncConfig.getFieldMapping().keySet());
+		List<String> sourceFilterIds = projectSync.getSourceFilterIds();
+		Assert.notEmpty(sourceFilterIds, "sourceFilterIds must be configured");
+
+		List<JiraIssue> issues = new ArrayList<>();
+		for (String sourceFilterId : sourceFilterIds) {
+			issues.addAll(jiraSource.getIssuesByFilterId(sourceFilterId, jiraSyncConfig.getFieldMapping().keySet()));
+		}
 
 		Map<SyncResult, Long> resultCounts = new EnumMap<>(SyncResult.class);
 		for (SyncResult syncResult : SyncResult.values()) {

@@ -1,8 +1,10 @@
 package de.cronn.jira.sync.config;
 
 import java.net.URL;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -13,7 +15,7 @@ public class JiraProjectSync {
 
 	private String sourceProject;
 	private String targetProject;
-	private String sourceFilterId;
+	private List<String> sourceFilterIds;
 	private URL remoteLinkIconInSource;
 	private URL remoteLinkIconInTarget;
 	private String targetIssueTypeFallback;
@@ -41,12 +43,12 @@ public class JiraProjectSync {
 		this.targetProject = targetProject;
 	}
 
-	public void setSourceFilterId(String sourceFilterId) {
-		this.sourceFilterId = sourceFilterId;
+	public void setSourceFilterIds(String... sourceFilterIds) {
+		this.sourceFilterIds = Arrays.asList(sourceFilterIds);
 	}
 
-	public String getSourceFilterId() {
-		return sourceFilterId;
+	public List<String> getSourceFilterIds() {
+		return sourceFilterIds;
 	}
 
 	public String getTargetIssueTypeFallback() {

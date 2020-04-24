@@ -50,6 +50,7 @@ import de.cronn.jira.sync.domain.JiraTransition;
 import de.cronn.jira.sync.domain.JiraUser;
 import de.cronn.jira.sync.domain.JiraVersion;
 import de.cronn.jira.sync.dummy.JiraDummyService;
+import de.cronn.jira.sync.dummy.JiraFilter;
 import de.cronn.jira.sync.service.JiraService;
 import de.cronn.jira.sync.strategy.SyncResult;
 
@@ -76,7 +77,8 @@ public class JiraSyncApplicationTests {
 	private static final JiraIssueStatus TARGET_STATUS_CLOSED = new JiraIssueStatus("103", "Closed");
 
 	private static final JiraIssueType SOURCE_TYPE_BUG = new JiraIssueType("1", "Bug");
-	private static final JiraIssueType SOURCE_TYPE_UNKNOWN = new JiraIssueType("2", "Unknown");
+	private static final JiraIssueType SOURCE_TYPE_STORY = new JiraIssueType("2", "Story");
+	private static final JiraIssueType SOURCE_TYPE_UNKNOWN = new JiraIssueType("3", "Unknown");
 
 	private static final JiraIssueType TARGET_TYPE_BUG = new JiraIssueType("100", "Bug");
 	private static final JiraIssueType TARGET_TYPE_IMPROVEMENT = new JiraIssueType("101", "Improvement");
@@ -158,6 +160,14 @@ public class JiraSyncApplicationTests {
 		}
 	}
 
+	private static JiraFilter filterByProjectAndTypes(JiraProject project, JiraIssueType... issueTypes) {
+		return issue -> {
+			JiraIssueFields fields = issue.getFields();
+			return fields.getProject().getId().equals(project.getId())
+				&& Arrays.stream(issueTypes).anyMatch(issueType -> fields.getIssuetype().getId().equals(issueType.getId()));
+		};
+	}
+
 	@Before
 	public void resetClock() {
 		clock.reset();
@@ -165,7 +175,6 @@ public class JiraSyncApplicationTests {
 
 	@Before
 	public void setUp() throws Exception {
-
 		String commonBaseUrl = "https://localhost:" + port + "/";
 		sourceBaseUrl = commonBaseUrl + SOURCE + "/";
 		targetBaseUrl = commonBaseUrl + TARGET + "/";
@@ -188,7 +197,8 @@ public class JiraSyncApplicationTests {
 		jiraDummyService.addProject(SOURCE, SOURCE_PROJECT_2);
 		jiraDummyService.addProject(TARGET, TARGET_PROJECT_2);
 
-		jiraDummyService.associateFilterIdToProject(SOURCE, "12345", SOURCE_PROJECT);
+		jiraDummyService.setFilter(SOURCE, "12345", filterByProjectAndTypes(SOURCE_PROJECT, SOURCE_TYPE_BUG, SOURCE_TYPE_UNKNOWN));
+		jiraDummyService.setFilter(SOURCE, "56789", issue -> false);
 		jiraDummyService.associateFilterIdToProject(SOURCE, "2222", SOURCE_PROJECT_2);
 
 		jiraDummyService.addPriority(SOURCE, SOURCE_PRIORITY_HIGH);
@@ -354,6 +364,44 @@ public class JiraSyncApplicationTests {
 		JiraRemoteLinkObject firstRemoteLinkInTarget = remoteLinksInTarget.iterator().next().getObject();
 		assertThat(firstRemoteLinkInTarget.getUrl()).isEqualTo(new URL(sourceBaseUrl + "/browse/PROJECT_ONE-1"));
 		assertThat(firstRemoteLinkInTarget.getIcon().getUrl16x16()).isEqualTo(new URL("https://jira-target/favicon.ico"));
+
+		syncAndAssertNoChanges();
+	}
+
+	@Test
+	public void testCreateTicketInTargetFromSecondFilter() throws Exception {
+		JiraIssue sourceIssue1 = new JiraIssue(null, null, "My first bug", SOURCE_STATUS_OPEN);
+		sourceIssue1.getFields().setProject(SOURCE_PROJECT);
+		sourceIssue1.getFields().setIssuetype(SOURCE_TYPE_BUG);
+		sourceIssue1.getFields().setPriority(SOURCE_PRIORITY_HIGH);
+		sourceIssue1.getFields().setLabels(newLinkedHashSet("label1", "label2"));
+		sourceIssue1.getFields().setVersions(newLinkedHashSet(SOURCE_VERSION_10, SOURCE_VERSION_11, SOURCE_VERSION_UNDEFINED));
+		sourceIssue1.getFields().setFixVersions(newLinkedHashSet(SOURCE_VERSION_11));
+		jiraSource.createIssue(sourceIssue1);
+
+		JiraIssue sourceIssue2 = new JiraIssue(null, null, "My second bug", SOURCE_STATUS_OPEN);
+		sourceIssue2.getFields().setProject(SOURCE_PROJECT);
+		sourceIssue2.getFields().setIssuetype(SOURCE_TYPE_STORY);
+		sourceIssue2.getFields().setPriority(SOURCE_PRIORITY_HIGH);
+		sourceIssue2.getFields().setLabels(newLinkedHashSet("label1", "label2"));
+		sourceIssue2.getFields().setVersions(newLinkedHashSet(SOURCE_VERSION_10, SOURCE_VERSION_11, SOURCE_VERSION_UNDEFINED));
+		sourceIssue2.getFields().setFixVersions(newLinkedHashSet(SOURCE_VERSION_11));
+		jiraSource.createIssue(sourceIssue2);
+
+		clock.windForwardSeconds(30);
+		syncAndCheckResult();
+
+		JiraIssue targetIssue1 = getSingleIssue(TARGET);
+		JiraIssueFields targetIssueFields1 = targetIssue1.getFields();
+		assertThat(targetIssueFields1.getSummary()).isEqualTo("PROJECT_ONE-1: My first bug");
+
+		jiraDummyService.setFilter(SOURCE, "56789", filterByProjectAndTypes(SOURCE_PROJECT, SOURCE_TYPE_STORY));
+		clock.windForwardSeconds(30);
+		syncAndCheckResult();
+
+		JiraIssue targetIssue2 = jiraDummyService.getIssueByKey(TARGET, "PRJ_ONE-2");
+		JiraIssueFields targetIssueFields2 = targetIssue2.getFields();
+		assertThat(targetIssueFields2.getSummary()).isEqualTo("PROJECT_ONE-2: My second bug");
 
 		syncAndAssertNoChanges();
 	}
