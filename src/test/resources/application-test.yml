@@ -56,9 +56,9 @@ de.cronn.jira.sync:
     Won't Do: Rejected
 
 
-de.cronn.jira.sync.projects[PRJ_ONE]:
-    sourceProject: PROJECT_ONE
-    targetProject: PRJ_ONE
+de.cronn.jira.sync.projects[TRG_ONE]:
+    sourceProject: SRC_ONE
+    targetProject: TRG_ONE
     sourceFilterIds: 12345, 56789
     remoteLinkIconInSource: ${de.cronn.jira.sync.source.url}/favicon.ico
     remoteLinkIconInTarget: ${de.cronn.jira.sync.target.url}/favicon.ico

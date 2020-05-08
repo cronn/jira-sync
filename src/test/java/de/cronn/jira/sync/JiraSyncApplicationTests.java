@@ -1,8 +1,11 @@
 package de.cronn.jira.sync;
 
-import static de.cronn.jira.sync.SetUtils.*;
-import static de.cronn.jira.sync.config.Context.*;
-import static org.assertj.core.api.Assertions.*;
+import static de.cronn.jira.sync.SetUtils.newLinkedHashSet;
+import static de.cronn.jira.sync.config.Context.SOURCE;
+import static de.cronn.jira.sync.config.Context.TARGET;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.entry;
 
 import java.net.URL;
 import java.time.Instant;
@@ -59,11 +62,10 @@ import de.cronn.jira.sync.strategy.SyncResult;
 @ActiveProfiles("test")
 public class JiraSyncApplicationTests {
 
-	private static final JiraProject SOURCE_PROJECT = new JiraProject("1", "PROJECT_ONE");
-	private static final JiraProject SOURCE_PROJECT_OTHER = new JiraProject("2", "PROJECT_OTHER");
-	private static final JiraProject TARGET_PROJECT = new JiraProject("100", "PRJ_ONE");
+	private static final JiraProject SOURCE_PROJECT_1 = new JiraProject("1", "SRC_ONE");
+	private static final JiraProject TARGET_PROJECT_1 = new JiraProject("100", "TRG_ONE");
 
-	private static final JiraProject SOURCE_PROJECT_2 = new JiraProject("20", "SRC_TWO");
+	private static final JiraProject SOURCE_PROJECT_2 = new JiraProject("2", "SRC_TWO");
 	private static final JiraProject TARGET_PROJECT_2 = new JiraProject("200", "TRG_TWO");
 
 	private static final JiraIssueStatus SOURCE_STATUS_OPEN = new JiraIssueStatus("1", "Open");
@@ -194,14 +196,13 @@ public class JiraSyncApplicationTests {
 		jiraDummyService.setBaseUrl(SOURCE, sourceBaseUrl);
 		jiraDummyService.setBaseUrl(TARGET, targetBaseUrl);
 
-		jiraDummyService.addProject(SOURCE, SOURCE_PROJECT);
-		jiraDummyService.addProject(SOURCE, SOURCE_PROJECT_OTHER);
-		jiraDummyService.addProject(TARGET, TARGET_PROJECT);
+		jiraDummyService.addProject(SOURCE, SOURCE_PROJECT_1);
+		jiraDummyService.addProject(TARGET, TARGET_PROJECT_1);
 
 		jiraDummyService.addProject(SOURCE, SOURCE_PROJECT_2);
 		jiraDummyService.addProject(TARGET, TARGET_PROJECT_2);
 
-		jiraDummyService.setFilter(SOURCE, SOURCE_PROJECT_1_FILTER_ID_1, filterByProjectAndTypes(SOURCE_PROJECT, SOURCE_TYPE_BUG, SOURCE_TYPE_UNKNOWN));
+		jiraDummyService.setFilter(SOURCE, SOURCE_PROJECT_1_FILTER_ID_1, filterByProjectAndTypes(SOURCE_PROJECT_1, SOURCE_TYPE_BUG, SOURCE_TYPE_UNKNOWN));
 		jiraDummyService.setFilter(SOURCE, SOURCE_PROJECT_1_FILTER_ID_2, issue -> false);
 		jiraDummyService.associateFilterIdToProject(SOURCE, SOURCE_PROJECT_2_FILTER_ID, SOURCE_PROJECT_2);
 
@@ -243,7 +244,7 @@ public class JiraSyncApplicationTests {
 
 		jiraDummyService.setDefaultStatus(TARGET, TARGET_STATUS_OPEN);
 
-		TARGET_PROJECT.setIssueTypes(Arrays.asList(TARGET_TYPE_BUG, TARGET_TYPE_IMPROVEMENT, TARGET_TYPE_TASK));
+		TARGET_PROJECT_1.setIssueTypes(Arrays.asList(TARGET_TYPE_BUG, TARGET_TYPE_IMPROVEMENT, TARGET_TYPE_TASK));
 		TARGET_PROJECT_2.setIssueTypes(Arrays.asList(TARGET_TYPE_BUG, TARGET_TYPE_IMPROVEMENT, TARGET_TYPE_TASK));
 
 		jiraDummyService.expectLoginRequest(SOURCE, "jira-sync", "secret in source");
@@ -329,7 +330,7 @@ public class JiraSyncApplicationTests {
 	public void testCreateTicketInTarget() throws Exception {
 		// given
 		JiraIssue sourceIssue = new JiraIssue(null, null, "My first bug", SOURCE_STATUS_OPEN);
-		sourceIssue.getFields().setProject(SOURCE_PROJECT);
+		sourceIssue.getFields().setProject(SOURCE_PROJECT_1);
 		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_BUG);
 		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
 		sourceIssue.getFields().setLabels(newLinkedHashSet("label1", "label2"));
@@ -345,7 +346,7 @@ public class JiraSyncApplicationTests {
 		// then
 		JiraIssue targetIssue = getSingleIssue(TARGET);
 		JiraIssueFields targetIssueFields = targetIssue.getFields();
-		assertThat(targetIssueFields.getSummary()).isEqualTo("PROJECT_ONE-1: My first bug");
+		assertThat(targetIssueFields.getSummary()).isEqualTo("SRC_ONE-1: My first bug");
 		assertThat(targetIssueFields.getIssuetype().getName()).isEqualTo(TARGET_TYPE_BUG.getName());
 		assertThat(targetIssueFields.getPriority().getName()).isEqualTo(TARGET_PRIORITY_CRITICAL.getName());
 		assertThat(targetIssueFields.getLabels()).containsExactly("label1", "label2");
@@ -362,11 +363,11 @@ public class JiraSyncApplicationTests {
 		assertThat(remoteLinksInSource).hasSize(1);
 
 		JiraRemoteLinkObject firstRemoteLinkInSource = remoteLinksInSource.iterator().next().getObject();
-		assertThat(firstRemoteLinkInSource.getUrl()).isEqualTo(new URL(targetBaseUrl + "/browse/PRJ_ONE-1"));
+		assertThat(firstRemoteLinkInSource.getUrl()).isEqualTo(new URL(targetBaseUrl + "/browse/TRG_ONE-1"));
 		assertThat(firstRemoteLinkInSource.getIcon().getUrl16x16()).isEqualTo(new URL("https://jira-source/favicon.ico"));
 
 		JiraRemoteLinkObject firstRemoteLinkInTarget = remoteLinksInTarget.iterator().next().getObject();
-		assertThat(firstRemoteLinkInTarget.getUrl()).isEqualTo(new URL(sourceBaseUrl + "/browse/PROJECT_ONE-1"));
+		assertThat(firstRemoteLinkInTarget.getUrl()).isEqualTo(new URL(sourceBaseUrl + "/browse/SRC_ONE-1"));
 		assertThat(firstRemoteLinkInTarget.getIcon().getUrl16x16()).isEqualTo(new URL("https://jira-target/favicon.ico"));
 
 		syncAndAssertNoChanges();
@@ -375,7 +376,7 @@ public class JiraSyncApplicationTests {
 	@Test
 	public void testCreateTicketInTargetFromSecondFilter() throws Exception {
 		JiraIssue sourceIssue1 = new JiraIssue(null, null, "My first bug", SOURCE_STATUS_OPEN);
-		sourceIssue1.getFields().setProject(SOURCE_PROJECT);
+		sourceIssue1.getFields().setProject(SOURCE_PROJECT_1);
 		sourceIssue1.getFields().setIssuetype(SOURCE_TYPE_BUG);
 		sourceIssue1.getFields().setPriority(SOURCE_PRIORITY_HIGH);
 		sourceIssue1.getFields().setLabels(newLinkedHashSet("label1", "label2"));
@@ -384,7 +385,7 @@ public class JiraSyncApplicationTests {
 		JiraIssue createdSourceIssue1 = jiraSource.createIssue(sourceIssue1);
 
 		JiraIssue sourceIssue2 = new JiraIssue(null, null, "My second bug", SOURCE_STATUS_OPEN);
-		sourceIssue2.getFields().setProject(SOURCE_PROJECT);
+		sourceIssue2.getFields().setProject(SOURCE_PROJECT_1);
 		sourceIssue2.getFields().setIssuetype(SOURCE_TYPE_STORY);
 		sourceIssue2.getFields().setPriority(SOURCE_PRIORITY_HIGH);
 		sourceIssue2.getFields().setLabels(newLinkedHashSet("label1", "label2"));
@@ -397,19 +398,19 @@ public class JiraSyncApplicationTests {
 
 		JiraIssue targetIssue1 = getSingleIssue(TARGET);
 		JiraIssueFields targetIssueFields1 = targetIssue1.getFields();
-		assertThat(targetIssueFields1.getSummary()).isEqualTo("PROJECT_ONE-1: My first bug");
+		assertThat(targetIssueFields1.getSummary()).isEqualTo("SRC_ONE-1: My first bug");
 
-		jiraDummyService.setFilter(SOURCE, "56789", filterByProjectAndTypes(SOURCE_PROJECT, SOURCE_TYPE_STORY));
+		jiraDummyService.setFilter(SOURCE, "56789", filterByProjectAndTypes(SOURCE_PROJECT_1, SOURCE_TYPE_STORY));
 		clock.windForwardSeconds(30);
 		syncAndCheckResult();
 
-		JiraIssue targetIssue2 = jiraDummyService.getIssueByKey(TARGET, "PRJ_ONE-2");
+		JiraIssue targetIssue2 = jiraDummyService.getIssueByKey(TARGET, "TRG_ONE-2");
 		JiraIssueFields targetIssueFields2 = targetIssue2.getFields();
-		assertThat(targetIssueFields2.getSummary()).isEqualTo("PROJECT_ONE-2: My second bug");
+		assertThat(targetIssueFields2.getSummary()).isEqualTo("SRC_ONE-2: My second bug");
 
 		// Let the filters overlap
-		jiraDummyService.setFilter(SOURCE, SOURCE_PROJECT_1_FILTER_ID_1, filterByProjectAndTypes(SOURCE_PROJECT, SOURCE_TYPE_BUG));
-		jiraDummyService.setFilter(SOURCE, SOURCE_PROJECT_1_FILTER_ID_2, filterByProjectAndTypes(SOURCE_PROJECT, SOURCE_TYPE_BUG));
+		jiraDummyService.setFilter(SOURCE, SOURCE_PROJECT_1_FILTER_ID_1, filterByProjectAndTypes(SOURCE_PROJECT_1, SOURCE_TYPE_BUG));
+		jiraDummyService.setFilter(SOURCE, SOURCE_PROJECT_1_FILTER_ID_2, filterByProjectAndTypes(SOURCE_PROJECT_1, SOURCE_TYPE_BUG));
 
 		jiraSource.updateIssue(createdSourceIssue1.getKey(), fields -> fields.setDescription("changed description"));
 
@@ -428,7 +429,7 @@ public class JiraSyncApplicationTests {
 	public void testUnmappedVersionAndUnmappedPriority() throws Exception {
 		// given
 		JiraIssue sourceIssue = new JiraIssue(null, null, "some bug", SOURCE_STATUS_OPEN);
-		sourceIssue.getFields().setProject(SOURCE_PROJECT);
+		sourceIssue.getFields().setProject(SOURCE_PROJECT_1);
 		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_BUG);
 		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_UNMAPPED);
 		sourceIssue.getFields().setVersions(newLinkedHashSet(SOURCE_VERSION_UNMAPPED));
@@ -502,7 +503,7 @@ public class JiraSyncApplicationTests {
 	public void testCreateTicketInTarget_WithCustomFields() throws Exception {
 		// given
 		JiraIssue sourceIssue = new JiraIssue(null, null, "some issue", SOURCE_STATUS_OPEN);
-		sourceIssue.getFields().setProject(SOURCE_PROJECT);
+		sourceIssue.getFields().setProject(SOURCE_PROJECT_1);
 		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_UNKNOWN);
 		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
 		sourceIssue.getFields().setOther(SOURCE_CUSTOM_FIELD_FOUND_IN_VERSION.getId(), Arrays.asList("1.0", "1.1"));
@@ -620,7 +621,7 @@ public class JiraSyncApplicationTests {
 	public void testCopyCustomFieldsWhenIssueIsClosed() throws Exception {
 		// given
 		JiraIssue sourceIssue = new JiraIssue(null, null, "My first bug", SOURCE_STATUS_OPEN);
-		sourceIssue.getFields().setProject(SOURCE_PROJECT);
+		sourceIssue.getFields().setProject(SOURCE_PROJECT_1);
 		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_BUG);
 		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
 
@@ -709,8 +710,8 @@ public class JiraSyncApplicationTests {
 	}
 
 	private void moveTicketForwardAndBack(String issueKey) {
-		jiraDummyService.moveIssue(SOURCE, issueKey, SOURCE_PROJECT_OTHER.getKey());
-		jiraDummyService.moveIssue(SOURCE, issueKey, SOURCE_PROJECT.getKey());
+		jiraDummyService.moveIssue(SOURCE, issueKey, SOURCE_PROJECT_2.getKey());
+		jiraDummyService.moveIssue(SOURCE, issueKey, SOURCE_PROJECT_1.getKey());
 
 		JiraIssue sourceIssueMovedBack = getSingleIssue(SOURCE);
 		assertThat(sourceIssueMovedBack.getKey()).isNotEqualTo(issueKey);
@@ -735,7 +736,7 @@ public class JiraSyncApplicationTests {
 		update.getOrCreateFields().setFixVersions(newLinkedHashSet(TARGET_VERSION_10));
 		jiraDummyService.transitionIssue(TARGET, targetIssue.getKey(), update);
 
-		syncConfig.getProjects().get("PRJ_ONE").getTransition("ResolveWhenClosed").setTriggerIfIssueWasMovedBetweenProjects(true);
+		syncConfig.getProjects().get(TARGET_PROJECT_1.getKey()).getTransition("ResolveWhenClosed").setTriggerIfIssueWasMovedBetweenProjects(true);
 
 		// when
 		syncAndCheckResult();
@@ -753,7 +754,7 @@ public class JiraSyncApplicationTests {
 
 	private JiraIssue createIssueInSource(JiraIssueType issueType) {
 		JiraIssue sourceIssue = new JiraIssue(null, null, "some issue", SOURCE_STATUS_OPEN);
-		sourceIssue.getFields().setProject(SOURCE_PROJECT);
+		sourceIssue.getFields().setProject(SOURCE_PROJECT_1);
 		sourceIssue.getFields().setIssuetype(issueType);
 		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
 
@@ -849,12 +850,12 @@ public class JiraSyncApplicationTests {
 
 		assertThat(comments.iterator().next().getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:00 CEST|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
 			"some comment\n" +
-			"~??[comment 1_1|https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-1?focusedCommentId=1_1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_1]??~\n" +
+			"~??[comment 1_1|https://localhost:" + port + "/SOURCE/browse/SRC_ONE-1?focusedCommentId=1_1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_1]??~\n" +
 			"{panel}");
 
 		assertThat(comments.get(1).getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:02:00 CEST|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
 			"some other comment\n" +
-			"~??[comment 1_2|https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-1?focusedCommentId=1_2&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_2]??~\n" +
+			"~??[comment 1_2|https://localhost:" + port + "/SOURCE/browse/SRC_ONE-1?focusedCommentId=1_2&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_2]??~\n" +
 			"{panel}");
 
 		syncAndAssertNoChanges();
@@ -865,7 +866,7 @@ public class JiraSyncApplicationTests {
 		// given
 		JiraIssue sourceIssue = new JiraIssue(null, null, "some issue", SOURCE_STATUS_OPEN);
 		sourceIssue.getFields().setDescription("mentioning [~" + SOURCE_USER_SOME.getName() + "] in description");
-		sourceIssue.getFields().setProject(SOURCE_PROJECT);
+		sourceIssue.getFields().setProject(SOURCE_PROJECT_1);
 		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_UNKNOWN);
 		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
 		JiraIssue createdIssue = jiraSource.createIssue(sourceIssue);
@@ -886,12 +887,12 @@ public class JiraSyncApplicationTests {
 
 		assertThat(comments.get(0).getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:00 CEST|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
 			"[Another User|https://localhost:" + port + "/SOURCE/secure/ViewProfile.jspa?name=anotheruser]: some comment\n" +
-			"~??[comment 1_1|https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-1?focusedCommentId=1_1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_1]??~\n" +
+			"~??[comment 1_1|https://localhost:" + port + "/SOURCE/browse/SRC_ONE-1?focusedCommentId=1_1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_1]??~\n" +
 			"{panel}");
 
 		assertThat(comments.get(1).getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:00 CEST|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
 			"[~yetanotheruser]: some comment\n" +
-			"~??[comment 1_2|https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-1?focusedCommentId=1_2&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_2]??~\n" +
+			"~??[comment 1_2|https://localhost:" + port + "/SOURCE/browse/SRC_ONE-1?focusedCommentId=1_2&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_2]??~\n" +
 			"{panel}");
 
 		syncAndAssertNoChanges();
@@ -901,13 +902,13 @@ public class JiraSyncApplicationTests {
 	public void testCreateTicket_TicketReferences() throws Exception {
 		// given
 		JiraIssue sourceIssue = new JiraIssue(null, null, "some issue", SOURCE_STATUS_OPEN);
-		sourceIssue.getFields().setDescription("mentioning " + SOURCE_PROJECT.getKey() + "-123 in description");
-		sourceIssue.getFields().setProject(SOURCE_PROJECT);
+		sourceIssue.getFields().setDescription("mentioning " + SOURCE_PROJECT_1.getKey() + "-123 in description");
+		sourceIssue.getFields().setProject(SOURCE_PROJECT_1);
 		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_UNKNOWN);
 		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
 		JiraIssue createdIssue = jiraSource.createIssue(sourceIssue);
 
-		jiraSource.addComment(createdIssue.getKey(), "see ticket " + SOURCE_PROJECT.getKey() + "-456");
+		jiraSource.addComment(createdIssue.getKey(), "see ticket " + SOURCE_PROJECT_1.getKey() + "-456");
 
 		// when
 		syncAndCheckResult();
@@ -915,15 +916,15 @@ public class JiraSyncApplicationTests {
 		// then
 		JiraIssue targetIssue = getSingleIssue(TARGET);
 		assertThat(targetIssue.getFields().getDescription()).isEqualTo("{panel:title=Original description|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
-			"mentioning [PROJECT_ONE-123|https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-123] in description\n" +
+			"mentioning [SRC_ONE-123|https://localhost:" + port + "/SOURCE/browse/SRC_ONE-123] in description\n" +
 			"{panel}\n\n");
 
 		List<JiraComment> comments = targetIssue.getFields().getComment().getComments();
 		assertThat(comments).hasSize(1);
 
 		assertThat(comments.get(0).getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:00 CEST|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
-			"see ticket [PROJECT_ONE-456|https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-456]\n" +
-			"~??[comment 1_1|https://localhost:" + this.port + "/SOURCE/browse/PROJECT_ONE-1?focusedCommentId=1_1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_1]??~\n" +
+			"see ticket [SRC_ONE-456|https://localhost:" + port + "/SOURCE/browse/SRC_ONE-456]\n" +
+			"~??[comment 1_1|https://localhost:" + this.port + "/SOURCE/browse/SRC_ONE-1?focusedCommentId=1_1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_1]??~\n" +
 			"{panel}");
 
 		syncAndAssertNoChanges();
@@ -954,7 +955,7 @@ public class JiraSyncApplicationTests {
 		assertThat(comments).hasSize(1);
 		assertThat(comments.get(0).getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:30 CEST|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
 			"some comment\n" +
-			"~??[comment 1_1|https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-1?focusedCommentId=1_1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_1]??~\n" +
+			"~??[comment 1_1|https://localhost:" + port + "/SOURCE/browse/SRC_ONE-1?focusedCommentId=1_1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_1]??~\n" +
 			"{panel}");
 
 		syncAndAssertNoChanges();
@@ -983,7 +984,7 @@ public class JiraSyncApplicationTests {
 		targetIssue = getSingleIssue(TARGET);
 		List<JiraComment> comments = targetIssue.getFields().getComment().getComments();
 		assertThat(comments).hasSize(1);
-		String linkToFirstComment = "https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-1?focusedCommentId=1_1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_1";
+		String linkToFirstComment = "https://localhost:" + port + "/SOURCE/browse/SRC_ONE-1?focusedCommentId=1_1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_1";
 		assertThat(comments.get(0).getBody()).contains(linkToFirstComment);
 
 		syncAndAssertNoChanges();
@@ -1036,7 +1037,7 @@ public class JiraSyncApplicationTests {
 	public void testUpdateTicketInTarget_updateCustomField() throws Exception {
 		// given
 		JiraIssue sourceIssue = new JiraIssue(null, null, "My first bug", SOURCE_STATUS_OPEN);
-		sourceIssue.getFields().setProject(SOURCE_PROJECT);
+		sourceIssue.getFields().setProject(SOURCE_PROJECT_1);
 		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_BUG);
 		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
 		sourceIssue.getFields().setOther(SOURCE_CUSTOM_FIELD_FOUND_IN_VERSION.getId(), Collections.singletonList("1.0"));
@@ -1098,7 +1099,7 @@ public class JiraSyncApplicationTests {
 		assertThat(comment.getUpdated()).isEqualTo(secondSyncTime);
 		assertThat(comment.getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:00 CEST (Updated: 2016-05-23 20:01:00 CEST)|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
 			"updated second comment\n" +
-			"~??[comment 1_2|https://localhost:" + port + "/SOURCE/browse/PROJECT_ONE-1?focusedCommentId=1_2&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_2]??~\n" +
+			"~??[comment 1_2|https://localhost:" + port + "/SOURCE/browse/SRC_ONE-1?focusedCommentId=1_2&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_2]??~\n" +
 			"{panel}");
 
 		syncAndAssertNoChanges();
@@ -1218,7 +1219,7 @@ public class JiraSyncApplicationTests {
 
 	@Test
 	public void testGetAllowedValuesForCustomField() {
-		Map<String, Object> fields = jiraSource.getAllowedValuesForCustomField(SOURCE_PROJECT.getKey(), SOURCE_CUSTOM_FIELD_FIXED_IN_VERSION.getId());
+		Map<String, Object> fields = jiraSource.getAllowedValuesForCustomField(SOURCE_PROJECT_1.getKey(), SOURCE_CUSTOM_FIELD_FIXED_IN_VERSION.getId());
 		assertThat(fields).isNotNull();
 		assertThat(fields.values().size()).isGreaterThanOrEqualTo(1);
 	}
