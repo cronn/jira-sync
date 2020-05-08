@@ -113,6 +113,10 @@ public class JiraSyncApplicationTests {
 	private static final JiraField SOURCE_CUSTOM_FIELD_FIXED_IN_VERSION = new JiraField("2", "Fixed in version", true, FIELD_SCHEMA_SELECT);
 	private static final JiraField TARGET_CUSTOM_FIELD_FIXED_IN_VERSION = new JiraField("200", "Fixed in software version", true, FIELD_SCHEMA_SELECT);
 
+	private static final String SOURCE_PROJECT_1_FILTER_ID_1 = "12345";
+	private static final String SOURCE_PROJECT_1_FILTER_ID_2 = "56789";
+	private static final String SOURCE_PROJECT_2_FILTER_ID = "2222";
+
 	@Autowired
 	private TestClock clock;
 
@@ -197,9 +201,9 @@ public class JiraSyncApplicationTests {
 		jiraDummyService.addProject(SOURCE, SOURCE_PROJECT_2);
 		jiraDummyService.addProject(TARGET, TARGET_PROJECT_2);
 
-		jiraDummyService.setFilter(SOURCE, "12345", filterByProjectAndTypes(SOURCE_PROJECT, SOURCE_TYPE_BUG, SOURCE_TYPE_UNKNOWN));
-		jiraDummyService.setFilter(SOURCE, "56789", issue -> false);
-		jiraDummyService.associateFilterIdToProject(SOURCE, "2222", SOURCE_PROJECT_2);
+		jiraDummyService.setFilter(SOURCE, SOURCE_PROJECT_1_FILTER_ID_1, filterByProjectAndTypes(SOURCE_PROJECT, SOURCE_TYPE_BUG, SOURCE_TYPE_UNKNOWN));
+		jiraDummyService.setFilter(SOURCE, SOURCE_PROJECT_1_FILTER_ID_2, issue -> false);
+		jiraDummyService.associateFilterIdToProject(SOURCE, SOURCE_PROJECT_2_FILTER_ID, SOURCE_PROJECT_2);
 
 		jiraDummyService.addPriority(SOURCE, SOURCE_PRIORITY_HIGH);
 		jiraDummyService.addPriority(SOURCE, SOURCE_PRIORITY_UNMAPPED);
@@ -404,8 +408,8 @@ public class JiraSyncApplicationTests {
 		assertThat(targetIssueFields2.getSummary()).isEqualTo("PROJECT_ONE-2: My second bug");
 
 		// Let the filters overlap
-		jiraDummyService.setFilter(SOURCE, "12345", filterByProjectAndTypes(SOURCE_PROJECT, SOURCE_TYPE_BUG));
-		jiraDummyService.setFilter(SOURCE, "56789", filterByProjectAndTypes(SOURCE_PROJECT, SOURCE_TYPE_BUG));
+		jiraDummyService.setFilter(SOURCE, SOURCE_PROJECT_1_FILTER_ID_1, filterByProjectAndTypes(SOURCE_PROJECT, SOURCE_TYPE_BUG));
+		jiraDummyService.setFilter(SOURCE, SOURCE_PROJECT_1_FILTER_ID_2, filterByProjectAndTypes(SOURCE_PROJECT, SOURCE_TYPE_BUG));
 
 		jiraSource.updateIssue(createdSourceIssue1.getKey(), fields -> fields.setDescription("changed description"));
 
