@@ -6,6 +6,8 @@ import static de.cronn.jira.sync.config.Context.TARGET;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.entry;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 
 import java.net.URL;
 import java.time.Instant;
@@ -27,6 +29,7 @@ import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpMethod;
 import org.springframework.test.annotation.DirtiesContext;
@@ -122,7 +125,7 @@ public class JiraSyncApplicationTests {
 	@Autowired
 	private TestClock clock;
 
-	@Autowired
+	@SpyBean
 	private JiraDummyService jiraDummyService;
 
 	@Autowired
@@ -324,6 +327,27 @@ public class JiraSyncApplicationTests {
 
 		// then
 		assertThat(jiraDummyService.getAllIssues(TARGET)).isEmpty();
+	}
+
+	@Test
+	public void testFetchingFilterOfOneProjectFails() throws Exception {
+		JiraIssue sourceIssue = new JiraIssue(null, null, "some bug", SOURCE_STATUS_OPEN);
+		sourceIssue.getFields().setProject(SOURCE_PROJECT_2);
+		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
+		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_BUG);
+		jiraSource.createIssue(sourceIssue);
+
+		doThrow(new RuntimeException("Illegal filter")).when(jiraDummyService).filter(SOURCE, SOURCE_PROJECT_1_FILTER_ID_1);
+
+		assertThatExceptionOfType(JiraSyncException.class)
+			.isThrownBy(() -> syncTask.sync())
+			.withMessage("Synchronisation failed for: [SRC_ONE -> TRG_ONE]");
+
+		JiraIssue targetIssue = getSingleIssue(TARGET);
+		assertThat(targetIssue.getFields().getSummary()).isEqualTo("SRC_TWO-1: some bug");
+
+		verify(jiraDummyService).filter(SOURCE, SOURCE_PROJECT_1_FILTER_ID_1);
+		verify(jiraDummyService).filter(SOURCE, SOURCE_PROJECT_2_FILTER_ID);
 	}
 
 	@Test

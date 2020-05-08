@@ -99,7 +99,7 @@ public class JiraSyncTask implements CommandLineRunner {
 
 		if (!failedProjects.isEmpty()) {
 			String formattedProjects = failedProjects.stream().map(this::format).collect(Collectors.joining(", "));
-			throw new JiraSyncException("Synchronisation failed with :" + formattedProjects);
+			throw new JiraSyncException("Synchronisation failed for: " + formattedProjects);
 		}
 
 		return projectSyncResults;
@@ -117,32 +117,37 @@ public class JiraSyncTask implements CommandLineRunner {
 
 	private ProjectSyncResult syncProject(JiraService jiraSource, JiraService jiraTarget, JiraProjectSync projectSync) {
 		log.info("syncing project {}", format(projectSync));
-		List<String> sourceFilterIds = projectSync.getSourceFilterIds();
-		Assert.notEmpty(sourceFilterIds, "sourceFilterIds must be configured");
 
-		Set<String> customFields = jiraSyncConfig.getFieldMapping().keySet();
-		List<JiraIssue> issues = sourceFilterIds.stream()
-			.map(sourceFilterId -> jiraSource.getIssuesByFilterId(sourceFilterId, customFields))
-			.flatMap(Collection::stream)
-			.filter(StreamUtils.distinctByKey(JiraIssue::getKey))
-			.collect(Collectors.toList());
+		try {
+			List<String> sourceFilterIds = projectSync.getSourceFilterIds();
+			Assert.notEmpty(sourceFilterIds, "sourceFilterIds must be configured");
+			Set<String> customFields = jiraSyncConfig.getFieldMapping().keySet();
+			List<JiraIssue> issues = sourceFilterIds.stream()
+				.map(sourceFilterId -> jiraSource.getIssuesByFilterId(sourceFilterId, customFields))
+				.flatMap(Collection::stream)
+				.filter(StreamUtils.distinctByKey(JiraIssue::getKey))
+				.collect(Collectors.toList());
 
-		Map<SyncResult, Long> resultCounts = new EnumMap<>(SyncResult.class);
-		for (SyncResult syncResult : SyncResult.values()) {
-			resultCounts.put(syncResult, 0L);
+			Map<SyncResult, Long> resultCounts = new EnumMap<>(SyncResult.class);
+			for (SyncResult syncResult : SyncResult.values()) {
+				resultCounts.put(syncResult, 0L);
+			}
+
+			for (JiraIssue sourceIssue : issues) {
+				SyncResult syncResult = syncIssue(sourceIssue, jiraSource, jiraTarget, projectSync);
+				log.info("'{}' {}", sourceIssue.getKey(), syncResult.getDisplayName());
+				resultCounts.compute(syncResult, (k, v) -> v + 1);
+			}
+
+			for (Entry<SyncResult, Long> entry : resultCounts.entrySet()) {
+				log.info("{}   {} issues: {}", format(projectSync), entry.getKey().getDisplayName(), entry.getValue());
+			}
+
+			return new ProjectSyncResult(projectSync, resultCounts);
+		} catch (JiraSyncException e) {
+			log.error("Failed to synchronize {}", format(projectSync), e);
+			return ProjectSyncResult.genericException(projectSync);
 		}
-
-		for (JiraIssue sourceIssue : issues) {
-			SyncResult syncResult = syncIssue(sourceIssue, jiraSource, jiraTarget, projectSync);
-			log.info("'{}' {}", sourceIssue.getKey(), syncResult.getDisplayName());
-			resultCounts.compute(syncResult, (k, v) -> v + 1);
-		}
-
-		for (Entry<SyncResult, Long> entry : resultCounts.entrySet()) {
-			log.info("{}   {} issues: {}", format(projectSync), entry.getKey().getDisplayName(), entry.getValue());
-		}
-
-		return new ProjectSyncResult(projectSync, resultCounts);
 	}
 
 	private SyncResult syncIssue(JiraIssue sourceIssue, JiraService jiraSource, JiraService jiraTarget, JiraProjectSync projectSync) {
