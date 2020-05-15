@@ -12,7 +12,7 @@ public class JiraIssue extends JiraIdResource {
 	private String key;
 
 	private JiraIssueFields fields;
-	
+
 	private JiraChangeLog changelog;
 
 	public JiraIssue() {
@@ -45,17 +45,17 @@ public class JiraIssue extends JiraIdResource {
 	public JiraIssueFields getFields() {
 		return fields;
 	}
-	
+
 	public void setFields(JiraIssueFields fields) {
 		this.fields = fields;
 	}
-	
+
 	@JsonIgnore
 	public JiraIssue withFields(JiraIssueFields fields) {
 		setFields(fields);
 		return this;
 	}
-	
+
 	public JiraChangeLog getChangelog() {
 		return changelog;
 	}
@@ -71,7 +71,7 @@ public class JiraIssue extends JiraIdResource {
 		}
 		return fields;
 	}
-	
+
 	@JsonIgnore
 	public JiraChangeLog getOrCreateChangeLog() {
 		if (changelog == null) {

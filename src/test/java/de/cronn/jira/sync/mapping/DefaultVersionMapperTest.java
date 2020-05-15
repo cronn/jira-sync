@@ -41,7 +41,7 @@ public class DefaultVersionMapperTest {
 	private JiraService jiraService;
 
 	@Spy
-	private JiraProjectSync projectSync = new JiraProjectSync();
+	private final JiraProjectSync projectSync = new JiraProjectSync();
 
 	@Before
 	public void setUpProjectSyncConfig() {
@@ -59,79 +59,26 @@ public class DefaultVersionMapperTest {
 	}
 
 	@Test
-	public void testMapVersion_Empty() throws Exception {
-		projectSync = new JiraProjectSync();
+	public void testMapSourceToTarget() throws Exception {
+		List<JiraVersion> sourceVersions = Arrays.asList(SOURCE_VERSION_2, SOURCE_VERSION_1);
 
-		Map<String, String> versionMapping = new LinkedHashMap<>();
-		versionMapping.put(SOURCE_VERSION_1.getName(), TARGET_VERSION_1.getName());
-		versionMapping.put(SOURCE_VERSION_2.getName(), TARGET_VERSION_2.getName());
-		projectSync.setVersionMapping(versionMapping);
+		Set<JiraVersion> targetVersions = versionMapper.mapSourceToTarget(jiraService, sourceVersions, projectSync);
 
-		Set<JiraVersion> versions = versionMapper.mapSourceToTarget(jiraService, null, projectSync);
-		assertThat(versions).isEmpty();
-
-		versions = versionMapper.mapSourceToTarget(jiraService, Collections.emptySet(), projectSync);
-		assertThat(versions).isEmpty();
-
-		verifyNoMoreInteractions(jiraService);
-	}
-
-	@Test
-	public void testMapVersion_NotConfigured() throws Exception {
-		projectSync = new JiraProjectSync();
-		projectSync.setVersionMapping(null);
-
-		Set<JiraVersion> versions = versionMapper.mapSourceToTarget(jiraService, null, projectSync);
-		assertThat(versions).isNull();
-
-		versions = versionMapper.mapSourceToTarget(jiraService, Collections.emptySet(), projectSync);
-		assertThat(versions).isNull();
-
-		verifyNoMoreInteractions(jiraService);
-	}
-
-	@Test
-	public void testMapVersion_SingleVersion() throws Exception {
-		// given
-		List<JiraVersion> versions = Collections.singletonList(SOURCE_VERSION_2);
-
-		// when
-		Set<JiraVersion> targetVersions = versionMapper.mapSourceToTarget(jiraService, versions, projectSync);
-
-		// then
-		assertThat(targetVersions).containsExactly(TARGET_VERSION_2);
+		assertThat(targetVersions).containsExactly(TARGET_VERSION_2, TARGET_VERSION_1);
 
 		verify(jiraService).getVersions(TARGET_PROJECT);
 		verifyNoMoreInteractions(jiraService);
 	}
 
 	@Test
-	public void testMapVersionFromTargetToSource_SingleVersion() throws Exception {
-		// given
-		List<JiraVersion> versions = Collections.singletonList(TARGET_VERSION_2);
+	public void testMapTargetToSource() throws Exception {
+		List<JiraVersion> targetVersions = Arrays.asList(TARGET_VERSION_1, TARGET_VERSION_2);
 
-		// when
-		Set<JiraVersion> targetVersions = versionMapper.mapTargetToSource(jiraService, versions, projectSync);
+		Set<JiraVersion> sourceVersions = versionMapper.mapTargetToSource(jiraService, targetVersions, projectSync);
 
-		// then
-		assertThat(targetVersions).containsExactly(SOURCE_VERSION_2);
+		assertThat(sourceVersions).containsExactly(SOURCE_VERSION_1, SOURCE_VERSION_2);
 
 		verify(jiraService).getVersions(SOURCE_PROJECT);
-		verifyNoMoreInteractions(jiraService);
-	}
-
-	@Test
-	public void testMapVersion_MultipleVersion() throws Exception {
-		// given
-		List<JiraVersion> versions = Arrays.asList(SOURCE_VERSION_2, SOURCE_VERSION_1);
-
-		// when
-		Set<JiraVersion> targetVersions = versionMapper.mapSourceToTarget(jiraService, versions, projectSync);
-
-		// then
-		assertThat(targetVersions).containsExactly(TARGET_VERSION_2, TARGET_VERSION_1);
-
-		verify(jiraService, atLeast(1)).getVersions(TARGET_PROJECT);
 		verifyNoMoreInteractions(jiraService);
 	}
 

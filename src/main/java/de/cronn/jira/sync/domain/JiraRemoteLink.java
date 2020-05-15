@@ -6,7 +6,7 @@ import java.net.URL;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-public class JiraRemoteLink extends JiraIdResource {
+public class JiraRemoteLink {
 
 	private static final long serialVersionUID = 1L;
 
@@ -42,7 +42,6 @@ public class JiraRemoteLink extends JiraIdResource {
 	@Override
 	public String toString() {
 		return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
-			.append("id", getId())
 			.append("object", object)
 			.toString();
 	}

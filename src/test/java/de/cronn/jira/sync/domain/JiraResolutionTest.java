@@ -20,7 +20,6 @@ public class JiraResolutionTest {
 		EqualsVerifier.forClass(JiraResolution.class)
 			.suppress(Warning.NONFINAL_FIELDS)
 			.withIgnoredFields("self")
-			.usingGetClass()
 			.verify();
 	}
 

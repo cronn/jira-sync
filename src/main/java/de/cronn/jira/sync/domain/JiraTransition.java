@@ -7,11 +7,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 @JsonInclude(value = Include.NON_NULL)
-public class JiraTransition extends JiraIdResource implements JiraNamedBean {
+public class JiraTransition extends JiraNamedResource {
 
 	private static final long serialVersionUID = 1L;
-
-	private String name;
 
 	private JiraIssueStatus to;
 
@@ -19,18 +17,8 @@ public class JiraTransition extends JiraIdResource implements JiraNamedBean {
 	}
 
 	public JiraTransition(String id, String name, JiraIssueStatus to) {
-		super(id);
-		this.name = name;
+		super(id, name);
 		this.to = to;
-	}
-
-	@Override
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
 	}
 
 	public JiraIssueStatus getTo() {
@@ -45,7 +33,7 @@ public class JiraTransition extends JiraIdResource implements JiraNamedBean {
 	public String toString() {
 		return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
 			.append("id", getId())
-			.append("name", name)
+			.append("name", getName())
 			.append("to", to)
 			.toString();
 	}

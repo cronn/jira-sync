@@ -14,7 +14,6 @@ public class JiraIssueStatusTest {
 		EqualsVerifier.forClass(JiraIssueStatus.class)
 			.suppress(Warning.NONFINAL_FIELDS)
 			.withIgnoredFields("self")
-			.usingGetClass()
 			.verify();
 	}
 
