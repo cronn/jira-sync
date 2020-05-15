@@ -3,43 +3,26 @@ package de.cronn.jira.sync.domain;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-public class JiraUser extends JiraResource implements JiraNamedBean {
+public class JiraUser extends JiraNamedResource {
 
 	private static final long serialVersionUID = 2L;
 
-	private String name;
-	private String key;
 	private String displayName;
 
 	public JiraUser() {
 	}
 
 	public JiraUser(String name, String key) {
-		this.name = name;
-		this.key = key;
+		super(key, name);
 	}
 
 	public JiraUser(String name, String key, String displayName) {
-		this.name = name;
-		this.key = key;
+		super(key, name);
 		this.displayName = displayName;
 	}
 
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	@Override
-	public String getName() {
-		return name;
-	}
-
 	public String getKey() {
-		return key;
-	}
-
-	public void setKey(String key) {
-		this.key = key;
+		return getId();
 	}
 
 	public String getDisplayName() {
@@ -53,8 +36,8 @@ public class JiraUser extends JiraResource implements JiraNamedBean {
 	@Override
 	public String toString() {
 		return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
-			.append("key", key)
-			.append("name", name)
+			.append("key", getId())
+			.append("name", getName())
 			.append("displayName", displayName)
 			.toString();
 	}

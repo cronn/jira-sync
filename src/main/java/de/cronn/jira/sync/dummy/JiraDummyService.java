@@ -39,6 +39,7 @@ import de.cronn.jira.sync.domain.JiraField;
 import de.cronn.jira.sync.domain.JiraFieldsBean;
 import de.cronn.jira.sync.domain.JiraFieldsUpdate;
 import de.cronn.jira.sync.domain.JiraFilterResult;
+import de.cronn.jira.sync.domain.JiraNamedResource;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueFields;
 import de.cronn.jira.sync.domain.JiraIssueHistoryEntry;
@@ -523,22 +524,30 @@ public class JiraDummyService {
 		updateFields(context, jiraIssueUpdate, issueInSystem, historyEntry);
 	}
 
-	private void validateValidVersion(Context context, JiraVersion version) {
-		for (JiraVersion jiraVersion : getVersions(context, null)) {
-			if (jiraVersion.getName().equals(version.getName()) && jiraVersion.getId().equals(version.getId())) {
-				return;
-			}
+	private void validateVersions(Context context, Set<JiraVersion> versions) {
+		if (versions != null) {
+			versions.forEach(version -> validateValidVersion(context, version));
 		}
-		throw new IllegalArgumentException("Unknown version: " + version);
+	}
+
+	private void validateValidVersion(Context context, JiraVersion version) {
+		validateResourceIsKnown(version, getVersions(context, null));
 	}
 
 	private void validatePriority(Context context, JiraPriority priority) {
-		for (JiraPriority jiraPriority : getPriorities(context)) {
-			if (jiraPriority.getName().equals(priority.getName()) && jiraPriority.getId().equals(priority.getId())) {
-				return;
-			}
+		validateResourceIsKnown(priority, getPriorities(context));
+	}
+
+	private void validateResolution(Context context, JiraResolution resolution) {
+		validateResourceIsKnown(resolution, getResolutions(context));
+	}
+
+	private static <T extends JiraNamedResource> void validateResourceIsKnown(T resource, List<T> knownResources) {
+		Assert.notNull(resource, "Resource must not be null");
+
+		if (!knownResources.contains(resource)) {
+			throw new IllegalArgumentException("Unknown " + resource);
 		}
-		throw new IllegalArgumentException("Unknown priority: " + priority);
 	}
 
 	private void validateProject(Context context, JiraProject project) {
@@ -549,21 +558,6 @@ public class JiraDummyService {
 			}
 		}
 		throw new IllegalArgumentException("Unknown project: " + project);
-	}
-
-	private void validateVersions(Context context, Set<JiraVersion> versions) {
-		if (versions != null) {
-			versions.forEach(version -> validateValidVersion(context, version));
-		}
-	}
-
-	private void validateResolution(Context context, JiraResolution resolution) {
-		for (JiraResolution jiraResolution : getResolutions(context)) {
-			if (jiraResolution.getName().equals(resolution.getName()) && jiraResolution.getId().equals(resolution.getId())) {
-				return;
-			}
-		}
-		throw new IllegalArgumentException("Unknown resolution: " + resolution);
 	}
 
 	private void updateFields(Context context, JiraIssueUpdate jiraIssueUpdate, JiraIssue issueInSystem, JiraIssueHistoryEntry historyEntry) {
