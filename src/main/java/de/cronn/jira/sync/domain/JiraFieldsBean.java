@@ -24,4 +24,8 @@ public interface JiraFieldsBean {
 
 	void setFixVersions(Set<JiraVersion> fixVersions);
 
+	Set<JiraComponent> getComponents();
+
+	void setComponents(Set<JiraComponent> components);
+
 }

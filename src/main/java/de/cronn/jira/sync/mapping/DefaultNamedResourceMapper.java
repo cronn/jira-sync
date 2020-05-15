@@ -43,7 +43,7 @@ public final class DefaultNamedResourceMapper {
 		for (T resourceToMap : resourcesToMap) {
 			T mappedResource = map(resourceToMap, resourceNamesToIgnore, targetResources, nameMapping);
 			if (mappedResource != null) {
-				log.trace("Mapping resource: {}  -->  {}", resourceToMap, mappedResource);
+				log.trace("Mapping resource: {} --> {}", resourceToMap, mappedResource);
 				mappedResources.add(mappedResource);
 			}
 		}
@@ -52,8 +52,7 @@ public final class DefaultNamedResourceMapper {
 	}
 
 	private static <T extends JiraNamedResource> T map(T resourceToMap, Set<String> resourceNamesToIgnore,
-													   List<T> targetResources,
-													   Map<String, String> nameMapping) {
+													   List<T> targetResources, Map<String, String> nameMapping) {
 		String resourceName = resourceToMap.getName();
 		Assert.notNull(resourceName, "Resource name not set: " + resourceToMap);
 

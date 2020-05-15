@@ -9,6 +9,7 @@ import java.util.function.Consumer;
 
 import de.cronn.jira.sync.config.JiraConnectionProperties;
 import de.cronn.jira.sync.domain.JiraComment;
+import de.cronn.jira.sync.domain.JiraComponent;
 import de.cronn.jira.sync.domain.JiraField;
 import de.cronn.jira.sync.domain.JiraFieldsUpdate;
 import de.cronn.jira.sync.domain.JiraIssue;
@@ -58,6 +59,8 @@ public interface JiraService extends AutoCloseable {
 	List<JiraField> getFields();
 
 	List<JiraVersion> getVersions(String projectKey);
+
+	List<JiraComponent> getComponents(String projectKey);
 
 	List<JiraIssue> getIssuesByFilterId(String filterId, Collection<String> customFields);
 

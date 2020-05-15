@@ -35,6 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
 import de.cronn.jira.sync.config.Context;
 import de.cronn.jira.sync.domain.JiraComment;
 import de.cronn.jira.sync.domain.JiraComments;
+import de.cronn.jira.sync.domain.JiraComponent;
 import de.cronn.jira.sync.domain.JiraField;
 import de.cronn.jira.sync.domain.JiraFieldsBean;
 import de.cronn.jira.sync.domain.JiraFieldsUpdate;
@@ -128,6 +129,11 @@ public class JiraDummyService {
 	public void addVersion(Context context, JiraVersion version) {
 		List<JiraVersion> versions = getData(context).getVersions();
 		versions.add(version);
+	}
+
+	public void addComponent(Context context, JiraComponent component) {
+		List<JiraComponent> components = getData(context).getComponents();
+		components.add(component);
 	}
 
 	public void addPriority(Context context, JiraPriority priority) {
@@ -383,6 +389,11 @@ public class JiraDummyService {
 		return getData(context).getVersions();
 	}
 
+	@RequestMapping(path = "/api/2/project/{projectKey}/components", method = RequestMethod.GET)
+	public List<JiraComponent> getComponents(@PathVariable(CONTEXT) Context context, @PathVariable("projectKey") String projectKey) {
+		return getData(context).getComponents();
+	}
+
 	@RequestMapping(path = "/api/2/issue/{issueKey}/remotelink", method = RequestMethod.POST)
 	public void addRemoteLink(@PathVariable(CONTEXT) Context context, @PathVariable("issueKey") String issueKey, @RequestBody JiraRemoteLink newRemoteLink) {
 		JiraIssue issue = getIssueMap(context).get(issueKey);
@@ -476,8 +487,11 @@ public class JiraDummyService {
 		if (fields.getResolution() != null) {
 			validateResolution(context, fields.getResolution());
 		}
+
 		validateVersions(context, fields.getVersions());
 		validateVersions(context, fields.getFixVersions());
+
+		validateComponents(context, fields.getComponents());
 
 		if (fields.getPriority() == null) {
 			JiraPriority defaultPriority = getData(context).getDefaultPriority();
@@ -534,6 +548,16 @@ public class JiraDummyService {
 		validateResourceIsKnown(version, getVersions(context, null));
 	}
 
+	private void validateComponents(Context context, Set<JiraComponent> components) {
+		if (components != null) {
+			components.forEach(component -> validateValidComponent(context, component));
+		}
+	}
+
+	private void validateValidComponent(Context context, JiraComponent component) {
+		validateResourceIsKnown(component, getComponents(context, null));
+	}
+
 	private void validatePriority(Context context, JiraPriority priority) {
 		validateResourceIsKnown(priority, getPriorities(context));
 	}
@@ -568,12 +592,14 @@ public class JiraDummyService {
 
 		validateVersions(context, fieldToUpdate.getFixVersions());
 		validateVersions(context, fieldToUpdate.getVersions());
+		validateComponents(context, fieldToUpdate.getComponents());
 
 		updateField(jiraIssueUpdate, issueInSystem, historyEntry, JiraFieldsBean::getDescription);
 		updateField(jiraIssueUpdate, issueInSystem, historyEntry, JiraFieldsBean::getResolution, JiraNamedBean::getNameOrNull);
 		updateField(jiraIssueUpdate, issueInSystem, historyEntry, JiraFieldsBean::getAssignee, JiraNamedBean::getNameOrNull);
 		updateField(jiraIssueUpdate, issueInSystem, historyEntry, JiraFieldsBean::getFixVersions, new CollectionChangeHistoryItemWriter());
 		updateField(jiraIssueUpdate, issueInSystem, historyEntry, JiraFieldsBean::getVersions, new CollectionChangeHistoryItemWriter());
+		updateField(jiraIssueUpdate, issueInSystem, historyEntry, JiraFieldsBean::getComponents, new CollectionChangeHistoryItemWriter());
 
 		for (Entry<String, Object> entry : fieldToUpdate.getOther().entrySet()) {
 			issueInSystem.getFields().setOther(entry.getKey(), entry.getValue());

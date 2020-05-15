@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.springframework.util.Assert;
 
+import de.cronn.jira.sync.domain.JiraComponent;
 import de.cronn.jira.sync.domain.JiraField;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueStatus;
@@ -32,6 +33,7 @@ public class JiraDummyData {
 	private final List<JiraResolution> resolutions = new ArrayList<>();
 	private final List<JiraTransition> transitions = new ArrayList<>();
 	private final List<JiraVersion> versions = new ArrayList<>();
+	private final List<JiraComponent> components = new ArrayList<>();
 	private final Map<JiraField, Map<String, Long>> customFields = new LinkedHashMap<>();
 	private final Map<String, AtomicLong> keyCounters = new LinkedHashMap<>();
 	private final AtomicLong idCounter = new AtomicLong();
@@ -55,6 +57,10 @@ public class JiraDummyData {
 
 	public List<JiraVersion> getVersions() {
 		return versions;
+	}
+
+	public List<JiraComponent> getComponents() {
+		return components;
 	}
 
 	public Map<JiraField, Map<String, Long>> getCustomFields() {

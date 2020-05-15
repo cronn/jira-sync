@@ -7,7 +7,7 @@ import de.cronn.jira.sync.config.JiraProjectSync;
 import de.cronn.jira.sync.domain.JiraVersion;
 import de.cronn.jira.sync.service.JiraService;
 
-public interface VersionMapper {
+public interface VersionMapper extends NamedResourceMapper<JiraVersion> {
 
 	Set<JiraVersion> mapSourceToTarget(JiraService jiraService, Collection<JiraVersion> versionsToMap, JiraProjectSync projectSync);
 

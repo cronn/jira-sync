@@ -19,6 +19,7 @@ import de.cronn.jira.sync.domain.JiraPriority;
 import de.cronn.jira.sync.domain.JiraProject;
 import de.cronn.jira.sync.link.JiraIssueLinker;
 import de.cronn.jira.sync.mapping.CommentMapper;
+import de.cronn.jira.sync.mapping.ComponentMapper;
 import de.cronn.jira.sync.mapping.FieldMapper;
 import de.cronn.jira.sync.mapping.DescriptionMapper;
 import de.cronn.jira.sync.mapping.IssueTypeMapper;
@@ -40,6 +41,7 @@ public class CreateMissingTargetJiraIssueSyncStrategy implements MissingTargetJi
 	private LabelMapper labelMapper;
 	private PriorityMapper priorityMapper;
 	private VersionMapper versionMapper;
+	private ComponentMapper componentMapper;
 	private CommentMapper commentMapper;
 	private JiraIssueLinker issueLinker;
 	private FieldMapper fieldMapper;
@@ -72,6 +74,11 @@ public class CreateMissingTargetJiraIssueSyncStrategy implements MissingTargetJi
 	@Autowired
 	public void setVersionMapper(VersionMapper versionMapper) {
 		this.versionMapper = versionMapper;
+	}
+
+	@Autowired
+	public void setComponentMapper(ComponentMapper componentMapper) {
+		this.componentMapper = componentMapper;
 	}
 
 	@Autowired
@@ -108,6 +115,7 @@ public class CreateMissingTargetJiraIssueSyncStrategy implements MissingTargetJi
 		copyLabels(sourceIssue, issueToCreate);
 		copyVersions(sourceIssue, issueToCreate, jiraTarget, projectSync);
 		copyFixVersions(sourceIssue, issueToCreate, jiraTarget, projectSync);
+		copyComponents(sourceIssue, issueToCreate, jiraTarget, projectSync);
 		copyCustomFields(jiraSource, jiraTarget, sourceIssue, issueToCreate);
 
 		JiraIssue newIssue = jiraTarget.createIssue(issueToCreate);
@@ -153,6 +161,10 @@ public class CreateMissingTargetJiraIssueSyncStrategy implements MissingTargetJi
 
 	private void copyFixVersions(JiraIssue sourceIssue, JiraIssue issueToCreate, JiraService jiraTarget, JiraProjectSync projectSync) {
 		issueToCreate.getOrCreateFields().setFixVersions(versionMapper.mapSourceToTarget(jiraTarget, sourceIssue.getFields().getFixVersions(), projectSync));
+	}
+
+	private void copyComponents(JiraIssue sourceIssue, JiraIssue issueToCreate, JiraService jiraTarget, JiraProjectSync projectSync) {
+		issueToCreate.getOrCreateFields().setComponents(componentMapper.mapSourceToTarget(jiraTarget, sourceIssue.getFields().getComponents(), projectSync));
 	}
 
 	private void copySummary(JiraIssue sourceIssue, JiraIssue issueToCreate) {

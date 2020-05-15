@@ -19,6 +19,7 @@ public class JiraFieldsUpdate implements Serializable, JiraFieldsBean {
 	private Set<String> labels;
 	private Set<JiraVersion> versions;
 	private Set<JiraVersion> fixVersions;
+	private Set<JiraComponent> components;
 	private JiraUser assignee;
 	private Map<String, Object> other = new LinkedHashMap<>();
 
@@ -79,6 +80,12 @@ public class JiraFieldsUpdate implements Serializable, JiraFieldsBean {
 		this.versions = versions;
 	}
 
+	@JsonIgnore
+	public JiraFieldsUpdate withVersions(Set<JiraVersion> jiraVersions) {
+		setVersions(jiraVersions);
+		return this;
+	}
+
 	@Override
 	public Set<JiraVersion> getFixVersions() {
 		return fixVersions;
@@ -95,9 +102,19 @@ public class JiraFieldsUpdate implements Serializable, JiraFieldsBean {
 		return this;
 	}
 
+	@Override
+	public Set<JiraComponent> getComponents() {
+		return components;
+	}
+
+	@Override
+	public void setComponents(Set<JiraComponent> components) {
+		this.components = components;
+	}
+
 	@JsonIgnore
-	public JiraFieldsUpdate withVersions(Set<JiraVersion> jiraVersions) {
-		setVersions(jiraVersions);
+	public JiraFieldsUpdate withComponents(Set<JiraComponent> jiraComponents) {
+		setComponents(jiraComponents);
 		return this;
 	}
 

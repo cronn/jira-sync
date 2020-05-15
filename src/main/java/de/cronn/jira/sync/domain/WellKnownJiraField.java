@@ -15,6 +15,7 @@ public enum WellKnownJiraField {
 	LABELS(JiraIssueFields::getLabels),
 	VERSIONS(JiraIssueFields::getVersions),
 	FIX_VERSIONS(JiraIssueFields::getFixVersions),
+	COMPONENTS(JiraIssueFields::getComponents),
 	ASSIGNEE(JiraIssueFields::getAssignee),
 	UPDATED(JiraIssueFields::getUpdated),
 	COMMENT(JiraIssueFields::getComment),

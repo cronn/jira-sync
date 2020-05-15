@@ -8,9 +8,12 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.*;
 
 import java.time.Clock;
 import java.time.ZonedDateTime;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+
+import javax.swing.*;
 
 import org.hamcrest.core.IsNull;
 import org.junit.Before;
@@ -21,6 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import de.cronn.jira.sync.TestClock;
+import de.cronn.jira.sync.domain.JiraComponent;
 import de.cronn.jira.sync.domain.JiraFieldsUpdate;
 import de.cronn.jira.sync.domain.JiraIssue;
 import de.cronn.jira.sync.domain.JiraIssueFields;
@@ -28,6 +32,7 @@ import de.cronn.jira.sync.domain.JiraIssueHistoryEntry;
 import de.cronn.jira.sync.domain.JiraIssueHistoryItem;
 import de.cronn.jira.sync.domain.JiraIssueStatus;
 import de.cronn.jira.sync.domain.JiraIssueUpdate;
+import de.cronn.jira.sync.domain.JiraNamedResource;
 import de.cronn.jira.sync.domain.JiraPriority;
 import de.cronn.jira.sync.domain.JiraProject;
 import de.cronn.jira.sync.domain.JiraResolution;
@@ -39,6 +44,8 @@ import de.cronn.jira.sync.domain.WellKnownJiraField;
 public class JiraDummyServiceTest {
 	private static final JiraVersion JIRA_VERSION_2_0 = new JiraVersion("2", "2.0");
 	private static final JiraVersion JIRA_VERSION_1_0 = new JiraVersion("1", "1.0");
+	private static final JiraComponent JIRA_COMPONENT_BACKEND = new JiraComponent("2", "Backend");
+	private static final JiraComponent JIRA_COMPONENT_FRONTEND = new JiraComponent("1", "Frontend");
 	private static final JiraResolution RESOLUTION_WONT_DO = new JiraResolution("2", "Won't Do");
 	private static final JiraResolution RESOLUTION_DONE = new JiraResolution("1", "Done");
 	private static final JiraPriority PRIORITY_DEFAULT = new JiraPriority("1", "Default");
@@ -240,6 +247,29 @@ public class JiraDummyServiceTest {
 		return versions;
 	}
 
+	@Test
+	public void testUpdateIssue_components() throws Exception {
+		JiraIssue issue = createJiraIssue(jiraDummyService);
+
+		jiraDummyService.updateIssue(TARGET, issue.getKey(), createComponentUpdate(JIRA_COMPONENT_BACKEND));
+		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), CHANGELOG);
+
+		assertThat(issue.getFields().getComponents()).extracting(JiraComponent::getName).containsExactly("Backend");
+		assertLastHistoryEntryIs(issue, WellKnownJiraField.COMPONENTS, null, "Backend");
+
+		jiraDummyService.updateIssue(TARGET, issue.getKey(), createComponentUpdate(JIRA_COMPONENT_BACKEND, JIRA_COMPONENT_FRONTEND));
+		issue = jiraDummyService.getIssueByKey(TARGET, issue.getKey(), CHANGELOG);
+
+		assertThat(issue.getFields().getComponents()).extracting(JiraComponent::getName).containsExactly("Backend", "Frontend");
+		assertLastHistoryEntryIs(issue, WellKnownJiraField.COMPONENTS, null, "Frontend");
+	}
+
+	private static JiraIssueUpdate createComponentUpdate(JiraComponent... newComponents) {
+		return new JiraIssueUpdate()
+			.withFields(new JiraFieldsUpdate()
+				.withComponents(new LinkedHashSet<>(Arrays.asList(newComponents))));
+	}
+
 	private void assertLastHistoryEntryIsEmpty(JiraIssue issue) {
 		JiraIssueHistoryEntry lastHistoryEntry = getLastHistoryEntry(issue);
 
@@ -279,6 +309,8 @@ public class JiraDummyServiceTest {
 		jiraDummyService.addResolution(TARGET, RESOLUTION_WONT_DO);
 		jiraDummyService.addVersion(TARGET, JIRA_VERSION_1_0);
 		jiraDummyService.addVersion(TARGET, JIRA_VERSION_2_0);
+		jiraDummyService.addComponent(TARGET, JIRA_COMPONENT_FRONTEND);
+		jiraDummyService.addComponent(TARGET, JIRA_COMPONENT_BACKEND);
 		jiraDummyService.addTransition(TARGET, new JiraTransition("2", "Set in progress", STATUS_IN_PROGRESS));
 		return jiraDummyService;
 	}

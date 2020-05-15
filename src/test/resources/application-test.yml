@@ -105,6 +105,12 @@ de.cronn.jira.sync.projects[TRG_ONE]:
       v2: 2.0
       v3: 3.0
 
+    componentMapping:
+      Backend: Team A
+      Frontend: Team B
+      Services: Team C
+
+    componentssToIgnore: Undefined
 
 de.cronn.jira.sync.projects[PRJ_TWO]:
     sourceProject: SRC_TWO
