@@ -40,6 +40,7 @@ import org.springframework.web.filter.CommonsRequestLoggingFilter;
 import de.cronn.jira.sync.config.Context;
 import de.cronn.jira.sync.config.JiraSyncConfig;
 import de.cronn.jira.sync.domain.JiraComment;
+import de.cronn.jira.sync.domain.JiraComponent;
 import de.cronn.jira.sync.domain.JiraField;
 import de.cronn.jira.sync.domain.JiraFieldSchema;
 import de.cronn.jira.sync.domain.JiraIssue;
@@ -105,6 +106,14 @@ public class JiraSyncApplicationTests {
 
 	private static final JiraVersion TARGET_VERSION_10 = new JiraVersion("100", "10");
 	private static final JiraVersion TARGET_VERSION_11 = new JiraVersion("101", "11");
+
+	private static final JiraComponent SOURCE_COMPONENT_BACKEND = new JiraComponent("1", "Backend");
+	private static final JiraComponent SOURCE_COMPONENT_FRONTEND = new JiraComponent("2", "Frontend");
+	private static final JiraComponent SOURCE_COMPONENT_UNDEFINED = new JiraComponent("98", "Undefined");
+	private static final JiraComponent SOURCE_COMPONENT_UNMAPPED = new JiraComponent("99", "Unmapped component");
+
+	private static final JiraComponent TARGET_COMPONENT_TEAM_A = new JiraComponent("100", "Team A");
+	private static final JiraComponent TARGET_COMPONENT_TEAM_B = new JiraComponent("101", "Team B");
 
 	private static final JiraUser SOURCE_USER_SOME = new JiraUser("some.user", "some.user", "Some User");
 	private static final JiraUser SOURCE_USER_ANOTHER = new JiraUser("anotheruser", "anotheruser", "Another User");
@@ -236,6 +245,14 @@ public class JiraSyncApplicationTests {
 		jiraDummyService.addVersion(TARGET, TARGET_VERSION_10);
 		jiraDummyService.addVersion(TARGET, TARGET_VERSION_11);
 
+		jiraDummyService.addComponent(SOURCE, SOURCE_COMPONENT_BACKEND);
+		jiraDummyService.addComponent(SOURCE, SOURCE_COMPONENT_FRONTEND);
+		jiraDummyService.addComponent(SOURCE, SOURCE_COMPONENT_UNDEFINED);
+		jiraDummyService.addComponent(SOURCE, SOURCE_COMPONENT_UNMAPPED);
+
+		jiraDummyService.addComponent(TARGET, TARGET_COMPONENT_TEAM_A);
+		jiraDummyService.addComponent(TARGET, TARGET_COMPONENT_TEAM_B);
+
 		jiraDummyService.addUser(SOURCE, SOURCE_USER_SOME);
 		jiraDummyService.addUser(SOURCE, SOURCE_USER_ANOTHER);
 
@@ -360,6 +377,7 @@ public class JiraSyncApplicationTests {
 		sourceIssue.getFields().setLabels(newLinkedHashSet("label1", "label2"));
 		sourceIssue.getFields().setVersions(newLinkedHashSet(SOURCE_VERSION_10, SOURCE_VERSION_11, SOURCE_VERSION_UNDEFINED));
 		sourceIssue.getFields().setFixVersions(newLinkedHashSet(SOURCE_VERSION_11));
+		sourceIssue.getFields().setComponents(newLinkedHashSet(SOURCE_COMPONENT_BACKEND, SOURCE_COMPONENT_FRONTEND, SOURCE_COMPONENT_UNMAPPED));
 		JiraIssue createdSourceIssue = jiraSource.createIssue(sourceIssue);
 
 		clock.windForwardSeconds(30);
@@ -376,6 +394,7 @@ public class JiraSyncApplicationTests {
 		assertThat(targetIssueFields.getLabels()).containsExactly("label1", "label2");
 		assertThat(targetIssueFields.getVersions()).extracting(JiraVersion::getName).containsExactlyInAnyOrder("10", "11");
 		assertThat(targetIssueFields.getFixVersions()).extracting(JiraVersion::getName).containsExactly("11");
+		assertThat(targetIssueFields.getComponents()).extracting(JiraComponent::getName).containsExactlyInAnyOrder("Team A", "Team B");
 		assertThat(targetIssueFields.getUpdated().toInstant()).isEqualTo(Instant.now(clock));
 
 		JiraIssue updatedSourceIssue = getSingleIssue(SOURCE);
@@ -450,13 +469,14 @@ public class JiraSyncApplicationTests {
 	}
 
 	@Test
-	public void testUnmappedVersionAndUnmappedPriority() throws Exception {
+	public void testUnmappedResources() throws Exception {
 		// given
 		JiraIssue sourceIssue = new JiraIssue(null, null, "some bug", SOURCE_STATUS_OPEN);
 		sourceIssue.getFields().setProject(SOURCE_PROJECT_1);
 		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_BUG);
 		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_UNMAPPED);
 		sourceIssue.getFields().setVersions(newLinkedHashSet(SOURCE_VERSION_UNMAPPED));
+		sourceIssue.getFields().setComponents(newLinkedHashSet(SOURCE_COMPONENT_UNMAPPED));
 		jiraSource.createIssue(sourceIssue);
 
 		// when
@@ -467,6 +487,7 @@ public class JiraSyncApplicationTests {
 		assertThat(targetIssue.getFields().getIssuetype().getName()).isEqualTo(TARGET_TYPE_BUG.getName());
 		assertThat(targetIssue.getFields().getPriority().getName()).isEqualTo(TARGET_PRIORITY_DEFAULT.getName());
 		assertThat(targetIssue.getFields().getVersions()).isEmpty();
+		assertThat(targetIssue.getFields().getComponents()).isEmpty();
 
 		syncAndAssertNoChanges();
 	}
@@ -491,6 +512,29 @@ public class JiraSyncApplicationTests {
 		assertThat(payload).doesNotContain("\"versions\":[]");
 		assertThat(payload).doesNotContain("\"fixVersions\":[]");
 		assertThat(targetIssue.getFields().getVersions()).isNull();
+
+		syncAndAssertNoChanges();
+	}
+
+	@Test
+	public void testNotConfiguredComponents() throws Exception {
+		// given
+		JiraIssue sourceIssue = new JiraIssue(null, null, "some bug", SOURCE_STATUS_OPEN);
+		sourceIssue.getFields().setProject(SOURCE_PROJECT_2);
+		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_UNMAPPED);
+		sourceIssue.getFields().setComponents(null);
+		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_BUG);
+		jiraSource.createIssue(sourceIssue);
+
+		// when
+		syncAndCheckResult();
+
+		// then
+		JiraIssue targetIssue = getSingleIssue(TARGET);
+		String payload = storingRequestFilter.getPayload(HttpMethod.POST, "/TARGET/rest/api/2/issue");
+		assertThat(payload).isNotEmpty();
+		assertThat(payload).doesNotContain("\"components\":[]");
+		assertThat(targetIssue.getFields().getComponents()).isNull();
 
 		syncAndAssertNoChanges();
 	}

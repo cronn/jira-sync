@@ -42,6 +42,8 @@ import de.cronn.jira.sync.JiraSyncException;
 import de.cronn.jira.sync.config.BasicAuthentication;
 import de.cronn.jira.sync.config.JiraConnectionProperties;
 import de.cronn.jira.sync.domain.JiraComment;
+import de.cronn.jira.sync.domain.JiraComponent;
+import de.cronn.jira.sync.domain.JiraComponentsList;
 import de.cronn.jira.sync.domain.JiraField;
 import de.cronn.jira.sync.domain.JiraFieldList;
 import de.cronn.jira.sync.domain.JiraFilterResult;
@@ -271,6 +273,14 @@ public class JiraServiceRestClient implements JiraService {
 		validateProjectKey(projectKey);
 		log.debug("[{}] fetching versions for project {}", getUrl(), projectKey);
 		return getForObject("/rest/api/2/project/{key}/versions", JiraVersionsList.class, projectKey);
+	}
+
+	@Override
+	@Cacheable(value = CACHE_NAME_COMPONENTS, key = "{ #root.target.url, #projectKey }")
+	public List<JiraComponent> getComponents(String projectKey) {
+		validateProjectKey(projectKey);
+		log.debug("[{}] fetching components for project {}", getUrl(), projectKey);
+		return getForObject("/rest/api/2/project/{key}/components", JiraComponentsList.class, projectKey);
 	}
 
 	@Override

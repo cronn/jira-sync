@@ -39,6 +39,7 @@ import de.cronn.jira.sync.domain.JiraIssueFields;
 import de.cronn.jira.sync.domain.JiraIssueHistoryEntry;
 import de.cronn.jira.sync.domain.JiraIssueStatus;
 import de.cronn.jira.sync.domain.JiraIssueUpdate;
+import de.cronn.jira.sync.domain.JiraNamedResource;
 import de.cronn.jira.sync.domain.JiraPriority;
 import de.cronn.jira.sync.domain.JiraProject;
 import de.cronn.jira.sync.domain.JiraResolution;
@@ -48,9 +49,11 @@ import de.cronn.jira.sync.domain.JiraVersion;
 import de.cronn.jira.sync.domain.WellKnownCustomFieldType;
 import de.cronn.jira.sync.link.JiraIssueLinker;
 import de.cronn.jira.sync.mapping.CommentMapper;
+import de.cronn.jira.sync.mapping.ComponentMapper;
 import de.cronn.jira.sync.mapping.DescriptionMapper;
 import de.cronn.jira.sync.mapping.FieldMapper;
 import de.cronn.jira.sync.mapping.LabelMapper;
+import de.cronn.jira.sync.mapping.NamedResourceMapper;
 import de.cronn.jira.sync.mapping.PriorityMapper;
 import de.cronn.jira.sync.mapping.ResolutionMapper;
 import de.cronn.jira.sync.mapping.VersionMapper;
@@ -66,6 +69,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 	private PriorityMapper priorityMapper;
 	private ResolutionMapper resolutionMapper;
 	private VersionMapper versionMapper;
+	private ComponentMapper componentMapper;
 	private CommentMapper commentMapper;
 	private JiraIssueLinker issueLinker;
 	private FieldMapper fieldMapper;
@@ -88,6 +92,11 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 	@Autowired
 	public void setVersionMapper(VersionMapper versionMapper) {
 		this.versionMapper = versionMapper;
+	}
+
+	@Autowired
+	public void setComponentMapper(ComponentMapper componentMapper) {
+		this.componentMapper = componentMapper;
 	}
 
 	@Autowired
@@ -124,8 +133,9 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		processDescription(sourceIssue, targetIssue, targetIssueUpdate, jiraSource);
 		processLabels(sourceIssue, targetIssue, targetIssueUpdate, projectSync);
 		processPriority(jiraTarget, sourceIssue, targetIssue, targetIssueUpdate);
-		processVersions(jiraTarget, sourceIssue, targetIssue, JiraIssueFields::getVersions, versions -> targetIssueUpdate.getOrCreateFields().setVersions(versions), projectSync);
-		processVersions(jiraTarget, sourceIssue, targetIssue, JiraIssueFields::getFixVersions, versions -> targetIssueUpdate.getOrCreateFields().setFixVersions(versions), projectSync);
+		processNamedResources(jiraTarget, sourceIssue, targetIssue, JiraIssueFields::getVersions, versions -> targetIssueUpdate.getOrCreateFields().setVersions(versions), projectSync, versionMapper);
+		processNamedResources(jiraTarget, sourceIssue, targetIssue, JiraIssueFields::getFixVersions, versions -> targetIssueUpdate.getOrCreateFields().setFixVersions(versions), projectSync, versionMapper);
+		processNamedResources(jiraTarget, sourceIssue, targetIssue, JiraIssueFields::getComponents, components -> targetIssueUpdate.getOrCreateFields().setComponents(components), projectSync, componentMapper);
 		processCustomFields(jiraSource, jiraTarget, sourceIssue, targetIssue, targetIssueUpdate);
 
 		if (projectSync.isCopyCommentsToTarget() && !shouldSkipUpdate(targetIssue, projectSync)) {
@@ -332,7 +342,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 				}
 
 				if (transition.isCopyFixVersionsToSource()) {
-					processVersions(jiraSource, sourceIssue, targetIssue, sourceIssueUpdate, projectSync);
+					processFixVersions(jiraSource, sourceIssue, targetIssue, sourceIssueUpdate, projectSync);
 				}
 
 				copyCustomFields(jiraSource, sourceIssue, targetIssue, jiraTarget, sourceIssueUpdate, transition);
@@ -367,7 +377,8 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		}
 	}
 
-	private void processVersions(JiraService jiraSource, JiraIssue sourceIssue, JiraIssue targetIssue, JiraIssueUpdate sourceIssueUpdate, JiraProjectSync projectSync) {
+	private void processFixVersions(JiraService jiraSource, JiraIssue sourceIssue, JiraIssue targetIssue,
+									JiraIssueUpdate sourceIssueUpdate, JiraProjectSync projectSync) {
 		Set<JiraVersion> targetFixVersions = targetIssue.getFields().getFixVersions();
 		Set<JiraVersion> sourceFixVersions = sourceIssue.getFields().getFixVersions();
 
@@ -609,18 +620,23 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 		}
 	}
 
-	private void processVersions(JiraService jiraTarget, JiraIssue sourceIssue, JiraIssue targetIssue, Function<JiraIssueFields, Set<JiraVersion>> versionGetter, Consumer<Set<JiraVersion>> versionsSetter, JiraProjectSync projectSync) {
-		Set<JiraVersion> sourceVersions = versionGetter.apply(sourceIssue.getFields());
-		Set<JiraVersion> targetVersions = versionGetter.apply(targetIssue.getFields());
+	private static <T extends JiraNamedResource> void processNamedResources(JiraService jiraTarget, JiraIssue sourceIssue,
+																			JiraIssue targetIssue,
+																			Function<JiraIssueFields, Set<T>> resourceGetter,
+																			Consumer<Set<T>> resourceSetter,
+																			JiraProjectSync projectSync,
+																			NamedResourceMapper<T> resourceMapper) {
+		Set<T> sourceResources = resourceGetter.apply(sourceIssue.getFields());
+		Set<T> targetResources = resourceGetter.apply(targetIssue.getFields());
 
-		Set<JiraVersion> mappedSourceVersions = versionMapper.mapSourceToTarget(jiraTarget, sourceVersions, projectSync);
+		Set<T> mappedResources = resourceMapper.mapSourceToTarget(jiraTarget, sourceResources, projectSync);
 
-		if (CollectionUtils.isEmpty(sourceVersions) && CollectionUtils.isEmpty(mappedSourceVersions)) {
+		if (CollectionUtils.isEmpty(sourceResources) && CollectionUtils.isEmpty(mappedResources)) {
 			return;
 		}
 
-		if (!Objects.equals(targetVersions, mappedSourceVersions)) {
-			versionsSetter.accept(mappedSourceVersions);
+		if (!Objects.equals(targetResources, mappedResources)) {
+			resourceSetter.accept(mappedResources);
 		}
 	}
 

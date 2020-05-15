@@ -34,6 +34,8 @@ public class JiraIssueFields extends JiraResource implements JiraFieldsBean {
 
 	private Set<JiraVersion> fixVersions;
 
+	private Set<JiraComponent> components;
+
 	private JiraUser assignee;
 
 	@JsonFormat(pattern = JIRA_DATE_FORMAT)
@@ -154,6 +156,16 @@ public class JiraIssueFields extends JiraResource implements JiraFieldsBean {
 	@Override
 	public Set<JiraVersion> getFixVersions() {
 		return fixVersions;
+	}
+
+	@Override
+	public void setComponents(Set<JiraComponent> components) {
+		this.components = components;
+	}
+
+	@Override
+	public Set<JiraComponent> getComponents() {
+		return components;
 	}
 
 	@Override
