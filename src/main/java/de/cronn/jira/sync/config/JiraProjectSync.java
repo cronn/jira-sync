@@ -29,9 +29,6 @@ public class JiraProjectSync {
 	private boolean copyCommentsToTarget = false;
 	private Map<String, Map<String, String>> fieldValueMappings = new LinkedHashMap<>();
 
-	public JiraProjectSync() {
-	}
-
 	public String getSourceProject() {
 		return sourceProject;
 	}
