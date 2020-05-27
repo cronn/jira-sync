@@ -7,7 +7,6 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class JiraFieldsUpdate implements Serializable, JiraFieldsBean {
 
@@ -33,7 +32,6 @@ public class JiraFieldsUpdate implements Serializable, JiraFieldsBean {
 		this.description = description;
 	}
 
-	@JsonIgnore
 	public JiraFieldsUpdate withDescription(String description) {
 		setDescription(description);
 		return this;
@@ -80,7 +78,6 @@ public class JiraFieldsUpdate implements Serializable, JiraFieldsBean {
 		this.versions = versions;
 	}
 
-	@JsonIgnore
 	public JiraFieldsUpdate withVersions(Set<JiraVersion> jiraVersions) {
 		setVersions(jiraVersions);
 		return this;
@@ -96,7 +93,6 @@ public class JiraFieldsUpdate implements Serializable, JiraFieldsBean {
 		this.fixVersions = fixVersions;
 	}
 
-	@JsonIgnore
 	public JiraFieldsUpdate withFixVersions(Set<JiraVersion> jiraVersions) {
 		setFixVersions(jiraVersions);
 		return this;
@@ -112,7 +108,6 @@ public class JiraFieldsUpdate implements Serializable, JiraFieldsBean {
 		this.components = components;
 	}
 
-	@JsonIgnore
 	public JiraFieldsUpdate withComponents(Set<JiraComponent> jiraComponents) {
 		setComponents(jiraComponents);
 		return this;
@@ -128,7 +123,6 @@ public class JiraFieldsUpdate implements Serializable, JiraFieldsBean {
 		this.assignee = assignee;
 	}
 
-	@JsonIgnore
 	public JiraFieldsUpdate withAssignee(JiraUser jiraUser) {
 		setAssignee(jiraUser);
 		return this;
