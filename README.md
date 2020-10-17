@@ -1,6 +1,6 @@
-[![Build Status](https://travis-ci.org/cronn-de/jira-sync.png?branch=master)](https://travis-ci.org/cronn-de/jira-sync)
-[![Apache 2.0](https://img.shields.io/github/license/cronn-de/jira-sync.svg)](http://www.apache.org/licenses/LICENSE-2.0)
-[![Coverage Status](https://coveralls.io/repos/github/cronn-de/jira-sync/badge.svg?branch=master)](https://coveralls.io/github/cronn-de/jira-sync?branch=master)
+[![Build Status](https://travis-ci.org/cronn/jira-sync.png?branch=master)](https://travis-ci.org/cronn/jira-sync)
+[![Apache 2.0](https://img.shields.io/github/license/cronn/jira-sync.svg)](http://www.apache.org/licenses/LICENSE-2.0)
+[![Coverage Status](https://coveralls.io/repos/github/cronn/jira-sync/badge.svg?branch=master)](https://coveralls.io/github/cronn/jira-sync?branch=master)
 
 ## Jira-to-Jira Synchronisation
 
