@@ -1,6 +1,6 @@
 buildscript {
 	ext {
-		springBootVersion = '1.5.20.RELEASE'
+		springBootVersion = '1.5.22.RELEASE'
 	}
 	repositories {
 		jcenter()
@@ -17,7 +17,7 @@ plugins {
 	id 'eclipse'
 	id 'idea'
 
-	id 'com.github.kt3k.coveralls' version '2.8.2'
+	id 'com.github.kt3k.coveralls' version '2.10.2'
 }
 
 apply plugin: 'org.sonarqube'
@@ -70,28 +70,41 @@ repositories {
 }
 
 dependencies {
-	compile 'javax.annotation:javax.annotation-api:1.2'
+	compile 'javax.annotation:javax.annotation-api:latest.release'
 
 	compile('org.springframework.boot:spring-boot-starter')
 	compile('org.springframework.boot:spring-boot-starter-cache')
 	compile('javax.cache:cache-api')
 	compile('org.ehcache:ehcache')
 
-	compile 'org.apache.httpcomponents:httpclient:4.5.8'
-	compile 'org.apache.commons:commons-lang3:3.9'
+	compile 'org.apache.httpcomponents:httpclient'
+	compile 'org.apache.commons:commons-lang3:latest.release'
 
 	compile("org.springframework:spring-web")
 	compile("com.fasterxml.jackson.core:jackson-databind")
 	compile("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
-	compile("de.cronn:reflection-util:2.4.1")
-	compile("de.cronn:ssh-proxy:1.3")
+	compile("de.cronn:reflection-util:latest.release")
+	compile("de.cronn:ssh-proxy:latest.release")
 
-	testCompile("org.mockito:mockito-core:2.27.0")
-	testCompile("org.assertj:assertj-core:3.12.2")
-	testCompile("nl.jqno.equalsverifier:equalsverifier:3.1.8")
+	testCompile("org.mockito:mockito-core:3.5.13")
+	testCompile("org.assertj:assertj-core:3.17.2")
+	testCompile("nl.jqno.equalsverifier:equalsverifier:latest.release")
 	testCompile('org.springframework.boot:spring-boot-starter-test')
 	testCompile("org.springframework.boot:spring-boot-starter-web")
+
+	components.all { ComponentMetadataDetails details ->
+		details.statusScheme = ['candidate', 'release']
+		if (details.id.version =~ /(?i).+([-.])(CANDIDATE|RC|BETA|ALPHA).*/) {
+			details.status = 'candidate'
+		} else {
+			details.status = 'release'
+		}
+	}
+}
+
+dependencyLocking {
+	lockAllConfigurations()
 }
 
 wrapper {
