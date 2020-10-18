@@ -6,8 +6,8 @@ buildscript {
 		jcenter()
 	}
 	dependencies {
-		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
-		classpath 'org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.8'
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:1.5.22.RELEASE")
+		classpath 'org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:3.0'
 	}
 }
 
