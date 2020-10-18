@@ -3,7 +3,8 @@ language: java
 jdk:
     - openjdk8
     - openjdk11
-    - openjdk12
+    - openjdk14
+    - openjdk15
 
 after_success:
     - ./gradlew jacocoTestReport coveralls
