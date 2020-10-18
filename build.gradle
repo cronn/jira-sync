@@ -70,28 +70,28 @@ repositories {
 }
 
 dependencies {
-	compile 'javax.annotation:javax.annotation-api:latest.release'
+	implementation 'javax.annotation:javax.annotation-api:latest.release'
 
-	compile('org.springframework.boot:spring-boot-starter')
-	compile('org.springframework.boot:spring-boot-starter-cache')
-	compile('javax.cache:cache-api')
-	compile('org.ehcache:ehcache')
+	implementation('org.springframework.boot:spring-boot-starter')
+	implementation('org.springframework.boot:spring-boot-starter-cache')
+	implementation('javax.cache:cache-api')
+	implementation('org.ehcache:ehcache')
 
-	compile 'org.apache.httpcomponents:httpclient'
-	compile 'org.apache.commons:commons-lang3:latest.release'
+	implementation 'org.apache.httpcomponents:httpclient'
+	implementation 'org.apache.commons:commons-lang3:latest.release'
 
-	compile("org.springframework:spring-web")
-	compile("com.fasterxml.jackson.core:jackson-databind")
-	compile("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+	implementation("org.springframework:spring-web")
+	implementation("com.fasterxml.jackson.core:jackson-databind")
+	implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
-	compile("de.cronn:reflection-util:latest.release")
-	compile("de.cronn:ssh-proxy:latest.release")
+	implementation("de.cronn:reflection-util:latest.release")
+	implementation("de.cronn:ssh-proxy:latest.release")
 
-	testCompile("org.mockito:mockito-core:3.5.13")
-	testCompile("org.assertj:assertj-core:3.17.2")
-	testCompile("nl.jqno.equalsverifier:equalsverifier:latest.release")
-	testCompile('org.springframework.boot:spring-boot-starter-test')
-	testCompile("org.springframework.boot:spring-boot-starter-web")
+	testImplementation("org.mockito:mockito-core:3.5.13")
+	testImplementation("org.assertj:assertj-core:3.17.2")
+	testImplementation("nl.jqno.equalsverifier:equalsverifier:latest.release")
+	testImplementation('org.springframework.boot:spring-boot-starter-test')
+	testImplementation("org.springframework.boot:spring-boot-starter-web")
 
 	components.all { ComponentMetadataDetails details ->
 		details.statusScheme = ['candidate', 'release']
