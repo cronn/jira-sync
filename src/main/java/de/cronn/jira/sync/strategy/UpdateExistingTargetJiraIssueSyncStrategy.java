@@ -466,7 +466,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 	}
 
 	private boolean isLeftStatusTransitionNewer(JiraIssue leftIssue, JiraIssue rightIssue, JiraService leftJiraService,
-		JiraService rightJiraService, TransitionConfig transition) {
+												JiraService rightJiraService, TransitionConfig transition) {
 		ZonedDateTime latestStatusTransitionLeft = getLatestStatusTransitionDate(leftIssue, leftJiraService);
 
 		ZonedDateTime latestStatusTransitionRight = getLatestStatusTransitionDate(rightIssue, rightJiraService);

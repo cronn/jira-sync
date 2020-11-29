@@ -75,7 +75,7 @@ public class DefaultFieldMapper implements FieldMapper {
 
 		if (!Objects.equals(fromFieldSchemaType, toFieldSchemaType)) {
 			throw new IllegalArgumentException("Schema types of custom field " + fromField + " and " + toField + " do not match: "
-				+ fromFieldSchemaType + " vs. " + toFieldSchemaType);
+											   + fromFieldSchemaType + " vs. " + toFieldSchemaType);
 		}
 
 		switch (toFieldSchemaType) {

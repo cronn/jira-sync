@@ -62,10 +62,10 @@ public class DefaultCommentMapper implements CommentMapper {
 		commentText = ticketReferenceReplacer.replaceTicketReferences(commentText, jiraSource);
 		String signature = "~??[comment " + originalCommentId + "|" + buildCommentLink(jiraSource, originalCommentId, sourceKey) + "]??~";
 		return "{panel:title=" + author + " - " + dateString + "|" + getPanelColors(behindTime) + "}\n" +
-			commentText + "\n" +
-			signature + "\n" +
-			(behindTime ? "~(!) " + THIS_COMMENT_WAS_ADDED_BEHIND_TIME + ". The order of comments might not represent the real order.~\n" : "") +
-			"{panel}";
+			   commentText + "\n" +
+			   signature + "\n" +
+			   (behindTime ? "~(!) " + THIS_COMMENT_WAS_ADDED_BEHIND_TIME + ". The order of comments might not represent the real order.~\n" : "") +
+			   "{panel}";
 	}
 
 	@Override

@@ -78,8 +78,8 @@ public class DefaultDescriptionMapper implements DescriptionMapper {
 			String titleBackgroundColor = descriptionMapping.getPanelTitleBackgroundColor();
 			String backgroundColor = descriptionMapping.getPanelBackgroundColor();
 			return "{panel:title=Original description|titleBGColor=" + titleBackgroundColor + "|bgColor=" + backgroundColor + "}\n"
-				+ escapedSourceDescription
-				+ "\n{panel}\n\n";
+				   + escapedSourceDescription
+				   + "\n{panel}\n\n";
 		}
 	}
 

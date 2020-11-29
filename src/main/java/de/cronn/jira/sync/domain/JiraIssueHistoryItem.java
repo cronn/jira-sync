@@ -91,8 +91,8 @@ public class JiraIssueHistoryItem implements Serializable {
 		}
 		JiraIssueHistoryItem that = (JiraIssueHistoryItem) o;
 		return Objects.equals(getField(), that.getField())
-			&& Objects.equals(getFromString(), that.getFromString())
-			&& Objects.equals(getToString(), that.getToString());
+			   && Objects.equals(getFromString(), that.getFromString())
+			   && Objects.equals(getToString(), that.getToString());
 	}
 
 	@Override
