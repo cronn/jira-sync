@@ -83,8 +83,8 @@ public class DefaultTicketReferenceReplacerTest {
 
 		assertThat(replace("This is a duplicate of PROJECT-123;PROJECT-456;PROJECT-768"))
 			.isEqualTo("This is a duplicate of [PROJECT-123|https://jira/browse/PROJECT-123];" +
-				"[PROJECT-456|https://jira/browse/PROJECT-456];" +
-				"[PROJECT-768|https://jira/browse/PROJECT-768]");
+					   "[PROJECT-456|https://jira/browse/PROJECT-456];" +
+					   "[PROJECT-768|https://jira/browse/PROJECT-768]");
 
 		assertThat(replace("This could be a duplicate of PROJECT-123…"))
 			.isEqualTo("This could be a duplicate of [PROJECT-123|https://jira/browse/PROJECT-123]…");

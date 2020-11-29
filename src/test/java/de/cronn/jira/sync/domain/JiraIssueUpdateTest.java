@@ -33,9 +33,9 @@ public class JiraIssueUpdateTest {
 		issue.getOrCreateFields().setOther("customfield_123", Arrays.asList("some", 123, "value"));
 
 		String expectedJson = "{ \"fields\" : { " +
-				"\"description\" : \"new description\", " +
-				"\"customfield_123\" : [ \"some\", 123, \"value\" ]" +
-			" } }";
+							  "\"description\" : \"new description\", " +
+							  "\"customfield_123\" : [ \"some\", 123, \"value\" ]" +
+							  " } }";
 		assertThat(json.write(issue)).isStrictlyEqualToJson(expectedJson);
 	}
 

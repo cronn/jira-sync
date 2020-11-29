@@ -19,7 +19,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import de.cronn.jira.sync.config.JiraProjectSync;
 import de.cronn.jira.sync.domain.JiraComponent;
-import de.cronn.jira.sync.domain.JiraVersion;
 import de.cronn.jira.sync.service.JiraService;
 
 @RunWith(MockitoJUnitRunner.class)

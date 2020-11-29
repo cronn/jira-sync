@@ -28,22 +28,22 @@ public class JiraIssueTest {
 		issue.getOrCreateFields().setOther("customfield_123", Arrays.asList("some", 123, "values"));
 
 		String expectedJson = "{ \"id\" : \"1\", \"key\" : \"ISSUE-1\", " +
-			"\"fields\" : {" +
-				"\"updated\" : \"2016-10-13T07:21:13.000+0200\", " +
-				" \"customfield_123\" : [ \"some\", 123, \"values\" ]" +
-			"} }";
+							  "\"fields\" : {" +
+							  "\"updated\" : \"2016-10-13T07:21:13.000+0200\", " +
+							  " \"customfield_123\" : [ \"some\", 123, \"values\" ]" +
+							  "} }";
 		assertThat(json.write(issue)).isStrictlyEqualToJson(expectedJson);
 	}
 
 	@Test
 	public void testDeserialize() throws Exception {
 		String json = "{ \"id\" : \"1\"," +
-			"\"key\" : \"ISSUE-1\"," +
-			"\"fields\" : {" +
-				" \"updated\" : \"2016-10-13T09:21:13.000+0200\", " +
-				" \"customfield_123\" : [ \"some\", 123, \"values\" ]" +
-			"}," +
-			"\"other\" : \"is ignored\" }";
+					  "\"key\" : \"ISSUE-1\"," +
+					  "\"fields\" : {" +
+					  " \"updated\" : \"2016-10-13T09:21:13.000+0200\", " +
+					  " \"customfield_123\" : [ \"some\", 123, \"values\" ]" +
+					  "}," +
+					  "\"other\" : \"is ignored\" }";
 		JiraIssue jiraIssue = this.json.parseObject(json);
 		assertThat(jiraIssue.getId()).isEqualTo("1");
 		assertThat(jiraIssue.getKey()).isEqualTo("ISSUE-1");

@@ -68,9 +68,9 @@ public class DefaultCommentMapperTest {
 
 		// then
 		assertThat(body).isEqualTo("{panel:title=Some User - 2014-05-09 15:48:52 CEST|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
-			"some text\n" +
-			"~??[comment 12345|https://jira.source/browse/KEY-1?focusedCommentId=12345&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-12345]??~\n" +
-			"{panel}");
+								   "some text\n" +
+								   "~??[comment 12345|https://jira.source/browse/KEY-1?focusedCommentId=12345&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-12345]??~\n" +
+								   "{panel}");
 	}
 
 	@Test
@@ -86,9 +86,9 @@ public class DefaultCommentMapperTest {
 
 		// then
 		assertThat(body).isEqualTo("{panel:title=Some User - 2014-05-09 15:48:52 CEST|titleBGColor=#eeeeee|bgColor=#cccccc}\n" +
-			"some text\n" +
-			"~??[comment 12345|https://jira.source/browse/KEY-1?focusedCommentId=12345&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-12345]??~\n" +
-			"{panel}");
+								   "some text\n" +
+								   "~??[comment 12345|https://jira.source/browse/KEY-1?focusedCommentId=12345&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-12345]??~\n" +
+								   "{panel}");
 	}
 
 	@Test
@@ -103,9 +103,9 @@ public class DefaultCommentMapperTest {
 
 		// then
 		assertThat(body).isEqualTo("{panel:title=Some User - 2014-05-09 15:48:52 CEST (Updated: 2014-05-10 15:41:32 CEST)|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
-			"some text\n" +
-			"~??[comment 12345|https://jira.source/browse/KEY-1?focusedCommentId=12345&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-12345]??~\n" +
-			"{panel}");
+								   "some text\n" +
+								   "~??[comment 12345|https://jira.source/browse/KEY-1?focusedCommentId=12345&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-12345]??~\n" +
+								   "{panel}");
 	}
 
 	@Test
@@ -119,10 +119,10 @@ public class DefaultCommentMapperTest {
 
 		// then
 		assertThat(body).isEqualTo("{panel:title=Some User - 2014-05-09 15:48:52 CEST|titleBGColor=#cccccc|bgColor=#dddddd}\n" +
-			"some text\n" +
-			"~??[comment 12345|https://jira.source/browse/KEY-1?focusedCommentId=12345&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-12345]??~\n" +
-			"~(!) This comment was added behind time. The order of comments might not represent the real order.~\n" +
-			"{panel}");
+								   "some text\n" +
+								   "~??[comment 12345|https://jira.source/browse/KEY-1?focusedCommentId=12345&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-12345]??~\n" +
+								   "~(!) This comment was added behind time. The order of comments might not represent the real order.~\n" +
+								   "{panel}");
 	}
 
 	@Test
@@ -139,10 +139,10 @@ public class DefaultCommentMapperTest {
 
 		// then
 		assertThat(body).isEqualTo("{panel:title=Some User - 2014-05-09 15:48:52 CEST|titleBGColor=#ff0000|bgColor=#f0f0f0}\n" +
-			"some text\n" +
-			"~??[comment 12345|https://jira.source/browse/KEY-1?focusedCommentId=12345&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-12345]??~\n" +
-			"~(!) This comment was added behind time. The order of comments might not represent the real order.~\n" +
-			"{panel}");
+								   "some text\n" +
+								   "~??[comment 12345|https://jira.source/browse/KEY-1?focusedCommentId=12345&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-12345]??~\n" +
+								   "~(!) This comment was added behind time. The order of comments might not represent the real order.~\n" +
+								   "{panel}");
 	}
 
 	@Test
@@ -159,9 +159,9 @@ public class DefaultCommentMapperTest {
 
 		// then
 		assertThat(body).isEqualTo("{panel:title=Some User - 2014-05-09 15:48:52 CEST|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
-			"some text\n" +
-			"~??[comment 12345|https://jira.source/foo/browse/KEY-1?focusedCommentId=12345&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-12345]??~\n" +
-			"{panel}");
+								   "some text\n" +
+								   "~??[comment 12345|https://jira.source/foo/browse/KEY-1?focusedCommentId=12345&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-12345]??~\n" +
+								   "{panel}");
 	}
 
 	@Test

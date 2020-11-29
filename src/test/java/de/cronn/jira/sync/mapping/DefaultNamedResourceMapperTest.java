@@ -1,6 +1,6 @@
 package de.cronn.jira.sync.mapping;
 
-import static de.cronn.jira.sync.mapping.DefaultNamedResourceMapper.*;
+import static de.cronn.jira.sync.mapping.DefaultNamedResourceMapper.map;
 import static org.assertj.core.api.Assertions.*;
 
 import java.util.Arrays;
@@ -37,6 +37,7 @@ public class DefaultNamedResourceMapperTest {
 		() -> Arrays.asList(TARGET_RESOURCE_1, TARGET_RESOURCE_2);
 
 	private static final Map<String, String> MAPPING = new LinkedHashMap<>();
+
 	static {
 		MAPPING.put(SOURCE_RESOURCE_1.getName(), TARGET_RESOURCE_1.getName());
 		MAPPING.put(SOURCE_RESOURCE_2.getName(), TARGET_RESOURCE_2.getName());

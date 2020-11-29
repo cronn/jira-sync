@@ -1,13 +1,9 @@
 package de.cronn.jira.sync;
 
-import static de.cronn.jira.sync.SetUtils.newLinkedHashSet;
-import static de.cronn.jira.sync.config.Context.SOURCE;
-import static de.cronn.jira.sync.config.Context.TARGET;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.assertj.core.api.Assertions.entry;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
+import static de.cronn.jira.sync.SetUtils.*;
+import static de.cronn.jira.sync.config.Context.*;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import java.net.URL;
 import java.time.Instant;
@@ -182,7 +178,7 @@ public class JiraSyncApplicationTests {
 		return issue -> {
 			JiraIssueFields fields = issue.getFields();
 			return fields.getProject().getId().equals(project.getId())
-				&& Arrays.stream(issueTypes).anyMatch(issueType -> fields.getIssuetype().getId().equals(issueType.getId()));
+				   && Arrays.stream(issueTypes).anyMatch(issueType -> fields.getIssuetype().getId().equals(issueType.getId()));
 		};
 	}
 
@@ -462,8 +458,8 @@ public class JiraSyncApplicationTests {
 
 		JiraIssue updatedTargetIssue1 = jiraDummyService.getIssueByKey(TARGET, targetIssue1.getKey());
 		assertThat(updatedTargetIssue1.getFields().getDescription()).isEqualTo("{panel:title=Original description|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
-			"changed description\n" +
-			"{panel}");
+																			   "changed description\n" +
+																			   "{panel}");
 
 		syncAndAssertNoChanges();
 	}
@@ -917,14 +913,14 @@ public class JiraSyncApplicationTests {
 		assertThat(comments).hasSize(2);
 
 		assertThat(comments.iterator().next().getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:00 CEST|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
-			"some comment\n" +
-			"~??[comment 1_1|https://localhost:" + port + "/SOURCE/browse/SRC_ONE-1?focusedCommentId=1_1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_1]??~\n" +
-			"{panel}");
+																   "some comment\n" +
+																   "~??[comment 1_1|https://localhost:" + port + "/SOURCE/browse/SRC_ONE-1?focusedCommentId=1_1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_1]??~\n" +
+																   "{panel}");
 
 		assertThat(comments.get(1).getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:02:00 CEST|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
-			"some other comment\n" +
-			"~??[comment 1_2|https://localhost:" + port + "/SOURCE/browse/SRC_ONE-1?focusedCommentId=1_2&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_2]??~\n" +
-			"{panel}");
+														"some other comment\n" +
+														"~??[comment 1_2|https://localhost:" + port + "/SOURCE/browse/SRC_ONE-1?focusedCommentId=1_2&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_2]??~\n" +
+														"{panel}");
 
 		syncAndAssertNoChanges();
 	}
@@ -948,20 +944,20 @@ public class JiraSyncApplicationTests {
 		// then
 		JiraIssue targetIssue = getSingleIssue(TARGET);
 		assertThat(targetIssue.getFields().getDescription()).isEqualTo("{panel:title=Original description|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
-			"mentioning [Some User|https://localhost:" + port + "/SOURCE/secure/ViewProfile.jspa?name=some.user] in description\n" +
-			"{panel}\n\n");
+																	   "mentioning [Some User|https://localhost:" + port + "/SOURCE/secure/ViewProfile.jspa?name=some.user] in description\n" +
+																	   "{panel}\n\n");
 		List<JiraComment> comments = targetIssue.getFields().getComment().getComments();
 		assertThat(comments).hasSize(2);
 
 		assertThat(comments.get(0).getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:00 CEST|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
-			"[Another User|https://localhost:" + port + "/SOURCE/secure/ViewProfile.jspa?name=anotheruser]: some comment\n" +
-			"~??[comment 1_1|https://localhost:" + port + "/SOURCE/browse/SRC_ONE-1?focusedCommentId=1_1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_1]??~\n" +
-			"{panel}");
+														"[Another User|https://localhost:" + port + "/SOURCE/secure/ViewProfile.jspa?name=anotheruser]: some comment\n" +
+														"~??[comment 1_1|https://localhost:" + port + "/SOURCE/browse/SRC_ONE-1?focusedCommentId=1_1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_1]??~\n" +
+														"{panel}");
 
 		assertThat(comments.get(1).getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:00 CEST|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
-			"[~yetanotheruser]: some comment\n" +
-			"~??[comment 1_2|https://localhost:" + port + "/SOURCE/browse/SRC_ONE-1?focusedCommentId=1_2&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_2]??~\n" +
-			"{panel}");
+														"[~yetanotheruser]: some comment\n" +
+														"~??[comment 1_2|https://localhost:" + port + "/SOURCE/browse/SRC_ONE-1?focusedCommentId=1_2&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_2]??~\n" +
+														"{panel}");
 
 		syncAndAssertNoChanges();
 	}
@@ -984,16 +980,16 @@ public class JiraSyncApplicationTests {
 		// then
 		JiraIssue targetIssue = getSingleIssue(TARGET);
 		assertThat(targetIssue.getFields().getDescription()).isEqualTo("{panel:title=Original description|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
-			"mentioning [SRC_ONE-123|https://localhost:" + port + "/SOURCE/browse/SRC_ONE-123] in description\n" +
-			"{panel}\n\n");
+																	   "mentioning [SRC_ONE-123|https://localhost:" + port + "/SOURCE/browse/SRC_ONE-123] in description\n" +
+																	   "{panel}\n\n");
 
 		List<JiraComment> comments = targetIssue.getFields().getComment().getComments();
 		assertThat(comments).hasSize(1);
 
 		assertThat(comments.get(0).getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:00 CEST|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
-			"see ticket [SRC_ONE-456|https://localhost:" + port + "/SOURCE/browse/SRC_ONE-456]\n" +
-			"~??[comment 1_1|https://localhost:" + this.port + "/SOURCE/browse/SRC_ONE-1?focusedCommentId=1_1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_1]??~\n" +
-			"{panel}");
+														"see ticket [SRC_ONE-456|https://localhost:" + port + "/SOURCE/browse/SRC_ONE-456]\n" +
+														"~??[comment 1_1|https://localhost:" + this.port + "/SOURCE/browse/SRC_ONE-1?focusedCommentId=1_1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_1]??~\n" +
+														"{panel}");
 
 		syncAndAssertNoChanges();
 	}
@@ -1022,9 +1018,9 @@ public class JiraSyncApplicationTests {
 		List<JiraComment> comments = targetIssue.getFields().getComment().getComments();
 		assertThat(comments).hasSize(1);
 		assertThat(comments.get(0).getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:30 CEST|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
-			"some comment\n" +
-			"~??[comment 1_1|https://localhost:" + port + "/SOURCE/browse/SRC_ONE-1?focusedCommentId=1_1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_1]??~\n" +
-			"{panel}");
+														"some comment\n" +
+														"~??[comment 1_1|https://localhost:" + port + "/SOURCE/browse/SRC_ONE-1?focusedCommentId=1_1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_1]??~\n" +
+														"{panel}");
 
 		syncAndAssertNoChanges();
 	}
@@ -1166,9 +1162,9 @@ public class JiraSyncApplicationTests {
 		assertThat(comment.getCreated()).isEqualTo(firstSyncTime);
 		assertThat(comment.getUpdated()).isEqualTo(secondSyncTime);
 		assertThat(comment.getBody()).isEqualTo("{panel:title=my self - 2016-05-23 20:00:00 CEST (Updated: 2016-05-23 20:01:00 CEST)|titleBGColor=#dddddd|bgColor=#eeeeee}\n" +
-			"updated second comment\n" +
-			"~??[comment 1_2|https://localhost:" + port + "/SOURCE/browse/SRC_ONE-1?focusedCommentId=1_2&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_2]??~\n" +
-			"{panel}");
+												"updated second comment\n" +
+												"~??[comment 1_2|https://localhost:" + port + "/SOURCE/browse/SRC_ONE-1?focusedCommentId=1_2&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1_2]??~\n" +
+												"{panel}");
 
 		syncAndAssertNoChanges();
 	}

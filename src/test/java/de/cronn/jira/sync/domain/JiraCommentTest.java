@@ -26,18 +26,18 @@ public class JiraCommentTest {
 		comment.setUpdated(ZonedDateTime.parse("2016-10-13T07:21:13+02:00"));
 
 		String expectedJson = "{ " +
-			"\"created\" : \"2016-10-13T02:00:00.000+0200\", " +
-			"\"updated\" : \"2016-10-13T07:21:13.000+0200\"" +
-			" }";
+							  "\"created\" : \"2016-10-13T02:00:00.000+0200\", " +
+							  "\"updated\" : \"2016-10-13T07:21:13.000+0200\"" +
+							  " }";
 		assertThat(json.write(comment)).isStrictlyEqualToJson(expectedJson);
 	}
 
 	@Test
 	public void testDeserialize() throws Exception {
 		String json = "{ " +
-			"\"created\" : \"2016-10-13T02:00:00.000+0200\", " +
-			"\"updated\" : \"2016-10-13T07:21:13.000+0200\"" +
-			" }";
+					  "\"created\" : \"2016-10-13T02:00:00.000+0200\", " +
+					  "\"updated\" : \"2016-10-13T07:21:13.000+0200\"" +
+					  " }";
 		JiraComment jiraIssue = this.json.parseObject(json);
 		assertThat(jiraIssue.getCreated().toInstant()).isEqualTo(Instant.parse("2016-10-13T00:00:00Z"));
 		assertThat(jiraIssue.getUpdated().toInstant()).isEqualTo(Instant.parse("2016-10-13T05:21:13Z"));

@@ -13,8 +13,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.swing.*;
-
 import org.hamcrest.core.IsNull;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,7 +30,6 @@ import de.cronn.jira.sync.domain.JiraIssueHistoryEntry;
 import de.cronn.jira.sync.domain.JiraIssueHistoryItem;
 import de.cronn.jira.sync.domain.JiraIssueStatus;
 import de.cronn.jira.sync.domain.JiraIssueUpdate;
-import de.cronn.jira.sync.domain.JiraNamedResource;
 import de.cronn.jira.sync.domain.JiraPriority;
 import de.cronn.jira.sync.domain.JiraProject;
 import de.cronn.jira.sync.domain.JiraResolution;
