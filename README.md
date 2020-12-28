@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/cronn/jira-sync.png?branch=master)](https://travis-ci.org/cronn/jira-sync)
+[![CI](https://github.com/cronn/jira-sync/workflows/CI/badge.svg)](https://github.com/cronn/jira-sync/actions)
 [![Apache 2.0](https://img.shields.io/github/license/cronn/jira-sync.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 [![Coverage Status](https://coveralls.io/repos/github/cronn/jira-sync/badge.svg?branch=master)](https://coveralls.io/github/cronn/jira-sync?branch=master)
 
