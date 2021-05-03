@@ -6,8 +6,6 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Nonnull;
-
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
@@ -112,7 +110,6 @@ public class TransitionConfig {
 		return customFieldsToCopyFromTargetToSource;
 	}
 
-	@Nonnull
 	public Map<String, String> getCustomFieldsToCopyFromTargetToSource(JiraIssue issue) {
 		return getCustomFieldsToCopyFromTargetToSource(issue.getFields().getIssuetype());
 	}
