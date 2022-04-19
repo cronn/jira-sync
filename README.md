@@ -1,6 +1,7 @@
 [![CI](https://github.com/cronn/jira-sync/workflows/CI/badge.svg)](https://github.com/cronn/jira-sync/actions)
 [![Apache 2.0](https://img.shields.io/github/license/cronn/jira-sync.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 [![Coverage Status](https://coveralls.io/repos/github/cronn/jira-sync/badge.svg?branch=master)](https://coveralls.io/github/cronn/jira-sync?branch=master)
+[![Valid Gradle Wrapper](https://github.com/cronn/jira-sync/workflows/Validate%20Gradle%20Wrapper/badge.svg)](https://github.com/cronn/jira-sync/actions/workflows/gradle-wrapper-validation.yml)
 
 ## Jira-to-Jira Synchronisation
 
