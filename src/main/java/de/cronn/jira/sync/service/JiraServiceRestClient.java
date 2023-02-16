@@ -159,9 +159,19 @@ public class JiraServiceRestClient implements JiraService {
 	public void login(JiraConnectionProperties jiraConnectionProperties, boolean source) {
 		this.jiraConnectionProperties = jiraConnectionProperties;
 		this.source = source;
-		validate(jiraConnectionProperties);
+		validateUrl(jiraConnectionProperties.getUrl());
 		this.url = jiraConnectionProperties.getUrl();
 		this.restTemplate = createRestTemplate(jiraConnectionProperties);
+		if (hasUsernameAndPassword(jiraConnectionProperties)) {
+			performLoginRequest(jiraConnectionProperties);
+		}
+	}
+
+	private static boolean hasUsernameAndPassword(JiraConnectionProperties jiraConnectionProperties) {
+		return jiraConnectionProperties.getUsername() != null && jiraConnectionProperties.getPassword() != null;
+	}
+
+	private void performLoginRequest(JiraConnectionProperties jiraConnectionProperties) {
 		JiraLoginRequest loginRequest = new JiraLoginRequest(jiraConnectionProperties.getUsername(), jiraConnectionProperties.getPassword());
 		restTemplate.postForObject(restUrl("/rest/auth/1/session"), loginRequest, JiraLoginResponse.class);
 	}
@@ -169,7 +179,9 @@ public class JiraServiceRestClient implements JiraService {
 	@Override
 	public void logout() {
 		if (restTemplate != null) {
-			restTemplate.delete(restUrl("/rest/auth/1/session"));
+			if (hasUsernameAndPassword(jiraConnectionProperties)) {
+				restTemplate.delete(restUrl("/rest/auth/1/session"));
+			}
 			restTemplate = null;
 		}
 		jiraConnectionProperties = null;
@@ -428,12 +440,6 @@ public class JiraServiceRestClient implements JiraService {
 	@Override
 	public String getUrl() {
 		return url;
-	}
-
-	private void validate(JiraConnectionProperties jiraConnectionProperties) {
-		validateUrl(jiraConnectionProperties.getUrl());
-		Assert.notNull(jiraConnectionProperties.getUsername(), "username is missing");
-		Assert.notNull(jiraConnectionProperties.getPassword(), "password is missing");
 	}
 
 	private void validateIssueKey(String issueKey) {

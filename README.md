@@ -60,12 +60,13 @@ de.cronn.jira.sync.source:
 
 de.cronn.jira.sync.target:
   url: https://jira.target/
-  username: user
-  password: pass
-  # Optional
-  # basicAuth:
-  #   username: user
-  #   password: pass
+  # Username and password are optional. If provided, they will be used in a POST request to /rest/auth/1/session
+  # username: user
+  # password: pass
+  # Alternative: Use basic auth for all requests
+  basicAuth:
+    username: user
+    password: password-or-API-token
 
 # Optional
 # de.cronn.jira.sync.cache:
