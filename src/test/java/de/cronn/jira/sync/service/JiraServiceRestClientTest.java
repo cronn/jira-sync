@@ -92,9 +92,10 @@ public class JiraServiceRestClientTest {
 		JiraConnectionProperties connectionProperties = validConnectionProperties();
 		connectionProperties.setUsername(null);
 
-		assertThatExceptionOfType(IllegalArgumentException.class)
-			.isThrownBy(() -> jiraServiceRestClient.login(connectionProperties, true))
-			.withMessage("username is missing");
+		jiraServiceRestClient.login(connectionProperties, true);
+
+		verify(restTemplateBuilder).build();
+		verifyNoInteractions(restTemplate);
 	}
 
 	@Test
@@ -102,9 +103,10 @@ public class JiraServiceRestClientTest {
 		JiraConnectionProperties connectionProperties = validConnectionProperties();
 		connectionProperties.setPassword(null);
 
-		assertThatExceptionOfType(IllegalArgumentException.class)
-			.isThrownBy(() -> jiraServiceRestClient.login(connectionProperties, true))
-			.withMessage("password is missing");
+		jiraServiceRestClient.login(connectionProperties, true);
+
+		verify(restTemplateBuilder).build();
+		verifyNoInteractions(restTemplate);
 	}
 
 	@Test
