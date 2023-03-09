@@ -863,6 +863,40 @@ public class JiraSyncApplicationTests {
 	}
 
 	@Test
+	public void testSetTicketToInProgressInSourceWhenTargetGetsAssignedAndSourceWasAssigned() throws Exception {
+		// given
+		JiraIssue sourceIssue = new JiraIssue(null, null, "some issue", SOURCE_STATUS_OPEN);
+		sourceIssue.getFields().setProject(SOURCE_PROJECT_1);
+		sourceIssue.getFields().setIssuetype(SOURCE_TYPE_BUG);
+		sourceIssue.getFields().setPriority(SOURCE_PRIORITY_HIGH);
+		sourceIssue.getFields().setAssignee(new JiraUser("source assignee", "first"));
+
+		JiraIssue createdSourceIssue = jiraSource.createIssue(sourceIssue);
+
+		syncAndCheckResult();
+		syncAndAssertNoChanges();
+
+		JiraIssue currentTargetIssue = getSingleIssue(TARGET);
+
+		assertThat(currentTargetIssue.getFields().getStatus()).isEqualTo(TARGET_STATUS_OPEN);
+
+		// when
+
+		JiraIssue targetIssue = getSingleIssue(TARGET);
+		targetIssue.getFields().setAssignee(new JiraUser("some", "body"));
+
+		syncAndCheckResult();
+
+		// then
+		JiraIssue updatedSourceIssue = jiraDummyService.getIssueByKey(SOURCE, createdSourceIssue.getKey());
+
+		assertThat(updatedSourceIssue.getFields().getStatus()).isEqualTo(SOURCE_STATUS_IN_PROGRESS);
+		assertThat(updatedSourceIssue.getFields().getAssignee().getKey()).isEqualTo("myself");
+
+		syncAndAssertNoChanges();
+	}
+
+	@Test
 	public void testSetTicketToReopenedInTargetWhenSourceIsReopened() throws Exception {
 		// given
 		JiraIssue createdSourceIssue = createIssueInSource(SOURCE_TYPE_BUG);

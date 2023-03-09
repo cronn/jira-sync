@@ -410,6 +410,7 @@ public class UpdateExistingTargetJiraIssueSyncStrategy implements ExistingTarget
 
 	private boolean isEqual(JiraIssue issue, JiraUser jiraUser) {
 		JiraUser assignee = issue.getFields().getAssignee();
+		log.debug("Current assignee: {}", assignee);
 		if (assignee == null) {
 			return false;
 		}
