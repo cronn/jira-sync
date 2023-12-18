@@ -82,7 +82,7 @@ dependencies {
 	implementation("com.fasterxml.jackson.core:jackson-databind")
 	implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
-	implementation("de.cronn:reflection-util:latest.release")
+	implementation("de.cronn:reflection-util:2.14.0")
 	implementation("de.cronn:ssh-proxy:latest.release")
 
 	testImplementation("org.mockito:mockito-core:3.5.13")
