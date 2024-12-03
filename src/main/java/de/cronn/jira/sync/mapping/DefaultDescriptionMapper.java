@@ -63,7 +63,7 @@ public class DefaultDescriptionMapper implements DescriptionMapper {
 		if (description == null) {
 			return null;
 		}
-		return description.replaceAll("\\r\\n", "\n").trim();
+		return description.replaceAll(" *(\\r)?\\n", "\n").trim();
 	}
 
 	public String mapSourceDescription(String sourceDescription, JiraService jiraSource) {
